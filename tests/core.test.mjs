@@ -1,3 +1,4 @@
+import "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULTS, normalizeHandle, sanitizePost, isWhitelisted, updateSettings, buildRequest, parseDecision, validateThread } from "../src/lib/core.js";

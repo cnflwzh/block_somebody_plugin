@@ -1,3 +1,4 @@
+import "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { askJev } from "../src/lib/jev.js";
@@ -73,6 +74,8 @@ test("Jev transport, cache identity and concurrent consumers", async t => {
       assert.equal(result.echo, undefined); assert.equal(validate(result).action, "block");
     });
     await t.test("cancelling all consumers aborts the transport; a new request can proceed", async () => {
+      // Use a fresh context: the preceding subtest has already persisted its answer.
+      const uncachedRequest = buildRequest(root, { ...reply, text: "新的取消测试上下文" }, null, DEFAULTS.model);
       let started, wireSignal;
       const began = new Promise(resolve => { started = resolve; });
       globalThis.fetch = async (_, options) => {
@@ -80,12 +83,12 @@ test("Jev transport, cache identity and concurrent consumers", async t => {
         return new Promise((_, reject) => options.signal.addEventListener("abort", () => reject(new DOMException("cancelled", "AbortError")), { once: true }));
       };
       const controller = new AbortController();
-      const pending = askJevCached(request, "fixture-only-key", controller.signal, validate);
+      const pending = askJevCached(uncachedRequest, "fixture-only-key", controller.signal, validate);
       const cancelled = assert.rejects(pending, /取消/);
       await began; controller.abort(); await cancelled;
       assert.equal(wireSignal.aborted, true);
       globalThis.fetch = async () => Response.json(answer());
-      assert.equal(validate(await askJevCached(request, "fixture-only-key", undefined, validate)).action, "block");
+      assert.equal(validate(await askJevCached(uncachedRequest, "fixture-only-key", undefined, validate)).action, "block");
     });
   } finally { globalThis.fetch = originalFetch; globalThis.chrome = originalChrome; }
 });

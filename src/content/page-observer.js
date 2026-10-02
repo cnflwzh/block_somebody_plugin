@@ -13,6 +13,18 @@
     disable() { debugCommand("disable"); console.info("[block s.b.] 已退出动画预览，当前任务恢复正常处理。"); }
   }) });
   const records = new Map(), domSignatures = new Map();
+  /** Sparse blocked cards must not overwrite the full post previously observed on this page. */
+  function remember(post) {
+    const previous = records.get(post.id);
+    if (previous?.handle === post.handle) {
+      const keepText = previous.text && (!post.text || !previous.incomplete && post.incomplete);
+      post = { ...post, userId: post.userId || previous.userId, conversationId: post.conversationId || previous.conversationId,
+        parentId: post.parentId || previous.parentId, text: keepText ? previous.text : post.text,
+        incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia };
+    }
+    records.delete(post.id); records.set(post.id, post);
+    return post;
+  }
   const channel = "blocksb:metadata:v1";
   const timelines = new Map();
   const xhrUrls = new WeakMap();
@@ -62,7 +74,7 @@
         // Force a DOM inventory on activation, even if the same card was cached before the click.
         const signature = JSON.stringify(post);
         if (force || domSignatures.get(post.id) !== signature) {
-          domSignatures.set(post.id, signature); records.set(post.id, post); found.push(post);
+          domSignatures.set(post.id, signature); found.push(remember(post));
         }
         break;
       }
@@ -110,7 +122,7 @@
             hasMedia: !!(legacy.extended_entities?.media?.length || legacy.entities?.media?.length || item.quoted_status_result || item.card),
             incomplete: !!legacy.truncated || !!item.is_translatable && !legacy.full_text || (note?.text || legacy.full_text || "").length > 14000,
             blocking: typeof profile.blocking === "boolean" ? profile.blocking : null };
-          records.set(post.id, post); found.push(post);
+          found.push(remember(post));
         }
       }
       for (const value of Object.values(item)) if (value && typeof value === "object") pending.push(value);

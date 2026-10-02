@@ -1,62 +1,62 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>block s.b. · block somebody</title><link rel="icon" href="../../assets/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="manager.css"><script src="manager.js" type="module"></script></head>
 <body>
   <main class="app">
-    <header class="brand-row"><img src="../../assets/brand.svg" width="30" height="30" alt=""><h1>block s.b.</h1><button id="global-pause" class="pill">暂停</button></header>
-    <nav class="tabs" aria-label="管理功能"><button data-tab="history" aria-selected="true">屏蔽记录 <span id="history-count">0</span></button><button data-tab="whitelist" aria-selected="false">白名单 <span id="white-count">0</span></button><button data-tab="settings" aria-selected="false">设置</button></nav>
-    <div id="service-error" class="notice warning" hidden><span id="service-error-text"></span><button id="resume-services" class="text-button">恢复任务</button></div>
-    <div id="onboarding" class="notice" hidden><span>请先连接 Jev。</span><button id="connect-now" class="text-button">去设置</button></div>
+    <header class="brand-row"><img src="../../assets/brand.svg" width="30" height="30" alt=""><h1>block s.b.</h1><button id="global-pause" class="pill" data-i18n="pause"></button></header>
+    <nav class="tabs" aria-label="" data-i18n-aria-label="ui_management"><button data-tab="history" aria-selected="true"><span data-i18n="block_history"></span> <span id="history-count">0</span></button><button data-tab="whitelist" aria-selected="false"><span data-i18n="allowlist"></span> <span id="white-count">0</span></button><button data-tab="settings" aria-selected="false" data-i18n="settings"></button></nav>
+    <div id="service-error" class="notice warning" hidden><span id="service-error-text"></span><button id="resume-services" class="text-button" data-i18n="ui_resume_tasks"></button></div>
+    <div id="onboarding" class="notice" hidden><span data-i18n="ui_connect_jev_first"></span><button id="connect-now" class="text-button" data-i18n="ui_open_settings"></button></div>
 
-    <section id="view-history" class="view" aria-label="屏蔽记录">
-      <div class="stats"><div><strong id="stat-blocked">0</strong><span>已提交 / 已屏蔽</span></div><div><strong id="stat-pending">0</strong><span>队列中</span></div><div><strong id="stat-review">0</strong><span>需要处理</span></div></div>
-      <div class="search-row"><input id="history-search" type="search" placeholder="搜索用户名或评论内容" aria-label="搜索屏蔽记录"><select id="account-filter" aria-label="按登录账号筛选"><option value="">全部账号</option></select></div>
-      <div class="filters" aria-label="记录筛选"><button data-filter="all" class="selected">全部</button><button data-filter="blocked">已提交 / 屏蔽</button><button data-filter="pending">队列中</button><button data-filter="failed">需处理</button><button data-filter="unblocked">已取消</button></div>
+    <section id="view-history" class="view" aria-label="" data-i18n-aria-label="block_history">
+      <div class="stats"><div><strong id="stat-blocked">0</strong><span data-i18n="ui_submitted_blocked_2"></span></div><div><strong id="stat-pending">0</strong><span data-i18n="ui_queued"></span></div><div><strong id="stat-review">0</strong><span data-i18n="ui_needs_attention_2"></span></div></div>
+      <div class="search-row"><input id="history-search" type="search" placeholder="" data-i18n-placeholder="ui_search_usernames_or_reply_text" aria-label="" data-i18n-aria-label="ui_search_block_history"><select id="account-filter" aria-label="" data-i18n-aria-label="ui_filter_by_signed_in_account"><option value="" data-i18n="ui_all_accounts"></option></select></div>
+      <div class="filters" aria-label="" data-i18n-aria-label="ui_filter_records"><button data-filter="all" class="selected" data-i18n="ui_all"></button><button data-filter="blocked" data-i18n="ui_submitted_blocked"></button><button data-filter="pending" data-i18n="ui_queued"></button><button data-filter="failed" data-i18n="ui_needs_attention"></button><button data-filter="unblocked" data-i18n="ui_canceled"></button></div>
       <div id="session-list"></div>
       <div id="history-list" class="record-list"></div>
-      <button id="show-more" class="wide subtle" hidden>显示更多任务</button>
-      <footer class="list-footer"><button id="export" class="text-button" title="导出记录与白名单">导出</button><button id="clear-finished" class="text-button">清理已取消记录</button></footer>
+      <button id="show-more" class="wide subtle" hidden data-i18n="ui_show_more_tasks"></button>
+      <footer class="list-footer"><button id="export" class="text-button" title="" data-i18n-title="ui_export_history_and_allowlist" data-i18n="ui_export"></button><button id="clear-finished" class="text-button" data-i18n="ui_clear_canceled_records_2"></button></footer>
     </section>
 
-    <section id="view-whitelist" class="view" hidden aria-label="白名单">
-      <div id="whitelist-notice" class="notice teal dismissible" hidden><p>白名单用户不分析、不自动屏蔽。已有屏蔽需手动取消。</p><button id="dismiss-whitelist-notice" class="notice-close" aria-label="关闭白名单提示" title="不再提示">×</button></div>
-      <form id="whitelist-form" class="card"><div class="input-action"><input id="white-handle" autocomplete="off" placeholder="@用户名或 X 主页链接" aria-label="添加白名单用户" required maxlength="120"><button class="primary" type="submit">添加</button></div><input id="white-note" placeholder="备注（可选）" maxlength="100" aria-label="白名单备注"></form>
-      <input id="white-search" type="search" class="wide" placeholder="搜索白名单" aria-label="搜索白名单">
+    <section id="view-whitelist" class="view" hidden aria-label="" data-i18n-aria-label="allowlist">
+      <div id="whitelist-notice" class="notice teal dismissible" hidden><p data-i18n="ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks"></p><button id="dismiss-whitelist-notice" class="notice-close" aria-label="" data-i18n-aria-label="ui_dismiss_allowlist_notice" title="" data-i18n-title="ui_don_t_show_again">×</button></div>
+      <form id="whitelist-form" class="card"><div class="input-action"><input id="white-handle" autocomplete="off" placeholder="" data-i18n-placeholder="ui_username_or_x_profile_link" aria-label="" data-i18n-aria-label="ui_add_an_allowlisted_user" required maxlength="120"><button class="primary" type="submit" data-i18n="ui_add"></button></div><input id="white-note" placeholder="" data-i18n-placeholder="ui_note_optional" maxlength="100" aria-label="" data-i18n-aria-label="ui_allowlist_note"></form>
+      <input id="white-search" type="search" class="wide" placeholder="" data-i18n-placeholder="ui_search_allowlist" aria-label="" data-i18n-aria-label="ui_search_allowlist">
       <div id="whitelist-list" class="record-list"></div>
     </section>
 
-    <section id="view-settings" class="view" hidden aria-label="设置">
+    <section id="view-settings" class="view" hidden aria-label="" data-i18n-aria-label="settings">
       <section class="card key-card">
-        <div class="card-heading"><h3>模型设置</h3><div class="key-status-actions"><span id="key-status" class="status">未连接</span><button type="button" id="remove-key" class="text-button" hidden>移除密钥</button></div></div>
+        <div class="card-heading"><h3 data-i18n="ui_model_settings"></h3><div class="key-status-actions"><span id="key-status" class="status" data-i18n="ui_not_connected"></span><button type="button" id="remove-key" class="text-button" hidden data-i18n="ui_remove_key"></button></div></div>
         <form id="key-form">
-          <label for="api-key">API Key</label><div class="input-action"><input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="输入 API Key" required maxlength="500"><button type="button" id="reveal-key" class="subtle" aria-label="显示输入的密钥">显示</button></div>
-          <label for="api-endpoint">API 端点</label><input id="api-endpoint" type="url" required maxlength="2048" spellcheck="false" placeholder="https://api.typesafe.ai/v1/systemone" aria-describedby="endpoint-hint">
-          <p id="endpoint-hint" class="hint">填写兼容 Jev 的完整 HTTPS 接口地址。</p>
-          <label for="model">模型</label><input id="model" required maxlength="100" spellcheck="false" placeholder="jev-1.13.0">
-          <details class="prompt-options"><summary>高级选项</summary><div class="prompt-heading"><label for="custom-prompt">自定义 Prompt</label><button type="button" id="reset-prompt" class="text-button">恢复默认</button></div><textarea id="custom-prompt" rows="9" maxlength="12000" spellcheck="false" aria-describedby="prompt-hint"></textarea><p id="prompt-hint" class="hint">修改判定指令，分类标签与返回格式保持不变。</p></details>
-          <div class="save-row"><span id="model-feedback" class="hint" role="status"></span><button type="submit" class="primary" id="save-key">保存并连接</button></div>
+          <label for="api-key" data-i18n="api_key"></label><div class="input-action"><input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="" data-i18n-placeholder="ui_enter_api_key" required maxlength="500"><button type="button" id="reveal-key" class="subtle" aria-label="" data-i18n-aria-label="ui_show_entered_key" data-i18n="ui_show"></button></div>
+          <label for="api-endpoint" data-i18n="ui_api_endpoint"></label><input id="api-endpoint" type="url" required maxlength="2048" spellcheck="false" placeholder="https://api.typesafe.ai/v1/systemone" aria-describedby="endpoint-hint">
+          <p id="endpoint-hint" class="hint" data-i18n="ui_enter_the_full_https_url_of_a_jev_compatible_endpoint"></p>
+          <label for="model" data-i18n="ui_model"></label><input id="model" required maxlength="100" spellcheck="false" placeholder="jev-1.13.0">
+          <div class="prompt-heading"><button type="button" id="edit-rules" class="subtle" data-i18n="ui_customize_prompt"></button><span id="rule-summary" class="hint"></span></div>
+          <div class="save-row"><span id="model-feedback" class="hint" role="status"></span><button type="submit" class="primary" id="save-key" data-i18n="ui_save_and_connect"></button></div>
         </form>
       </section>
       <form id="settings-form">
-        <section class="card"><h3>识别策略</h3><div class="preset-grid"><label><input type="radio" name="preset" value="careful"><strong>谨慎</strong></label><label><input type="radio" name="preset" value="balanced"><strong>平衡</strong></label><label><input type="radio" name="preset" value="active"><strong>积极</strong></label><label><input type="radio" name="preset" value="custom"><strong>自定义</strong></label></div>
-          <div class="threshold"><label for="high">自动屏蔽：支持概率 ≥ <output id="high-out">92%</output></label><input id="high" type="range" min="50" max="100" step="1"></div>
-          <div class="threshold"><label for="confidence">自动屏蔽：模型置信度 ≥ <output id="confidence-out">80%</output></label><input id="confidence" type="range" min="0" max="100" step="1"></div>
-          <label class="switch-row"><span><strong>自动隐藏评论</strong></span><input id="mask-enabled" type="checkbox" role="switch"></label>
-          <div class="threshold"><label for="maskThreshold">自动隐藏：支持概率 ≥ <output id="maskThreshold-out">80%</output></label><input id="maskThreshold" type="range" min="0" max="91" step="1"><p id="mask-range" class="hint"></p></div>
+        <section class="card"><h3 data-i18n="ui_detection_policy"></h3><div class="preset-grid"><label><input type="radio" name="preset" value="careful"><strong data-i18n="ui_cautious"></strong></label><label><input type="radio" name="preset" value="balanced"><strong data-i18n="ui_balanced"></strong></label><label><input type="radio" name="preset" value="active"><strong data-i18n="ui_aggressive"></strong></label><label><input type="radio" name="preset" value="custom"><strong data-i18n="ui_custom"></strong></label></div>
+          <div class="threshold"><label for="high"><span data-i18n="ui_auto_block"></span><span class="probability-label" data-i18n="support_probability"></span> ≥ <output id="high-out">92%</output></label><input id="high" type="range" min="50" max="100" step="1"></div>
+          <div class="threshold"><label for="confidence"><span data-i18n="ui_auto_block_model_confidence"></span> <output id="confidence-out">80%</output></label><input id="confidence" type="range" min="0" max="100" step="1"></div>
+          <label class="switch-row"><span><strong data-i18n="ui_auto_hide_replies"></strong></span><input id="mask-enabled" type="checkbox" role="switch"></label>
+          <div class="threshold"><label for="maskThreshold"><span data-i18n="ui_auto_hide"></span><span class="probability-label" data-i18n="support_probability"></span> ≥ <output id="maskThreshold-out">80%</output></label><input id="maskThreshold" type="range" min="0" max="91" step="1"><p id="mask-range" class="hint"></p></div>
         </section>
-        <section class="card"><h3>Jev 请求缓存</h3><label for="cache-limit">最多保留条数</label><input id="cache-limit" type="number" min="100" max="100000" step="1" required value="10000"></section>
-        <section class="card"><h3>页面体验</h3><label class="switch-row"><span><strong>评论移除动画</strong></span><input id="animation" type="checkbox" role="switch"></label>
-          <fieldset id="animation-effects" class="animation-effects"><legend>动画效果</legend><div class="preset-grid">
-            <label><input type="radio" name="animation-effect" value="fly" checked><strong>飞入垃圾桶</strong></label>
-            <label><input type="radio" name="animation-effect" value="particles"><strong>粒子消散</strong></label>
+        <section class="card"><h3 data-i18n="ui_jev_request_cache"></h3><label for="cache-limit" data-i18n="ui_maximum_entries"></label><input id="cache-limit" type="number" min="100" max="100000" step="1" required value="10000"></section>
+        <section class="card"><h3 data-i18n="ui_page_experience"></h3><label class="switch-row"><span><strong data-i18n="ui_reply_removal_animation"></strong></span><input id="animation" type="checkbox" role="switch"></label>
+          <fieldset id="animation-effects" class="animation-effects"><legend data-i18n="ui_animation_style"></legend><div class="preset-grid">
+            <label><input type="radio" name="animation-effect" value="fly" checked><strong data-i18n="ui_fly_to_trash"></strong></label>
+            <label><input type="radio" name="animation-effect" value="particles"><strong data-i18n="ui_particle_dissolve"></strong></label>
           </div></fieldset>
-          <label class="switch-row"><span><strong>跟随系统减少动态效果</strong></span><input id="reduced-motion" type="checkbox" role="switch"></label></section>
-        <div class="save-row"><span id="settings-feedback" class="hint" role="status"></span><button class="primary" type="submit">保存设置</button></div>
+          <label class="switch-row"><span><strong data-i18n="ui_follow_system_reduced_motion_preference"></strong></span><input id="reduced-motion" type="checkbox" role="switch"></label></section>
+        <div class="save-row"><span id="settings-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
       </form>
-      <div class="about"><span>block s.b. · 0.1.17</span><a class="github-link" href="https://github.com/cnflwzh/block_somebody_plugin" target="_blank" rel="noopener noreferrer" aria-label="GitHub 项目仓库" title="GitHub"><svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 3.86c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a></div>
+      <div class="about"><span>block s.b. · 1.0.0</span><a class="github-link" href="https://github.com/cnflwzh/block_somebody_plugin" target="_blank" rel="noopener noreferrer" aria-label="" data-i18n-aria-label="ui_github_repository" title="GitHub"><svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 3.86c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a></div>
     </section>
   </main>
-  <dialog id="modal"><div class="modal-heading"><h2 id="modal-title"></h2><button id="modal-close" class="icon-button" aria-label="关闭">×</button></div><div id="modal-body"></div><div id="modal-actions" class="button-row"></div></dialog>
+  <dialog id="modal"><div class="modal-heading"><h2 id="modal-title"></h2><button id="modal-close" class="icon-button" aria-label="" data-i18n-aria-label="ui_close">×</button></div><div id="modal-body"></div><div id="modal-actions" class="button-row"></div></dialog>
   <div id="toast" role="status" hidden></div>
 </body>
 </html>

@@ -1,0 +1,1750 @@
+{
+  "action_title": {
+    "message": "block s.b. · History, allowlist and settings"
+  },
+  "agreement_probability": {
+    "message": "Agreement probability"
+  },
+  "allowlist": {
+    "message": "Allowlist"
+  },
+  "api_key": {
+    "message": "API key"
+  },
+  "auto_load_off": {
+    "message": "Auto-load: off"
+  },
+  "auto_load_on": {
+    "message": "Auto-load: on"
+  },
+  "block_history": {
+    "message": "Block history"
+  },
+  "category_neutral": {
+    "message": "Unrelated"
+  },
+  "category_oppose": {
+    "message": "Opposes the original post"
+  },
+  "category_support": {
+    "message": "Supports the original post"
+  },
+  "category_uncertain": {
+    "message": "Uncertain"
+  },
+  "extension_description": {
+    "message": "Show reply probabilities on X, block matching accounts, and manage history and your allowlist."
+  },
+  "match_probability": {
+    "message": "Match probability"
+  },
+  "model_confidence": {
+    "message": "Model confidence"
+  },
+  "pause": {
+    "message": "Pause"
+  },
+  "resume": {
+    "message": "Resume"
+  },
+  "save_settings": {
+    "message": "Save settings"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "support_probability": {
+    "message": "Support probability"
+  },
+  "ui_access_to_this_api_endpoint_was_not_granted_settings_were": {
+    "message": "Access to this API endpoint was not granted. Settings were not saved."
+  },
+  "ui_account_changed_or_could_not_be_verified_action_stopped": {
+    "message": "Account changed or could not be verified. Action stopped."
+  },
+  "ui_account_changed_start_the_task_again": {
+    "message": "Account changed. Start the task again."
+  },
+  "ui_account_verification_failed": {
+    "message": "Account verification failed."
+  },
+  "ui_accounts": {
+    "message": "$v0$: $v1$ accounts",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_action_already_started_submitted_requests_cannot_be_canceled": {
+    "message": "Action already started. Submitted requests cannot be canceled."
+  },
+  "ui_action_failed": {
+    "message": "Action failed."
+  },
+  "ui_add": {
+    "message": "Add"
+  },
+  "ui_add_an_allowlisted_user": {
+    "message": "Add an allowlisted user"
+  },
+  "ui_add_option": {
+    "message": "＋ Add option"
+  },
+  "ui_add_to_allowlist": {
+    "message": "Add to allowlist"
+  },
+  "ui_add_to_allowlist_2": {
+    "message": "Add @$v0$ to allowlist",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist": {
+    "message": "Added to allowlist."
+  },
+  "ui_added_to_allowlist_2": {
+    "message": "@$v0$ added to allowlist.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist_existing_blocks_can_be_undone_in_history": {
+    "message": "Added to allowlist. Existing blocks can be undone in history."
+  },
+  "ui_added_when_unblocking": {
+    "message": "Added when unblocking"
+  },
+  "ui_aggressive": {
+    "message": "Aggressive"
+  },
+  "ui_agreed_being_on_time_is_basic_courtesy": {
+    "message": "Agreed. Being on time is basic courtesy."
+  },
+  "ui_all": {
+    "message": "All"
+  },
+  "ui_all_accounts": {
+    "message": "All accounts"
+  },
+  "ui_allowlist_is_empty": {
+    "message": "Allowlist is empty"
+  },
+  "ui_allowlist_note": {
+    "message": "Allowlist note"
+  },
+  "ui_allowlisted_not_sent_to_jev": {
+    "message": "Allowlisted; not sent to Jev"
+  },
+  "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
+    "message": "Allowlisted users are not analyzed or auto-blocked. Existing blocks must be undone manually."
+  },
+  "ui_already_blocked": {
+    "message": "Already blocked"
+  },
+  "ui_already_queued_for_undo": {
+    "message": "Already queued for undo"
+  },
+  "ui_also_allowlist_this_user_to_skip_future_analysis": {
+    "message": "Also allowlist this user to skip future analysis"
+  },
+  "ui_also_stops_analysis_of_this_post_in_all_tabs_to": {
+    "message": "Also stops analysis of this post in all tabs. To unblock, keep any X page signed in to the same account open."
+  },
+  "ui_analysis_canceled": {
+    "message": "Analysis canceled."
+  },
+  "ui_analysis_needs_attention": {
+    "message": "Analysis needs attention: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_analysis_paused": {
+    "message": "Analysis paused"
+  },
+  "ui_analysis_rules": {
+    "message": "Analysis rules"
+  },
+  "ui_analysis_rules_block_s_b": {
+    "message": "Analysis rules · block s.b."
+  },
+  "ui_analyzing_this_reply": {
+    "message": "Analyzing this reply"
+  },
+  "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
+    "message": "Animation preview: analysis and new blocks are disabled. Exit with blockSBDebug.disable()."
+  },
+  "ui_animation_style": {
+    "message": "Animation style"
+  },
+  "ui_api_domain_changed_enter_the_new_service_s_api_key": {
+    "message": "API domain changed. Enter the new service's API key again."
+  },
+  "ui_api_endpoint": {
+    "message": "API endpoint"
+  },
+  "ui_api_endpoint_access_not_granted_save_and_grant_access_in": {
+    "message": "API endpoint access not granted. Save and grant access in Model settings."
+  },
+  "ui_api_endpoint_must_use_https_without_credentials_query_parameters_or": {
+    "message": "API endpoint must use HTTPS, without credentials, query parameters or fragments."
+  },
+  "ui_at_most": {
+    "message": "at most"
+  },
+  "ui_auto_block": {
+    "message": "Auto-block:"
+  },
+  "ui_auto_block_model_confidence": {
+    "message": "Auto-block: model confidence ≥"
+  },
+  "ui_auto_hidden": {
+    "message": "Auto-hidden · $v0$ $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_auto_hide": {
+    "message": "Auto-hide:"
+  },
+  "ui_auto_hide_replies": {
+    "message": "Auto-hide replies"
+  },
+  "ui_auto_hide_threshold_must_be_below_the_auto_block_threshold": {
+    "message": "Auto-hide threshold must be below the auto-block threshold."
+  },
+  "ui_auto_load_stopped_due_to_a_service_or_loading_error": {
+    "message": "Auto-load stopped due to a service or loading error. Resolve it, then enable again."
+  },
+  "ui_auto_load_stopped_this_task_reached_the_2_000_reply": {
+    "message": "Auto-load stopped: this task reached the 2,000-reply analysis limit"
+  },
+  "ui_auto_loading": {
+    "message": " · Auto-loading"
+  },
+  "ui_automatically_load_more_replies_pauses_when_you_switch_pages_or": {
+    "message": "Automatically load more replies. Pauses when you switch pages or tabs."
+  },
+  "ui_back": {
+    "message": "Back"
+  },
+  "ui_background_interrupted_before_submission_you_can_retry": {
+    "message": "Background interrupted before submission. You can retry."
+  },
+  "ui_background_interrupted_before_the_final_http_response_no_automatic_retry": {
+    "message": "Background interrupted before the final HTTP response. No automatic retry; review the record manually."
+  },
+  "ui_background_interrupted_result_unknown_verify_the_status_before_retrying": {
+    "message": "Background interrupted; result unknown. Verify the status before retrying."
+  },
+  "ui_balanced": {
+    "message": "Balanced"
+  },
+  "ui_block": {
+    "message": "Block"
+  },
+  "ui_block_2": {
+    "message": "Block @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_agreeing_repliers": {
+    "message": "Block @$v0$ and agreeing repliers",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_apply_reply_rules": {
+    "message": "Block @$v0$ and apply reply rules",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_remove_their_other_replies": {
+    "message": "Block @$v0$ and remove their other replies",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_for_did_not_complete_replies_restored_check_the_trash": {
+    "message": "Block for @$v0$ did not complete. Replies restored; check the trash.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_must_be_true_or_false": {
+    "message": "$v0$: block must be true or false.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_on_match": {
+    "message": "Block on match"
+  },
+  "ui_block_queue_needs_attention_open_the_trash_to_review": {
+    "message": "Block queue needs attention. Open the trash to review."
+  },
+  "ui_block_request_failed_http": {
+    "message": "Block request failed (HTTP $v0$). $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_block_request_received_an_http_success_response_the_relationship_was": {
+    "message": "Block request received an HTTP success response; the relationship was not queried."
+  },
+  "ui_block_request_timed_out_or_disconnected_without_http_success_not": {
+    "message": "Block request timed out or disconnected without HTTP success. Not retried automatically."
+  },
+  "ui_block_requests_are_submitted_by_the_background_queue": {
+    "message": "Block requests are submitted by the background queue."
+  },
+  "ui_block_s_b_block_history": {
+    "message": "block s.b. · Block history"
+  },
+  "ui_block_s_b_cache_cleanup_failed": {
+    "message": "block s.b.: Cache cleanup failed."
+  },
+  "ui_block_s_b_cache_read_failed_using_online_analysis": {
+    "message": "block s.b.: Cache read failed; using online analysis."
+  },
+  "ui_block_s_b_cache_write_failed_this_result_is_still": {
+    "message": "block s.b.: Cache write failed; this result is still usable."
+  },
+  "ui_block_s_b_cannot_read_queue_will_retry_on_next": {
+    "message": "block s.b.: Cannot read queue; will retry on next wake."
+  },
+  "ui_block_s_b_no_reply_to_preview_scroll_to_the": {
+    "message": "[block s.b.] No reply to preview. Scroll to the replies or provide a visible reply's post ID."
+  },
+  "ui_block_s_b_panel": {
+    "message": "block s.b. panel"
+  },
+  "ui_block_somebody_panel": {
+    "message": "block somebody panel"
+  },
+  "ui_block_submission_failed_check_the_trash": {
+    "message": " · Block submission failed; check the trash"
+  },
+  "ui_block_target": {
+    "message": "Block target"
+  },
+  "ui_block_threshold": {
+    "message": "Block threshold $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_threshold_cannot_be_below_0_5": {
+    "message": "Block threshold cannot be below 0.5."
+  },
+  "ui_block_threshold_confidence_must_be": {
+    "message": "Block threshold $v0$ · Confidence must be ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_blocked": {
+    "message": "Blocked"
+  },
+  "ui_blocked_manually": {
+    "message": "Blocked manually"
+  },
+  "ui_cache_is_in_use_by_another_window": {
+    "message": "Cache is in use by another window"
+  },
+  "ui_cache_limit_must_be_an_integer_from_100_to_100": {
+    "message": "Cache limit must be an integer from 100 to 100,000."
+  },
+  "ui_cache_open_timed_out": {
+    "message": "Cache open timed out"
+  },
+  "ui_cache_transaction_failed": {
+    "message": "Cache transaction failed"
+  },
+  "ui_cancel_task": {
+    "message": "Cancel task"
+  },
+  "ui_cancel_unsent_requests": {
+    "message": "Cancel unsent requests"
+  },
+  "ui_canceled": {
+    "message": "Canceled"
+  },
+  "ui_cannot_block_the_currently_signed_in_account": {
+    "message": "Cannot block the currently signed-in account."
+  },
+  "ui_cannot_connect_to_jev_right_now_reply_left_unchanged": {
+    "message": "Cannot connect to Jev right now. Reply left unchanged."
+  },
+  "ui_cannot_connect_to_the_extension": {
+    "message": "Cannot connect to the extension."
+  },
+  "ui_cannot_connect_to_the_extension_reload_the_extension_and_this": {
+    "message": "Cannot connect to the extension. Reload the extension and this page."
+  },
+  "ui_cannot_identify_the_post_link": {
+    "message": "Cannot identify the post link."
+  },
+  "ui_cannot_identify_the_task_s_original_post": {
+    "message": "Cannot identify the task's original post."
+  },
+  "ui_cannot_preview": {
+    "message": "Cannot preview: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_cannot_verify_account_status": {
+    "message": "Cannot verify account status."
+  },
+  "ui_cannot_verify_the_existing_block_no_action_taken": {
+    "message": "Cannot verify the existing block. No action taken."
+  },
+  "ui_category": {
+    "message": "Category"
+  },
+  "ui_cautious": {
+    "message": "Cautious"
+  },
+  "ui_checked": {
+    "message": "Checked $v0$$v1$$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_classification_prompt": {
+    "message": "Classification prompt"
+  },
+  "ui_clear_canceled_records": {
+    "message": "Clear canceled records?"
+  },
+  "ui_clear_canceled_records_2": {
+    "message": "Clear canceled records"
+  },
+  "ui_clear_records": {
+    "message": "Clear records"
+  },
+  "ui_close": {
+    "message": "Close"
+  },
+  "ui_close_panel": {
+    "message": "Close panel"
+  },
+  "ui_close_preview": {
+    "message": "Close preview"
+  },
+  "ui_confidence": {
+    "message": "Confidence $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_confidence_2": {
+    "message": "$v0$ · Confidence $v1$%$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_configured": {
+    "message": "Configured"
+  },
+  "ui_confirm": {
+    "message": "Confirm"
+  },
+  "ui_connect_jev_first": {
+    "message": "Connect Jev first."
+  },
+  "ui_connect_jev_in_settings_first": {
+    "message": "Connect Jev in Settings first."
+  },
+  "ui_connecting": {
+    "message": "Connecting…"
+  },
+  "ui_contains_an_unknown_variable": {
+    "message": "$v0$ contains an unknown variable: $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_contains_unread_media": {
+    "message": "Contains unread media"
+  },
+  "ui_could_not_save_reply_context": {
+    "message": "Could not save reply context"
+  },
+  "ui_could_not_save_reply_context_retrying": {
+    "message": "Could not save reply context. Retrying."
+  },
+  "ui_could_not_switch_automatically_choose_most_recent_on_x_to": {
+    "message": "Could not switch automatically. Choose Most recent on X to continue."
+  },
+  "ui_could_not_sync_task_status": {
+    "message": "Could not sync task status: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria": {
+    "message": "$v0$ criteria",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria_which_replies_belong_in_this_category": {
+    "message": "Criteria: which replies belong in this category?"
+  },
+  "ui_current_block_status_on_x_verified": {
+    "message": "Current block status on X verified."
+  },
+  "ui_current_thread_task_changed": {
+    "message": "Current thread task changed."
+  },
+  "ui_current_thread_task_is_paused_or_changed": {
+    "message": "Current thread task is paused or changed."
+  },
+  "ui_custom": {
+    "message": "Custom"
+  },
+  "ui_customize_prompt": {
+    "message": "Customize prompt ↗"
+  },
+  "ui_decision_details": {
+    "message": "Decision details"
+  },
+  "ui_delete": {
+    "message": "Delete"
+  },
+  "ui_delete_option": {
+    "message": "Delete option"
+  },
+  "ui_detection_policy": {
+    "message": "Detection policy"
+  },
+  "ui_direct_parent_reply_context_is_missing": {
+    "message": "Direct parent reply context is missing"
+  },
+  "ui_discard_unsaved_changes_and_load_the_latest_settings": {
+    "message": "Discard unsaved changes and load the latest settings?"
+  },
+  "ui_dismiss_allowlist_notice": {
+    "message": "Dismiss allowlist notice"
+  },
+  "ui_don_t_show_again": {
+    "message": "Don't show again"
+  },
+  "ui_edit_note": {
+    "message": "Edit note"
+  },
+  "ui_editing_mode": {
+    "message": "Editing mode"
+  },
+  "ui_end_of_x_s_results_queued_blocks_will_continue": {
+    "message": "End of X's results · Queued blocks will continue"
+  },
+  "ui_endpoint_did_not_return_a_valid_jev_result_settings_were": {
+    "message": "Endpoint did not return a valid Jev result. Settings were not saved."
+  },
+  "ui_enter_a_valid_api_key": {
+    "message": "Enter a valid API key."
+  },
+  "ui_enter_an_x_username_or_profile_link": {
+    "message": "Enter an X username or profile link."
+  },
+  "ui_enter_api_key": {
+    "message": "Enter API key"
+  },
+  "ui_enter_the_full_https_api_endpoint": {
+    "message": "Enter the full HTTPS API endpoint."
+  },
+  "ui_enter_the_full_https_url_of_a_jev_compatible_endpoint": {
+    "message": "Enter the full HTTPS URL of a Jev-compatible endpoint."
+  },
+  "ui_enter_this_service_s_api_key": {
+    "message": "Enter this service's API key"
+  },
+  "ui_enter_your_jev_api_key_in_settings_first": {
+    "message": "Enter your Jev API key in Settings first."
+  },
+  "ui_excluded_from_this_automatic_task": {
+    "message": "Excluded from this automatic task"
+  },
+  "ui_existing_blocks_or_accounts_managed_by_later_records_will_be": {
+    "message": "$v0$ existing blocks or accounts managed by later records will be kept.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_expanded_request_too_large_reduce_repeated_variables_or_shorten_the": {
+    "message": "Expanded request too large. Reduce repeated variables or shorten the template."
+  },
+  "ui_expands_variables_locally_without_calling_an_api": {
+    "message": "Expands variables locally without calling an API."
+  },
+  "ui_export": {
+    "message": "Export"
+  },
+  "ui_export_history_and_allowlist": {
+    "message": "Export history and allowlist"
+  },
+  "ui_extension_disconnected_refresh_this_page": {
+    "message": "Extension disconnected. Refresh this page."
+  },
+  "ui_failed_or_unconfirmed_items_need_separate_review_they_will_not": {
+    "message": "$v0$ failed or unconfirmed items need separate review; they will not be marked as undone.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_by_signed_in_account": {
+    "message": "Filter by signed-in account"
+  },
+  "ui_filter_records": {
+    "message": "Filter records"
+  },
+  "ui_final_request_content": {
+    "message": "Final request content"
+  },
+  "ui_fly_to_trash": {
+    "message": "Fly to trash"
+  },
+  "ui_follow_system_reduced_motion_preference": {
+    "message": "Follow system reduced-motion preference"
+  },
+  "ui_for_http_only_records_the_previous_block_status_was_not": {
+    "message": "For HTTP-only records, the previous block status was not checked. Unblocking removes the account's current block."
+  },
+  "ui_future_replies_by_will_follow_the_current_rules_existing_blocks": {
+    "message": "Future replies by @$v0$ will follow the current rules. Existing blocks will not change.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_github_repository": {
+    "message": "GitHub repository"
+  },
+  "ui_has_unknown_fields_or_an_invalid_format": {
+    "message": "$v0$ has unknown fields or an invalid format.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_has_unmatched_variable_braces": {
+    "message": "$v0$ has unmatched variable braces.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_hide": {
+    "message": "Hide"
+  },
+  "ui_hide_details": {
+    "message": "Hide details"
+  },
+  "ui_hide_range": {
+    "message": "Hide range: $v0$% ≤ $v1$ < $v2$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_history_has_reached_5_000_records_export_and_clear_completed": {
+    "message": "History has reached 5,000 records. Export and clear completed records."
+  },
+  "ui_if_you_agree_to_meet_you_should_be_on_time": {
+    "message": "If you agree to meet, you should be on time."
+  },
+  "ui_incomplete_text": {
+    "message": "Incomplete text"
+  },
+  "ui_input": {
+    "message": "Input"
+  },
+  "ui_input_template": {
+    "message": "Input template"
+  },
+  "ui_insert": {
+    "message": "Insert {{$v0$}}",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_insert_input_variable": {
+    "message": "Insert input variable"
+  },
+  "ui_insert_prompt_variable": {
+    "message": "Insert prompt variable"
+  },
+  "ui_insufficient_jev_balance_check_your_account": {
+    "message": "Insufficient Jev balance. Check your account."
+  },
+  "ui_internal_id": {
+    "message": "Internal ID · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_analysis_result": {
+    "message": "Invalid analysis result"
+  },
+  "ui_invalid_context_request": {
+    "message": "Invalid context request."
+  },
+  "ui_invalid_jev_classification_format_reply_skipped": {
+    "message": "Invalid Jev classification format; reply skipped"
+  },
+  "ui_invalid_jev_key_update_it_in_settings": {
+    "message": "Invalid Jev key. Update it in Settings."
+  },
+  "ui_invalid_jev_probability_sum_reply_skipped": {
+    "message": "Invalid Jev probability sum ($v0$); reply skipped",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_json_check_brackets_commas_and_quotes": {
+    "message": "Invalid JSON. Check brackets, commas, and quotes."
+  },
+  "ui_invalid_model_name": {
+    "message": "Invalid model name."
+  },
+  "ui_invalid_page": {
+    "message": "Invalid page."
+  },
+  "ui_invalid_request_source": {
+    "message": "Invalid request source."
+  },
+  "ui_invalid_results": {
+    "message": " · $v0$ invalid results",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_x_origin": {
+    "message": "Invalid X origin."
+  },
+  "ui_is_below": {
+    "message": "$v0$ is below $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_jev_classification_disagrees_with_the_highest_probability_reply_skipped": {
+    "message": "Jev classification disagrees with the highest probability; reply skipped"
+  },
+  "ui_jev_denied_access_check_your_permissions": {
+    "message": "Jev denied access. Check your permissions."
+  },
+  "ui_jev_rate_limit_reached_analysis_paused_retry_later": {
+    "message": "Jev rate limit reached. Analysis paused; retry later."
+  },
+  "ui_jev_request_cache": {
+    "message": "Jev request cache"
+  },
+  "ui_jev_response_interrupted_reply_left_unchanged": {
+    "message": "Jev response interrupted. Reply left unchanged."
+  },
+  "ui_jev_response_too_large_reply_skipped": {
+    "message": "Jev response too large. Reply skipped."
+  },
+  "ui_jev_returned_an_empty_result": {
+    "message": "Jev returned an empty result."
+  },
+  "ui_jev_returned_an_unreadable_result": {
+    "message": "Jev returned an unreadable result."
+  },
+  "ui_jev_returned_http_reply_left_unchanged": {
+    "message": "Jev returned HTTP $v0$. Reply left unchanged.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_jev_timed_out_reply_left_unchanged": {
+    "message": "Jev timed out. Reply left unchanged."
+  },
+  "ui_leave_blank_to_keep_the_saved_key": {
+    "message": "Leave blank to keep the saved key"
+  },
+  "ui_left_thread_queued_blocks_continue_in_background": {
+    "message": "Left thread · Queued blocks continue in background"
+  },
+  "ui_load_latest_settings": {
+    "message": "Load latest settings"
+  },
+  "ui_loading": {
+    "message": "Loading…"
+  },
+  "ui_management": {
+    "message": "Management"
+  },
+  "ui_maximum_entries": {
+    "message": "Maximum entries"
+  },
+  "ui_missing_parent_context_in_this_page_and_local_records_load": {
+    "message": "Missing parent context in this page and local records. Load the missing replies to continue."
+  },
+  "ui_model": {
+    "message": "Model"
+  },
+  "ui_model_confidence_is_below": {
+    "message": "Model confidence is below $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_model_selection": {
+    "message": "Model selection"
+  },
+  "ui_model_settings": {
+    "message": "Model settings"
+  },
+  "ui_model_settings_changed_in_another_window_save_again": {
+    "message": "Model settings changed in another window. Save again."
+  },
+  "ui_move_down": {
+    "message": "Move down"
+  },
+  "ui_move_up": {
+    "message": "Move up"
+  },
+  "ui_must_be_text_characters": {
+    "message": "$v0$ must be text: $v1$ $v2$ characters.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_name": {
+    "message": "$v0$ name",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_needs_attention": {
+    "message": "Needs attention"
+  },
+  "ui_needs_attention_2": {
+    "message": "Needs attention"
+  },
+  "ui_needs_attention_open_trash": {
+    "message": "Needs attention · Open trash"
+  },
+  "ui_needs_verification": {
+    "message": "Needs verification"
+  },
+  "ui_new_analysis_will_stop_block_history_and_the_allowlist_will": {
+    "message": "New analysis will stop. Block history and the allowlist will remain."
+  },
+  "ui_no_analysis_no_automatic_blocking": {
+    "message": "No analysis · No automatic blocking"
+  },
+  "ui_no_block_history_yet": {
+    "message": "No block history yet"
+  },
+  "ui_no_blocks_recorded_for_this_task_yet": {
+    "message": "No blocks recorded for this task yet."
+  },
+  "ui_no_matching_tasks": {
+    "message": "No matching tasks"
+  },
+  "ui_no_matching_users": {
+    "message": "No matching users"
+  },
+  "ui_no_new_replies_for_30_seconds_auto_load_stopped_check": {
+    "message": "No new replies for 30 seconds. Auto-load stopped; check manually and enable again."
+  },
+  "ui_no_probability_available": {
+    "message": "No probability available"
+  },
+  "ui_no_readable_text": {
+    "message": "No readable text"
+  },
+  "ui_no_records_need_verification": {
+    "message": "No records need verification."
+  },
+  "ui_no_text_to_analyze": {
+    "message": "No text to analyze"
+  },
+  "ui_no_verifiable_result_received": {
+    "message": "No verifiable result received."
+  },
+  "ui_nonempty_at_most": {
+    "message": "nonempty, at most"
+  },
+  "ui_not_analyzed_yet": {
+    "message": "Not analyzed yet"
+  },
+  "ui_not_auto_blocked": {
+    "message": " · Not auto-blocked: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_not_connected": {
+    "message": "Not connected"
+  },
+  "ui_not_enough_text_to_decide": {
+    "message": "Not enough text to decide"
+  },
+  "ui_note": {
+    "message": "Note"
+  },
+  "ui_note_for": {
+    "message": "Note for @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_note_optional": {
+    "message": "Note (optional)"
+  },
+  "ui_older_results_may_lack_a_full_distribution_missing_values_show": {
+    "message": "Older results may lack a full distribution. Missing values show —."
+  },
+  "ui_only_http_success_was_recorded_the_prior_block_status_was": {
+    "message": "Only HTTP success was recorded; the prior block status was not checked. Unblocking removes the account's current block."
+  },
+  "ui_only_unblocked_or_canceled_local_records_will_be_deleted_active": {
+    "message": "Only unblocked or canceled local records will be deleted. Active blocks and their undo controls stay available. This does not change blocks on X."
+  },
+  "ui_open_settings": {
+    "message": "Open settings"
+  },
+  "ui_open_x_signed_in_as_first": {
+    "message": "Open X signed in as @$v0$ first.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_open_x_signed_in_as_once_to_connect_this_older": {
+    "message": "Open X signed in as @$v0$ once to connect this older task to the background queue.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option": {
+    "message": "Option $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_criteria": {
+    "message": "Option $v0$ criteria",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_internal_id": {
+    "message": "Option $v0$ internal ID",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_name": {
+    "message": "Option name"
+  },
+  "ui_option_name_2": {
+    "message": "Option $v0$ name",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_probabilities": {
+    "message": "Option probabilities"
+  },
+  "ui_options_blocking_options": {
+    "message": "$v0$ options · $v1$ blocking options",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_original_author": {
+    "message": "Original author"
+  },
+  "ui_original_author_blocked_by_this_task": {
+    "message": "Original author; blocked by this task"
+  },
+  "ui_original_post_reply_or_parent_text_is_incomplete": {
+    "message": "Original post, reply, or parent text is incomplete"
+  },
+  "ui_output_options": {
+    "message": "Output options"
+  },
+  "ui_page_closed_or_connection_lost_verify_the_outcome": {
+    "message": "Page closed or connection lost. Verify the outcome."
+  },
+  "ui_page_experience": {
+    "message": "Page experience"
+  },
+  "ui_particle_dissolve": {
+    "message": "Particle dissolve"
+  },
+  "ui_paused": {
+    "message": "Paused"
+  },
+  "ui_pending": {
+    "message": "Pending"
+  },
+  "ui_post_by": {
+    "message": "Post by @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_preview_request": {
+    "message": "Preview request"
+  },
+  "ui_probabilities_by_option": {
+    "message": "Probabilities by option"
+  },
+  "ui_processing": {
+    "message": "Processing"
+  },
+  "ui_prompt": {
+    "message": "Prompt"
+  },
+  "ui_prompt_can_contain_up_to_12_000_characters": {
+    "message": "Prompt can contain up to 12,000 characters."
+  },
+  "ui_queue_for_unblocking": {
+    "message": "Queue for unblocking"
+  },
+  "ui_queue_waiting_for_to_sign_in_no_other_account_will": {
+    "message": "Queue waiting for @$v0$ to sign in; no other account will be used.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_queued": {
+    "message": "Queued"
+  },
+  "ui_raw_configuration": {
+    "message": "Raw configuration"
+  },
+  "ui_recorded": {
+    "message": "Recorded $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reload": {
+    "message": "Reload"
+  },
+  "ui_remove": {
+    "message": "Remove"
+  },
+  "ui_remove_from_allowlist": {
+    "message": "Remove from allowlist"
+  },
+  "ui_remove_from_allowlist_2": {
+    "message": "Remove from allowlist?"
+  },
+  "ui_remove_jev_api_key": {
+    "message": "Remove Jev API key?"
+  },
+  "ui_remove_key": {
+    "message": "Remove key"
+  },
+  "ui_remove_users_from_the_allowlist_panel": {
+    "message": "Remove users from the allowlist panel."
+  },
+  "ui_replies_failed_to_load_retry_on_x": {
+    "message": "Replies failed to load$v0$. Retry on X.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_replies_ready_syncing_task_status": {
+    "message": "Replies ready · Syncing task status"
+  },
+  "ui_reply_automatically_hidden": {
+    "message": "Reply automatically hidden"
+  },
+  "ui_reply_context_cache_is_in_use": {
+    "message": "Reply context cache is in use"
+  },
+  "ui_reply_context_cache_open_timed_out": {
+    "message": "Reply context cache open timed out"
+  },
+  "ui_reply_does_not_belong_to_the_selected_conversation": {
+    "message": "Reply does not belong to the selected conversation."
+  },
+  "ui_reply_kept_no_automatic_retry_in_this_task": {
+    "message": "$v0$; reply kept, no automatic retry in this task",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reply_removal_animation": {
+    "message": "Reply removal animation"
+  },
+  "ui_reply_that_triggered_the_decision": {
+    "message": "Reply that triggered the decision"
+  },
+  "ui_request_preview": {
+    "message": "Request preview"
+  },
+  "ui_restore_defaults": {
+    "message": "Restore defaults"
+  },
+  "ui_resume_tasks": {
+    "message": "Resume tasks"
+  },
+  "ui_retry": {
+    "message": "Retry"
+  },
+  "ui_rule": {
+    "message": "Rule"
+  },
+  "ui_rule_json": {
+    "message": "Rule JSON"
+  },
+  "ui_rule_too_large_shorten_descriptions_max_120_000_characters_total": {
+    "message": "Rule too large. Shorten descriptions (max 120,000 characters total)."
+  },
+  "ui_sample_original_post": {
+    "message": "Sample original post"
+  },
+  "ui_sample_parent_reply_leave_blank_for_direct_replies": {
+    "message": "Sample parent reply (leave blank for direct replies)"
+  },
+  "ui_sample_reply": {
+    "message": "Sample reply"
+  },
+  "ui_save": {
+    "message": "Save"
+  },
+  "ui_save_and_connect": {
+    "message": "Save and connect"
+  },
+  "ui_save_connection_details_in_model_settings": {
+    "message": "Save connection details in Model settings."
+  },
+  "ui_save_failed": {
+    "message": "Save failed"
+  },
+  "ui_save_rules": {
+    "message": "Save rules"
+  },
+  "ui_saved": {
+    "message": "Saved"
+  },
+  "ui_saved_and_connected": {
+    "message": "Saved and connected"
+  },
+  "ui_saving": {
+    "message": "Saving…"
+  },
+  "ui_search_allowlist": {
+    "message": "Search allowlist"
+  },
+  "ui_search_block_history": {
+    "message": "Search block history"
+  },
+  "ui_search_usernames_or_reply_text": {
+    "message": "Search usernames or reply text"
+  },
+  "ui_select_at_least_one_option_that_triggers_blocking": {
+    "message": "Select at least one option that triggers blocking."
+  },
+  "ui_select_categories_that_may_trigger_blocking_both_the_chosen_category": {
+    "message": "Select categories that may trigger blocking. Both the chosen category's probability and model confidence must meet your thresholds."
+  },
+  "ui_selected_original_post": {
+    "message": "Selected original post"
+  },
+  "ui_set_between_2_and_255_output_options": {
+    "message": "Set between 2 and 255 output options."
+  },
+  "ui_set_inputs_instructions_and_blocking_options": {
+    "message": "Set inputs, instructions, and blocking options."
+  },
+  "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
+    "message": "Settings changed in another window. Copy your draft, then load the latest settings."
+  },
+  "ui_settings_changed_in_another_window_your_draft_is_kept_copy": {
+    "message": "Settings changed in another window. Your draft is kept. Copy it before loading the latest settings."
+  },
+  "ui_show": {
+    "message": "Show"
+  },
+  "ui_show_details": {
+    "message": "Show details ($v0$)",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_show_entered_key": {
+    "message": "Show entered key"
+  },
+  "ui_show_more_accounts": {
+    "message": "Show more accounts"
+  },
+  "ui_show_more_tasks": {
+    "message": "Show more tasks"
+  },
+  "ui_show_reply": {
+    "message": "Show reply"
+  },
+  "ui_showing_of_records_undo_still_applies_to_the_entire_task": {
+    "message": "Showing $v0$ of $v1$ records. Undo still applies to the entire task.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_some_replies_lack_context": {
+    "message": " · Some replies lack context"
+  },
+  "ui_start_from_a_post_s_menu_on_x": {
+    "message": "Start from a post's menu on X."
+  },
+  "ui_start_from_a_signed_in_x_page_in_a_regular": {
+    "message": "Start from a signed-in X page in a regular window."
+  },
+  "ui_start_from_the_post_menu": {
+    "message": "Start from the post menu."
+  },
+  "ui_stop": {
+    "message": "Stop"
+  },
+  "ui_stop_task": {
+    "message": "Stop task"
+  },
+  "ui_submission_failed": {
+    "message": "Submission failed"
+  },
+  "ui_submitted": {
+    "message": "Submitted"
+  },
+  "ui_submitted_blocked": {
+    "message": "Submitted / blocked"
+  },
+  "ui_submitted_blocked_2": {
+    "message": "Submitted / blocked"
+  },
+  "ui_submitting": {
+    "message": "Submitting"
+  },
+  "ui_switching_to_most_recent_using_the_page_menu": {
+    "message": "Switching to Most recent using the page menu"
+  },
+  "ui_target_identity_could_not_be_verified_action_stopped": {
+    "message": "Target identity could not be verified. Action stopped."
+  },
+  "ui_task_canceled": {
+    "message": "Task canceled"
+  },
+  "ui_task_created_open_this_post_s_replies_to_switch_automatically": {
+    "message": "Task created. Open this post's replies to switch automatically to Most recent."
+  },
+  "ui_task_ended_page_changed_or_account_unavailable_start_again_from": {
+    "message": "Task ended, page changed, or account unavailable. Start again from the post menu."
+  },
+  "ui_task_history": {
+    "message": "Task history"
+  },
+  "ui_task_not_found_or_already_cleared": {
+    "message": "Task not found or already cleared."
+  },
+  "ui_task_running": {
+    "message": "Task running"
+  },
+  "ui_task_stopped": {
+    "message": "Task stopped"
+  },
+  "ui_task_stopped_accounts_queued_for_undo_unsent_requests_canceled_requests": {
+    "message": "Task stopped: $v0$ accounts queued for undo, $v1$ unsent requests canceled, $v2$ requests awaiting a response.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_task_stopped_submitted_blocks_remain_use_undo_all_blocks_to": {
+    "message": "Task stopped. Submitted blocks remain; use Undo all blocks to reverse them."
+  },
+  "ui_tasks_resumed_failed_items_can_be_retried_individually": {
+    "message": "Tasks resumed. Failed items can be retried individually."
+  },
+  "ui_templates_can_contain_up_to_12_000_characters": {
+    "message": "Templates can contain up to 12,000 characters."
+  },
+  "ui_the_background_service_could_not_authorize_this_action": {
+    "message": "The background service could not authorize this action."
+  },
+  "ui_the_chosen_category_is_not_marked_for_blocking": {
+    "message": "The chosen category is not marked for blocking"
+  },
+  "ui_the_model_did_not_classify_this_as_clear_support": {
+    "message": "The model did not classify this as clear support"
+  },
+  "ui_the_original_author_is_allowlisted_remove_them_before_starting": {
+    "message": "The original author is allowlisted. Remove them before starting."
+  },
+  "ui_the_original_post_contains_media": {
+    "message": "The original post contains media"
+  },
+  "ui_the_original_post_contains_media_2": {
+    "message": "The original post contains media"
+  },
+  "ui_the_username_now_belongs_to_a_different_account_action_stopped": {
+    "message": "The username now belongs to a different account. Action stopped."
+  },
+  "ui_this_account_already_has_a_pending_action": {
+    "message": "This account already has a pending action."
+  },
+  "ui_this_account_needs_review_open_the_trash_to_check_its": {
+    "message": "This account needs review. Open the trash to check its record."
+  },
+  "ui_this_extension_did_not_submit_the_block_so_it_cannot": {
+    "message": "This extension did not submit the block, so it cannot undo it here."
+  },
+  "ui_this_record_cannot_be_unblocked_right_now": {
+    "message": "This record cannot be unblocked right now."
+  },
+  "ui_this_task_has_analyzed_2_000_replies_stop_and_start": {
+    "message": "This task has analyzed 2,000 replies. Stop and start a new task."
+  },
+  "ui_this_task_was_undone_start_again_from_the_original_post": {
+    "message": "This task was undone. Start again from the original post to block again."
+  },
+  "ui_this_user_is_allowlisted": {
+    "message": "This user is allowlisted"
+  },
+  "ui_this_user_is_allowlisted_remove_them_first": {
+    "message": "This user is allowlisted. Remove them first."
+  },
+  "ui_this_user_is_already_allowlisted": {
+    "message": "This user is already allowlisted."
+  },
+  "ui_thread_changed_try_again": {
+    "message": "Thread changed. Try again."
+  },
+  "ui_thread_task_changed": {
+    "message": "Thread task changed."
+  },
+  "ui_threshold_must_be_between_0_and_1": {
+    "message": "Threshold must be between 0 and 1."
+  },
+  "ui_to_unblock_open_any_x_page_signed_in_as": {
+    "message": "To unblock, open any X page signed in as @$v0$.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_toggle_auto_load_from_the_replies": {
+    "message": "Toggle auto-load from the replies."
+  },
+  "ui_unblock": {
+    "message": "Unblock"
+  },
+  "ui_unblock_failed": {
+    "message": "Unblock failed"
+  },
+  "ui_unblock_pending": {
+    "message": "Unblock pending"
+  },
+  "ui_unblock_request_queued": {
+    "message": "Unblock request queued."
+  },
+  "ui_unblocked": {
+    "message": "Unblocked"
+  },
+  "ui_unblocking": {
+    "message": "Unblocking"
+  },
+  "ui_undo_after_request_completes": {
+    "message": "Undo after request completes"
+  },
+  "ui_undo_all_blocks": {
+    "message": "Undo all blocks"
+  },
+  "ui_undo_needs_attention": {
+    "message": "Undo needs attention"
+  },
+  "ui_undo_task": {
+    "message": "Undo task"
+  },
+  "ui_undo_this_entire_task_for_s_post_using_includes_the": {
+    "message": "Undo this entire task for @$v0$'s post, using @$v1$. Includes the author and reply accounts, regardless of the current search or filter.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_undo_this_task_s_blocks": {
+    "message": "Undo this task's blocks?"
+  },
+  "ui_undoing": {
+    "message": "Undoing"
+  },
+  "ui_undone": {
+    "message": "Undone"
+  },
+  "ui_undone_canceled": {
+    "message": "Undone / canceled"
+  },
+  "ui_unknown_action": {
+    "message": "Unknown action."
+  },
+  "ui_unknown_animation_effect": {
+    "message": "Unknown animation effect."
+  },
+  "ui_unknown_decision_mode": {
+    "message": "Unknown decision mode."
+  },
+  "ui_unknown_variable": {
+    "message": "Unknown variable: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_unsaved_changes": {
+    "message": "Unsaved changes"
+  },
+  "ui_unsupported_rule_version_use_version_1": {
+    "message": "Unsupported rule version. Use version 1."
+  },
+  "ui_use_a_unique_id_starting_with_a_lowercase_letter_containing": {
+    "message": "$v0$: use a unique ID starting with a lowercase letter, containing only letters, numbers or underscores (max 48).",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_use_s_x_session_to_unblock_keep_an_x_page": {
+    "message": "Use @$v0$'s X session to unblock @$v1$. Keep an X page for that account open. This user will not be automatically blocked again in this task.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_use_the_button_next_to_a_reply": {
+    "message": "Use the button next to a reply."
+  },
+  "ui_use_the_history_panel": {
+    "message": "Use the history panel."
+  },
+  "ui_use_the_management_panel_for_this_action": {
+    "message": "Use the management panel for this action."
+  },
+  "ui_username_or_x_profile_link": {
+    "message": "@username or X profile link"
+  },
+  "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
+    "message": "Usernames must be 1–15 letters, digits, or underscores."
+  },
+  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
+    "message": "Uses the same configuration as the visual editor. Options with block set to true may trigger blocking."
+  },
+  "ui_verify_status": {
+    "message": "Verify status"
+  },
+  "ui_verify_unknown_results_before_retrying": {
+    "message": "Verify unknown results before retrying."
+  },
+  "ui_via_records": {
+    "message": "Via @$v0$ · $v1$ · $v2$ records",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_view_original": {
+    "message": "View original ↗"
+  },
+  "ui_view_post_on_x": {
+    "message": "View post on X ↗"
+  },
+  "ui_view_probabilities_by_option": {
+    "message": "$v0$. View probabilities by option. $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_view_reason": {
+    "message": "View reason"
+  },
+  "ui_visual": {
+    "message": "Visual"
+  },
+  "ui_waiting_for_recent_replies_check_if_x_needs_a_retry": {
+    "message": "Waiting for recent replies. Check if X needs a retry."
+  },
+  "ui_waiting_for_the_first_page_of_recent_replies": {
+    "message": "Waiting for the first page of recent replies"
+  },
+  "ui_waiting_to_analyze_this_reply": {
+    "message": "Waiting to analyze this reply"
+  },
+  "ui_why_this_user_was_processed": {
+    "message": "Why this user was processed"
+  },
+  "ui_x_action_failed_http": {
+    "message": "X action failed (HTTP $v0$).",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_x_did_not_confirm_the_unblock_verify_the_result_first": {
+    "message": "X did not confirm the unblock. Verify the result first."
+  },
+  "ui_x_endpoint_or_target_account_is_unavailable": {
+    "message": "X endpoint or target account is unavailable."
+  },
+  "ui_x_rate_limit_reached_queue_paused": {
+    "message": "X rate limit reached. Queue paused."
+  },
+  "ui_x_refused_the_request_check_your_account_status": {
+    "message": "X refused the request. Check your account status."
+  },
+  "ui_x_refused_this_action_check_your_account_status": {
+    "message": "X refused this action. Check your account status."
+  },
+  "ui_x_request_timed_out_or_connection_was_interrupted": {
+    "message": "X request timed out or connection was interrupted."
+  },
+  "ui_x_returned_a_result_that_could_not_be_verified": {
+    "message": "X returned a result that could not be verified."
+  },
+  "ui_x_returned_an_error": {
+    "message": "X returned an error."
+  },
+  "ui_x_session_expired": {
+    "message": "X session expired."
+  },
+  "ui_x_session_expired_refresh_and_sign_in_again": {
+    "message": "X session expired. Refresh and sign in again."
+  },
+  "ui_x_session_expired_sign_in_to_resume_the_queue": {
+    "message": "X session expired. Sign in to resume the queue."
+  },
+  "ui_x_session_unavailable_sign_in_before_resuming_the_queue": {
+    "message": "X session unavailable. Sign in before resuming the queue."
+  },
+  "ui_you_can_retry_manually_in_history": {
+    "message": "You can retry manually in history."
+  },
+  "ui_you_cannot_block_yourself": {
+    "message": "You cannot block yourself"
+  },
+  "ui_you_cannot_block_yourself_2": {
+    "message": "You cannot block yourself."
+  },
+  "ui_you_chose_to_block_the_original_author_no_model_decision": {
+    "message": "You chose to block the original author. No model decision was used."
+  },
+  "ui_you_manually_blocked_this_user_using_the_reply_button_no": {
+    "message": "You manually blocked this user using the reply button. No model decision was used."
+  },
+  "ui_your_own_reply_not_analyzed": {
+    "message": "Your own reply; not analyzed"
+  },
+  "variable_incomplete_text": {
+    "message": "Text incomplete?"
+  },
+  "variable_original_post": {
+    "message": "Original post text"
+  },
+  "variable_parent_reply": {
+    "message": "Direct parent reply"
+  },
+  "variable_reply": {
+    "message": "Current reply"
+  },
+  "variable_reply_is_direct": {
+    "message": "Direct reply to original?"
+  },
+  "variable_unseen_media": {
+    "message": "Contains unread media?"
+  }
+}

@@ -1,0 +1,1750 @@
+{
+  "action_title": {
+    "message": "block s.b. · 기록, 허용 목록 및 설정"
+  },
+  "agreement_probability": {
+    "message": "동의 확률"
+  },
+  "allowlist": {
+    "message": "허용 목록"
+  },
+  "api_key": {
+    "message": "API 키"
+  },
+  "auto_load_off": {
+    "message": "자동 불러오기: 꺼짐"
+  },
+  "auto_load_on": {
+    "message": "자동 불러오기: 켜짐"
+  },
+  "block_history": {
+    "message": "차단 기록"
+  },
+  "category_neutral": {
+    "message": "무관한 내용"
+  },
+  "category_oppose": {
+    "message": "원문에 반대"
+  },
+  "category_support": {
+    "message": "원문에 동의"
+  },
+  "category_uncertain": {
+    "message": "판단 불가"
+  },
+  "extension_description": {
+    "message": "X 답글의 동의 확률을 표시하고 조건에 맞는 계정을 차단합니다. 직접 차단, 기록 되돌리기, 허용 목록을 지원합니다."
+  },
+  "match_probability": {
+    "message": "일치 확률"
+  },
+  "model_confidence": {
+    "message": "모델 확신도"
+  },
+  "pause": {
+    "message": "일시 정지"
+  },
+  "resume": {
+    "message": "계속"
+  },
+  "save_settings": {
+    "message": "설정 저장"
+  },
+  "settings": {
+    "message": "설정"
+  },
+  "support_probability": {
+    "message": "동의 확률"
+  },
+  "ui_access_to_this_api_endpoint_was_not_granted_settings_were": {
+    "message": "이 API 엔드포인트에 대한 접근 권한이 없어 설정을 저장하지 않았습니다."
+  },
+  "ui_account_changed_or_could_not_be_verified_action_stopped": {
+    "message": "로그인 계정이 변경되었거나 확인할 수 없어 작업을 중단했습니다."
+  },
+  "ui_account_changed_start_the_task_again": {
+    "message": "로그인 계정이 변경되었습니다. 작업을 다시 시작하세요."
+  },
+  "ui_account_verification_failed": {
+    "message": "계정 확인에 실패했습니다."
+  },
+  "ui_accounts": {
+    "message": "$v0$: 계정 $v1$개",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_action_already_started_submitted_requests_cannot_be_canceled": {
+    "message": "작업이 이미 시작되었습니다. 전송된 요청은 취소할 수 없습니다."
+  },
+  "ui_action_failed": {
+    "message": "작업에 실패했습니다."
+  },
+  "ui_add": {
+    "message": "추가"
+  },
+  "ui_add_an_allowlisted_user": {
+    "message": "허용 목록에 사용자 추가"
+  },
+  "ui_add_option": {
+    "message": "＋ 옵션 추가"
+  },
+  "ui_add_to_allowlist": {
+    "message": "허용 목록에 추가"
+  },
+  "ui_add_to_allowlist_2": {
+    "message": "@$v0$ 허용 목록에 추가",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist": {
+    "message": "허용 목록에 추가했습니다."
+  },
+  "ui_added_to_allowlist_2": {
+    "message": "@$v0$을(를) 허용 목록에 추가했습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist_existing_blocks_can_be_undone_in_history": {
+    "message": "허용 목록에 추가했습니다. 기존 차단은 기록에서 해제할 수 있습니다."
+  },
+  "ui_added_when_unblocking": {
+    "message": "차단 해제 시 추가됨"
+  },
+  "ui_aggressive": {
+    "message": "적극적"
+  },
+  "ui_agreed_being_on_time_is_basic_courtesy": {
+    "message": "맞아요. 시간을 지키는 건 기본 예의죠."
+  },
+  "ui_all": {
+    "message": "전체"
+  },
+  "ui_all_accounts": {
+    "message": "모든 계정"
+  },
+  "ui_allowlist_is_empty": {
+    "message": "허용 목록이 비어 있습니다"
+  },
+  "ui_allowlist_note": {
+    "message": "허용 목록 메모"
+  },
+  "ui_allowlisted_not_sent_to_jev": {
+    "message": "허용 목록의 사용자이므로 Jev에 전송하지 않습니다"
+  },
+  "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
+    "message": "허용 목록의 사용자는 분석하거나 자동 차단하지 않습니다. 기존 차단은 직접 해제해야 합니다."
+  },
+  "ui_already_blocked": {
+    "message": "기존에 차단됨"
+  },
+  "ui_already_queued_for_undo": {
+    "message": "이미 되돌리기 대기 중"
+  },
+  "ui_also_allowlist_this_user_to_skip_future_analysis": {
+    "message": "허용 목록에도 추가하여 이후 분석에서 제외"
+  },
+  "ui_also_stops_analysis_of_this_post_in_all_tabs_to": {
+    "message": "모든 탭에서 이 게시물의 분석을 중단합니다. 차단을 해제하는 동안 같은 계정으로 로그인한 X 페이지를 하나 이상 열어 두세요."
+  },
+  "ui_analysis_canceled": {
+    "message": "분석이 취소되었습니다."
+  },
+  "ui_analysis_needs_attention": {
+    "message": "분석 서비스 확인 필요: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_analysis_paused": {
+    "message": "분석 일시 정지됨"
+  },
+  "ui_analysis_rules": {
+    "message": "분석 규칙"
+  },
+  "ui_analysis_rules_block_s_b": {
+    "message": "분석 규칙 · block s.b."
+  },
+  "ui_analyzing_this_reply": {
+    "message": "이 답글을 분석하는 중"
+  },
+  "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
+    "message": "애니메이션 미리보기 중에는 분석과 새 차단을 진행하지 않습니다. blockSBDebug.disable()로 종료하세요."
+  },
+  "ui_animation_style": {
+    "message": "애니메이션 효과"
+  },
+  "ui_api_domain_changed_enter_the_new_service_s_api_key": {
+    "message": "API 도메인이 변경되었습니다. 해당 서비스의 API 키를 다시 입력하세요."
+  },
+  "ui_api_endpoint": {
+    "message": "API 엔드포인트"
+  },
+  "ui_api_endpoint_access_not_granted_save_and_grant_access_in": {
+    "message": "API 엔드포인트 접근 권한이 없습니다. 모델 설정에서 다시 저장하고 권한을 허용하세요."
+  },
+  "ui_api_endpoint_must_use_https_without_credentials_query_parameters_or": {
+    "message": "API 엔드포인트는 HTTPS여야 하며 인증 정보, 쿼리 매개변수, 프래그먼트를 포함할 수 없습니다."
+  },
+  "ui_at_most": {
+    "message": "최대"
+  },
+  "ui_auto_block": {
+    "message": "자동 차단:"
+  },
+  "ui_auto_block_model_confidence": {
+    "message": "자동 차단: 모델 확신도 ≥"
+  },
+  "ui_auto_hidden": {
+    "message": "자동 숨김 · $v0$ $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_auto_hide": {
+    "message": "자동 숨김:"
+  },
+  "ui_auto_hide_replies": {
+    "message": "답글 자동 숨김"
+  },
+  "ui_auto_hide_threshold_must_be_below_the_auto_block_threshold": {
+    "message": "자동 숨김 기준은 자동 차단 기준보다 낮아야 합니다."
+  },
+  "ui_auto_load_stopped_due_to_a_service_or_loading_error": {
+    "message": "서비스 또는 불러오기 오류로 자동 불러오기를 중단했습니다. 해결 후 다시 켜세요"
+  },
+  "ui_auto_load_stopped_this_task_reached_the_2_000_reply": {
+    "message": "작업당 분석 한도인 2,000개에 도달하여 자동 불러오기를 중단했습니다"
+  },
+  "ui_auto_loading": {
+    "message": " · 자동 불러오는 중"
+  },
+  "ui_automatically_load_more_replies_pauses_when_you_switch_pages_or": {
+    "message": "답글을 자동으로 더 불러옵니다. 다른 페이지나 탭으로 이동하면 일시 정지합니다"
+  },
+  "ui_back": {
+    "message": "뒤로"
+  },
+  "ui_background_interrupted_before_submission_you_can_retry": {
+    "message": "전송 전에 백그라운드 작업이 중단되었습니다. 다시 시도할 수 있습니다."
+  },
+  "ui_background_interrupted_before_the_final_http_response_no_automatic_retry": {
+    "message": "백그라운드 작업이 중단되어 최종 HTTP 응답을 받지 못했습니다. 자동 재시도하지 않으니 기록을 직접 확인하세요."
+  },
+  "ui_background_interrupted_result_unknown_verify_the_status_before_retrying": {
+    "message": "백그라운드 작업이 중단되어 결과가 불분명합니다. 기록에서 상태를 확인한 뒤 다시 시도하세요."
+  },
+  "ui_balanced": {
+    "message": "균형"
+  },
+  "ui_block": {
+    "message": "차단"
+  },
+  "ui_block_2": {
+    "message": "@$v0$ 차단",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_agreeing_repliers": {
+    "message": "@$v0$ 및 동의하는 답글 작성자 차단",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_apply_reply_rules": {
+    "message": "@$v0$ 차단 및 답글에 규칙 적용",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_remove_their_other_replies": {
+    "message": "@$v0$ 차단 및 해당 사용자의 다른 답글 숨기기",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_for_did_not_complete_replies_restored_check_the_trash": {
+    "message": "@$v0$ 차단이 완료되지 않아 답글을 복원했습니다. 휴지통에서 기록을 확인하세요.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_must_be_true_or_false": {
+    "message": "$v0$의 block은 true 또는 false여야 합니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_on_match": {
+    "message": "일치 시 차단"
+  },
+  "ui_block_queue_needs_attention_open_the_trash_to_review": {
+    "message": "차단 대기열을 확인해야 합니다. 휴지통을 열어 확인하세요."
+  },
+  "ui_block_request_failed_http": {
+    "message": "차단 요청 실패(HTTP $v0$). $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_block_request_received_an_http_success_response_the_relationship_was": {
+    "message": "차단 요청의 HTTP 성공 응답을 받았습니다. 차단 관계는 별도로 조회하지 않았습니다."
+  },
+  "ui_block_request_timed_out_or_disconnected_without_http_success_not": {
+    "message": "차단 요청 시간이 초과되거나 연결이 끊겨 HTTP 성공을 확인하지 못했습니다. 자동 재시도하지 않았습니다."
+  },
+  "ui_block_requests_are_submitted_by_the_background_queue": {
+    "message": "차단 요청은 확장 프로그램의 백그라운드 대기열에서 전송합니다."
+  },
+  "ui_block_s_b_block_history": {
+    "message": "block s.b. · 차단 기록"
+  },
+  "ui_block_s_b_cache_cleanup_failed": {
+    "message": "block s.b.: 캐시 정리에 실패했습니다."
+  },
+  "ui_block_s_b_cache_read_failed_using_online_analysis": {
+    "message": "block s.b.: 캐시를 읽지 못해 온라인 분석을 사용합니다."
+  },
+  "ui_block_s_b_cache_write_failed_this_result_is_still": {
+    "message": "block s.b.: 캐시 저장에 실패했지만 이번 분석 결과는 사용할 수 있습니다."
+  },
+  "ui_block_s_b_cannot_read_queue_will_retry_on_next": {
+    "message": "block s.b.: 대기열을 읽을 수 없습니다. 다음 실행 시 다시 시도합니다."
+  },
+  "ui_block_s_b_no_reply_to_preview_scroll_to_the": {
+    "message": "[block s.b.] 미리볼 답글이 없습니다. 답글 영역으로 스크롤하거나 화면에 보이는 답글의 게시물 ID를 입력하세요."
+  },
+  "ui_block_s_b_panel": {
+    "message": "block s.b. 관리 패널"
+  },
+  "ui_block_somebody_panel": {
+    "message": "block somebody 관리 패널"
+  },
+  "ui_block_submission_failed_check_the_trash": {
+    "message": " · 차단 요청 전송 실패. 휴지통에서 확인하세요"
+  },
+  "ui_block_target": {
+    "message": "차단 대상"
+  },
+  "ui_block_threshold": {
+    "message": "차단 기준 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_threshold_cannot_be_below_0_5": {
+    "message": "차단 기준은 0.5 이상이어야 합니다."
+  },
+  "ui_block_threshold_confidence_must_be": {
+    "message": "차단 기준 $v0$ · 확신도 ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_blocked": {
+    "message": "차단됨"
+  },
+  "ui_blocked_manually": {
+    "message": "직접 차단함"
+  },
+  "ui_cache_is_in_use_by_another_window": {
+    "message": "다른 창에서 캐시를 사용 중입니다"
+  },
+  "ui_cache_limit_must_be_an_integer_from_100_to_100": {
+    "message": "캐시 개수는 100~100,000 사이의 정수여야 합니다."
+  },
+  "ui_cache_open_timed_out": {
+    "message": "캐시 열기 시간 초과"
+  },
+  "ui_cache_transaction_failed": {
+    "message": "캐시 처리 실패"
+  },
+  "ui_cancel_task": {
+    "message": "작업 취소"
+  },
+  "ui_cancel_unsent_requests": {
+    "message": "아직 전송하지 않은 요청 취소"
+  },
+  "ui_canceled": {
+    "message": "취소됨"
+  },
+  "ui_cannot_block_the_currently_signed_in_account": {
+    "message": "현재 로그인한 계정은 차단할 수 없습니다."
+  },
+  "ui_cannot_connect_to_jev_right_now_reply_left_unchanged": {
+    "message": "현재 Jev에 연결할 수 없습니다. 답글은 그대로 유지합니다."
+  },
+  "ui_cannot_connect_to_the_extension": {
+    "message": "확장 프로그램에 연결할 수 없습니다."
+  },
+  "ui_cannot_connect_to_the_extension_reload_the_extension_and_this": {
+    "message": "확장 프로그램에 연결할 수 없습니다. 확장 프로그램과 이 페이지를 새로고침하세요."
+  },
+  "ui_cannot_identify_the_post_link": {
+    "message": "게시물 링크를 확인할 수 없습니다."
+  },
+  "ui_cannot_identify_the_task_s_original_post": {
+    "message": "작업의 원문 게시물을 확인할 수 없습니다."
+  },
+  "ui_cannot_preview": {
+    "message": "미리보기 실패: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_cannot_verify_account_status": {
+    "message": "계정 상태를 확인할 수 없습니다."
+  },
+  "ui_cannot_verify_the_existing_block_no_action_taken": {
+    "message": "현재 차단 상태를 확인할 수 없어 작업을 수행하지 않았습니다."
+  },
+  "ui_category": {
+    "message": "분류"
+  },
+  "ui_cautious": {
+    "message": "신중"
+  },
+  "ui_checked": {
+    "message": "$v0$개 확인됨$v1$$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_classification_prompt": {
+    "message": "판단 프롬프트"
+  },
+  "ui_clear_canceled_records": {
+    "message": "취소된 기록을 삭제할까요?"
+  },
+  "ui_clear_canceled_records_2": {
+    "message": "취소된 기록 삭제"
+  },
+  "ui_clear_records": {
+    "message": "기록 삭제"
+  },
+  "ui_close": {
+    "message": "닫기"
+  },
+  "ui_close_panel": {
+    "message": "패널 닫기"
+  },
+  "ui_close_preview": {
+    "message": "미리보기 닫기"
+  },
+  "ui_confidence": {
+    "message": "확신도 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_confidence_2": {
+    "message": "$v0$ · 확신도 $v1$%$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_configured": {
+    "message": "설정됨"
+  },
+  "ui_confirm": {
+    "message": "확인"
+  },
+  "ui_connect_jev_first": {
+    "message": "먼저 Jev에 연결하세요."
+  },
+  "ui_connect_jev_in_settings_first": {
+    "message": "먼저 설정에서 Jev에 연결하세요."
+  },
+  "ui_connecting": {
+    "message": "연결 중…"
+  },
+  "ui_contains_an_unknown_variable": {
+    "message": "$v0$에 알 수 없는 변수가 있습니다: $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_contains_unread_media": {
+    "message": "읽지 않은 미디어 포함"
+  },
+  "ui_could_not_save_reply_context": {
+    "message": "답글 맥락을 저장할 수 없습니다"
+  },
+  "ui_could_not_save_reply_context_retrying": {
+    "message": "답글 맥락을 저장하지 못했습니다. 다시 시도 중입니다"
+  },
+  "ui_could_not_switch_automatically_choose_most_recent_on_x_to": {
+    "message": "자동 전환에 실패했습니다. X 메뉴에서 최신순을 선택하면 계속 진행합니다"
+  },
+  "ui_could_not_sync_task_status": {
+    "message": "작업 상태 동기화 실패: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria": {
+    "message": "$v0$ 판단 기준",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria_which_replies_belong_in_this_category": {
+    "message": "이 옵션에 해당하는 답글의 판단 기준"
+  },
+  "ui_current_block_status_on_x_verified": {
+    "message": "X의 현재 차단 상태를 확인했습니다."
+  },
+  "ui_current_thread_task_changed": {
+    "message": "현재 스레드 작업이 변경되었습니다."
+  },
+  "ui_current_thread_task_is_paused_or_changed": {
+    "message": "현재 스레드 작업이 일시 정지되었거나 변경되었습니다."
+  },
+  "ui_custom": {
+    "message": "직접 설정"
+  },
+  "ui_customize_prompt": {
+    "message": "프롬프트 맞춤 설정 ↗"
+  },
+  "ui_decision_details": {
+    "message": "판단 근거"
+  },
+  "ui_delete": {
+    "message": "삭제"
+  },
+  "ui_delete_option": {
+    "message": "이 옵션 삭제"
+  },
+  "ui_detection_policy": {
+    "message": "판단 설정"
+  },
+  "ui_direct_parent_reply_context_is_missing": {
+    "message": "직접 답글을 단 대상의 맥락이 없습니다"
+  },
+  "ui_discard_unsaved_changes_and_load_the_latest_settings": {
+    "message": "저장하지 않은 초안을 버리고 최신 설정을 불러올까요?"
+  },
+  "ui_dismiss_allowlist_notice": {
+    "message": "허용 목록 안내 닫기"
+  },
+  "ui_don_t_show_again": {
+    "message": "다시 표시하지 않기"
+  },
+  "ui_edit_note": {
+    "message": "메모 수정"
+  },
+  "ui_editing_mode": {
+    "message": "편집 모드"
+  },
+  "ui_end_of_x_s_results_queued_blocks_will_continue": {
+    "message": "X 목록의 끝 · 대기 중인 차단은 계속 처리"
+  },
+  "ui_endpoint_did_not_return_a_valid_jev_result_settings_were": {
+    "message": "유효한 Jev 분류 결과가 반환되지 않아 설정을 저장하지 않았습니다."
+  },
+  "ui_enter_a_valid_api_key": {
+    "message": "유효한 API 키를 입력하세요."
+  },
+  "ui_enter_an_x_username_or_profile_link": {
+    "message": "X 사용자 이름 또는 프로필 링크를 입력하세요."
+  },
+  "ui_enter_api_key": {
+    "message": "API 키 입력"
+  },
+  "ui_enter_the_full_https_api_endpoint": {
+    "message": "전체 HTTPS API 엔드포인트를 입력하세요."
+  },
+  "ui_enter_the_full_https_url_of_a_jev_compatible_endpoint": {
+    "message": "Jev 호환 API의 전체 HTTPS 주소를 입력하세요."
+  },
+  "ui_enter_this_service_s_api_key": {
+    "message": "이 서비스의 API 키 입력"
+  },
+  "ui_enter_your_jev_api_key_in_settings_first": {
+    "message": "먼저 설정에서 Jev API 키를 입력하세요."
+  },
+  "ui_excluded_from_this_automatic_task": {
+    "message": "이 자동 작업에서 제외됨"
+  },
+  "ui_existing_blocks_or_accounts_managed_by_later_records_will_be": {
+    "message": "기존 차단 또는 이후 기록에서 관리하는 계정 $v0$개는 그대로 유지합니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_expanded_request_too_large_reduce_repeated_variables_or_shorten_the": {
+    "message": "변수 적용 후 요청이 너무 큽니다. 반복 변수를 줄이거나 템플릿을 줄이세요."
+  },
+  "ui_expands_variables_locally_without_calling_an_api": {
+    "message": "로컬에서 변수를 적용하며 API를 호출하지 않습니다."
+  },
+  "ui_export": {
+    "message": "내보내기"
+  },
+  "ui_export_history_and_allowlist": {
+    "message": "기록 및 허용 목록 내보내기"
+  },
+  "ui_extension_disconnected_refresh_this_page": {
+    "message": "확장 프로그램 연결이 끊겼습니다. 페이지를 새로고침하세요."
+  },
+  "ui_failed_or_unconfirmed_items_need_separate_review_they_will_not": {
+    "message": "실패했거나 결과가 불분명한 $v0$개 항목은 별도 확인이 필요하며, 되돌린 것으로 표시하지 않습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_by_signed_in_account": {
+    "message": "로그인 계정별 필터"
+  },
+  "ui_filter_records": {
+    "message": "기록 필터"
+  },
+  "ui_final_request_content": {
+    "message": "최종 요청 내용"
+  },
+  "ui_fly_to_trash": {
+    "message": "휴지통으로 이동"
+  },
+  "ui_follow_system_reduced_motion_preference": {
+    "message": "시스템의 동작 줄이기 설정 따르기"
+  },
+  "ui_for_http_only_records_the_previous_block_status_was_not": {
+    "message": "HTTP 성공만 기록한 항목은 이전 차단 상태를 확인하지 않았습니다. 차단 해제 시 현재의 차단 관계가 해제됩니다."
+  },
+  "ui_future_replies_by_will_follow_the_current_rules_existing_blocks": {
+    "message": "@$v0$의 이후 답글에는 현재 규칙이 적용됩니다. 기존 차단은 변경되지 않습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_github_repository": {
+    "message": "GitHub 저장소"
+  },
+  "ui_has_unknown_fields_or_an_invalid_format": {
+    "message": "$v0$에 알 수 없는 필드가 있거나 형식이 올바르지 않습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_has_unmatched_variable_braces": {
+    "message": "$v0$의 변수 괄호가 닫히지 않았습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_hide": {
+    "message": "숨기기"
+  },
+  "ui_hide_details": {
+    "message": "상세 내용 접기"
+  },
+  "ui_hide_range": {
+    "message": "숨김 범위: $v0$% ≤ $v1$ < $v2$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_history_has_reached_5_000_records_export_and_clear_completed": {
+    "message": "기록이 5,000개에 도달했습니다. 내보낸 후 완료된 기록을 삭제하세요."
+  },
+  "ui_if_you_agree_to_meet_you_should_be_on_time": {
+    "message": "만나기로 약속했다면 시간을 지켜야 한다."
+  },
+  "ui_incomplete_text": {
+    "message": "불완전한 텍스트"
+  },
+  "ui_input": {
+    "message": "입력 내용"
+  },
+  "ui_input_template": {
+    "message": "입력 템플릿"
+  },
+  "ui_insert": {
+    "message": "{{$v0$}} 삽입",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_insert_input_variable": {
+    "message": "입력 변수 삽입"
+  },
+  "ui_insert_prompt_variable": {
+    "message": "프롬프트 변수 삽입"
+  },
+  "ui_insufficient_jev_balance_check_your_account": {
+    "message": "Jev 잔액이 부족합니다. 계정을 확인하세요."
+  },
+  "ui_internal_id": {
+    "message": "내부 ID · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_analysis_result": {
+    "message": "분석 결과 오류"
+  },
+  "ui_invalid_context_request": {
+    "message": "맥락 요청이 올바르지 않습니다."
+  },
+  "ui_invalid_jev_classification_format_reply_skipped": {
+    "message": "Jev 분류 형식 오류로 이 답글을 건너뛰었습니다"
+  },
+  "ui_invalid_jev_key_update_it_in_settings": {
+    "message": "Jev 키가 유효하지 않습니다. 다시 설정하세요."
+  },
+  "ui_invalid_jev_probability_sum_reply_skipped": {
+    "message": "Jev 확률 합계 오류($v0$)로 답글을 건너뛰었습니다",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_json_check_brackets_commas_and_quotes": {
+    "message": "JSON 형식이 올바르지 않습니다. 괄호, 쉼표, 따옴표를 확인하세요."
+  },
+  "ui_invalid_model_name": {
+    "message": "모델 이름이 올바르지 않습니다."
+  },
+  "ui_invalid_page": {
+    "message": "유효하지 않은 페이지입니다."
+  },
+  "ui_invalid_request_source": {
+    "message": "요청 출처가 올바르지 않습니다."
+  },
+  "ui_invalid_results": {
+    "message": " · 결과 오류 $v0$개",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_x_origin": {
+    "message": "X 출처가 올바르지 않습니다."
+  },
+  "ui_is_below": {
+    "message": "$v0$이(가) $v1$% 미만",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_jev_classification_disagrees_with_the_highest_probability_reply_skipped": {
+    "message": "Jev 분류가 최고 확률과 일치하지 않아 답글을 건너뛰었습니다"
+  },
+  "ui_jev_denied_access_check_your_permissions": {
+    "message": "Jev에서 접근을 거부했습니다. 계정 권한을 확인하세요."
+  },
+  "ui_jev_rate_limit_reached_analysis_paused_retry_later": {
+    "message": "Jev 요청 제한으로 분석을 일시 정지했습니다. 잠시 후 다시 시도하세요."
+  },
+  "ui_jev_request_cache": {
+    "message": "Jev 요청 캐시"
+  },
+  "ui_jev_response_interrupted_reply_left_unchanged": {
+    "message": "Jev 응답이 중단되었습니다. 답글은 그대로 유지합니다."
+  },
+  "ui_jev_response_too_large_reply_skipped": {
+    "message": "Jev 응답이 너무 커서 이 답글을 건너뛰었습니다."
+  },
+  "ui_jev_returned_an_empty_result": {
+    "message": "Jev 응답이 비어 있습니다."
+  },
+  "ui_jev_returned_an_unreadable_result": {
+    "message": "Jev 응답을 읽을 수 없습니다."
+  },
+  "ui_jev_returned_http_reply_left_unchanged": {
+    "message": "Jev에서 HTTP $v0$을(를) 반환했습니다. 답글은 그대로 유지합니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_jev_timed_out_reply_left_unchanged": {
+    "message": "Jev 응답 시간이 초과되었습니다. 답글은 그대로 유지합니다."
+  },
+  "ui_leave_blank_to_keep_the_saved_key": {
+    "message": "비워 두면 저장된 키 사용"
+  },
+  "ui_left_thread_queued_blocks_continue_in_background": {
+    "message": "스레드에서 나옴 · 대기열은 백그라운드에서 계속 처리"
+  },
+  "ui_load_latest_settings": {
+    "message": "최신 설정 불러오기"
+  },
+  "ui_loading": {
+    "message": "불러오는 중…"
+  },
+  "ui_management": {
+    "message": "관리 메뉴"
+  },
+  "ui_maximum_entries": {
+    "message": "최대 저장 개수"
+  },
+  "ui_missing_parent_context_in_this_page_and_local_records_load": {
+    "message": "현재 페이지와 로컬 기록에 답글 맥락이 부족합니다. 누락된 답글을 불러오면 계속 분석합니다"
+  },
+  "ui_model": {
+    "message": "모델"
+  },
+  "ui_model_confidence_is_below": {
+    "message": "모델 확신도가 $v0$% 미만",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_model_selection": {
+    "message": "모델 선택"
+  },
+  "ui_model_settings": {
+    "message": "모델 설정"
+  },
+  "ui_model_settings_changed_in_another_window_save_again": {
+    "message": "다른 창에서 모델 설정이 변경되었습니다. 다시 저장하세요."
+  },
+  "ui_move_down": {
+    "message": "아래로 이동"
+  },
+  "ui_move_up": {
+    "message": "위로 이동"
+  },
+  "ui_must_be_text_characters": {
+    "message": "$v0$은(는) 텍스트여야 합니다: $v1$ $v2$자.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_name": {
+    "message": "$v0$ 이름",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_needs_attention": {
+    "message": "확인 필요"
+  },
+  "ui_needs_attention_2": {
+    "message": "확인 필요"
+  },
+  "ui_needs_attention_open_trash": {
+    "message": "확인 필요 · 휴지통 열기"
+  },
+  "ui_needs_verification": {
+    "message": "결과 확인 필요"
+  },
+  "ui_new_analysis_will_stop_block_history_and_the_allowlist_will": {
+    "message": "새 답글 분석이 중단됩니다. 차단 기록과 허용 목록은 유지됩니다."
+  },
+  "ui_no_analysis_no_automatic_blocking": {
+    "message": "분석 및 자동 차단 제외"
+  },
+  "ui_no_block_history_yet": {
+    "message": "아직 차단 기록이 없습니다"
+  },
+  "ui_no_blocks_recorded_for_this_task_yet": {
+    "message": "이 작업에는 아직 차단 기록이 없습니다."
+  },
+  "ui_no_matching_tasks": {
+    "message": "일치하는 작업이 없습니다"
+  },
+  "ui_no_matching_users": {
+    "message": "일치하는 사용자가 없습니다"
+  },
+  "ui_no_new_replies_for_30_seconds_auto_load_stopped_check": {
+    "message": "30초 동안 새 답글이 없어 자동 불러오기를 중단했습니다. 직접 확인한 뒤 다시 켤 수 있습니다"
+  },
+  "ui_no_probability_available": {
+    "message": "확률 정보 없음"
+  },
+  "ui_no_readable_text": {
+    "message": "읽을 수 있는 텍스트가 없습니다"
+  },
+  "ui_no_records_need_verification": {
+    "message": "확인할 기록이 없습니다."
+  },
+  "ui_no_text_to_analyze": {
+    "message": "분석할 텍스트가 없습니다"
+  },
+  "ui_no_verifiable_result_received": {
+    "message": "확인 가능한 결과를 받지 못했습니다."
+  },
+  "ui_nonempty_at_most": {
+    "message": "빈 값 불가, 최대"
+  },
+  "ui_not_analyzed_yet": {
+    "message": "아직 분석 결과가 없습니다"
+  },
+  "ui_not_auto_blocked": {
+    "message": " · 자동 차단하지 않은 이유: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_not_connected": {
+    "message": "연결 안 됨"
+  },
+  "ui_not_enough_text_to_decide": {
+    "message": "판단에 필요한 텍스트가 부족합니다"
+  },
+  "ui_note": {
+    "message": "메모"
+  },
+  "ui_note_for": {
+    "message": "@$v0$ 메모",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_note_optional": {
+    "message": "메모 (선택 사항)"
+  },
+  "ui_older_results_may_lack_a_full_distribution_missing_values_show": {
+    "message": "이전 결과에 전체 확률 분포가 없으면 누락된 항목은 —로 표시합니다."
+  },
+  "ui_only_http_success_was_recorded_the_prior_block_status_was": {
+    "message": "HTTP 성공만 확인했으며 기존 차단 여부는 확인하지 않았습니다. 차단 해제 시 현재 차단이 해제됩니다."
+  },
+  "ui_only_unblocked_or_canceled_local_records_will_be_deleted_active": {
+    "message": "차단 해제 또는 취소된 로컬 기록만 삭제합니다. 현재 차단과 되돌리기 기능은 유지되며, X의 차단 상태는 변경되지 않습니다."
+  },
+  "ui_open_settings": {
+    "message": "설정 열기"
+  },
+  "ui_open_x_signed_in_as_first": {
+    "message": "먼저 @$v0$으로 로그인한 X 페이지를 열어 주세요.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_open_x_signed_in_as_once_to_connect_this_older": {
+    "message": "이전 작업을 백그라운드 대기열에 연결하려면 @$v0$으로 로그인한 X 페이지를 한 번 열어 주세요.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option": {
+    "message": "옵션 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_criteria": {
+    "message": "옵션 $v0$ 판단 기준",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_internal_id": {
+    "message": "옵션 $v0$ 내부 ID",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_name": {
+    "message": "옵션 이름"
+  },
+  "ui_option_name_2": {
+    "message": "옵션 $v0$ 이름",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_probabilities": {
+    "message": "옵션 확률"
+  },
+  "ui_options_blocking_options": {
+    "message": "옵션 $v0$개 · 차단 옵션 $v1$개",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_original_author": {
+    "message": "원문 작성자"
+  },
+  "ui_original_author_blocked_by_this_task": {
+    "message": "이 작업에서 원문 작성자를 직접 차단합니다"
+  },
+  "ui_original_post_reply_or_parent_text_is_incomplete": {
+    "message": "원문, 답글 또는 상위 답글의 텍스트가 불완전합니다"
+  },
+  "ui_output_options": {
+    "message": "출력 옵션"
+  },
+  "ui_page_closed_or_connection_lost_verify_the_outcome": {
+    "message": "페이지가 닫혔거나 연결이 끊겼습니다. 처리 결과를 확인하세요."
+  },
+  "ui_page_experience": {
+    "message": "페이지 표시"
+  },
+  "ui_particle_dissolve": {
+    "message": "입자로 흩어짐"
+  },
+  "ui_paused": {
+    "message": "일시 정지됨"
+  },
+  "ui_pending": {
+    "message": "전송 대기"
+  },
+  "ui_post_by": {
+    "message": "@$v0$의 게시물",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_preview_request": {
+    "message": "요청 미리보기"
+  },
+  "ui_probabilities_by_option": {
+    "message": "옵션별 확률"
+  },
+  "ui_processing": {
+    "message": "처리 중"
+  },
+  "ui_prompt": {
+    "message": "프롬프트"
+  },
+  "ui_prompt_can_contain_up_to_12_000_characters": {
+    "message": "프롬프트는 최대 12,000자입니다."
+  },
+  "ui_queue_for_unblocking": {
+    "message": "차단 해제 대기열에 추가"
+  },
+  "ui_queue_waiting_for_to_sign_in_no_other_account_will": {
+    "message": "@$v0$ 로그인을 기다리는 중입니다. 다른 계정으로는 전송하지 않습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_queued": {
+    "message": "대기열"
+  },
+  "ui_raw_configuration": {
+    "message": "Raw 설정"
+  },
+  "ui_recorded": {
+    "message": "기록 시간 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reload": {
+    "message": "다시 불러오기"
+  },
+  "ui_remove": {
+    "message": "삭제"
+  },
+  "ui_remove_from_allowlist": {
+    "message": "허용 목록에서 삭제"
+  },
+  "ui_remove_from_allowlist_2": {
+    "message": "허용 목록에서 삭제할까요?"
+  },
+  "ui_remove_jev_api_key": {
+    "message": "Jev API 키를 삭제할까요?"
+  },
+  "ui_remove_key": {
+    "message": "키 삭제"
+  },
+  "ui_remove_users_from_the_allowlist_panel": {
+    "message": "허용 목록 패널에서 삭제하세요."
+  },
+  "ui_replies_failed_to_load_retry_on_x": {
+    "message": "답글을 불러오지 못했습니다$v0$. X 페이지에서 다시 시도하세요",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_replies_ready_syncing_task_status": {
+    "message": "답글 준비됨 · 작업 상태 동기화 중"
+  },
+  "ui_reply_automatically_hidden": {
+    "message": "답글이 자동으로 숨겨졌습니다"
+  },
+  "ui_reply_context_cache_is_in_use": {
+    "message": "답글 맥락 캐시 사용 중"
+  },
+  "ui_reply_context_cache_open_timed_out": {
+    "message": "답글 맥락 캐시 열기 시간 초과"
+  },
+  "ui_reply_does_not_belong_to_the_selected_conversation": {
+    "message": "선택한 대화에 속한 답글이 아닙니다."
+  },
+  "ui_reply_kept_no_automatic_retry_in_this_task": {
+    "message": "$v0$. 답글은 유지하며 이 작업에서 자동으로 재시도하지 않습니다",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reply_removal_animation": {
+    "message": "답글 제거 애니메이션"
+  },
+  "ui_reply_that_triggered_the_decision": {
+    "message": "판단 대상 답글"
+  },
+  "ui_request_preview": {
+    "message": "요청 미리보기"
+  },
+  "ui_restore_defaults": {
+    "message": "기본값 복원"
+  },
+  "ui_resume_tasks": {
+    "message": "작업 재개"
+  },
+  "ui_retry": {
+    "message": "다시 시도"
+  },
+  "ui_rule": {
+    "message": "규칙"
+  },
+  "ui_rule_json": {
+    "message": "규칙 JSON"
+  },
+  "ui_rule_too_large_shorten_descriptions_max_120_000_characters_total": {
+    "message": "규칙이 너무 큽니다. 설명을 줄이세요(전체 최대 120,000자)."
+  },
+  "ui_sample_original_post": {
+    "message": "원문 예시"
+  },
+  "ui_sample_parent_reply_leave_blank_for_direct_replies": {
+    "message": "상위 답글 예시 (원문에 직접 답한 경우 비워 두세요)"
+  },
+  "ui_sample_reply": {
+    "message": "답글 예시"
+  },
+  "ui_save": {
+    "message": "저장"
+  },
+  "ui_save_and_connect": {
+    "message": "저장 후 연결"
+  },
+  "ui_save_connection_details_in_model_settings": {
+    "message": "연결 정보는 모델 설정에서 저장하세요."
+  },
+  "ui_save_failed": {
+    "message": "저장 실패"
+  },
+  "ui_save_rules": {
+    "message": "규칙 저장"
+  },
+  "ui_saved": {
+    "message": "저장됨"
+  },
+  "ui_saved_and_connected": {
+    "message": "저장 및 연결 완료"
+  },
+  "ui_saving": {
+    "message": "저장 중…"
+  },
+  "ui_search_allowlist": {
+    "message": "허용 목록 검색"
+  },
+  "ui_search_block_history": {
+    "message": "차단 기록 검색"
+  },
+  "ui_search_usernames_or_reply_text": {
+    "message": "사용자 이름 또는 답글 내용 검색"
+  },
+  "ui_select_at_least_one_option_that_triggers_blocking": {
+    "message": "차단할 옵션을 하나 이상 선택하세요."
+  },
+  "ui_select_categories_that_may_trigger_blocking_both_the_chosen_category": {
+    "message": "차단할 분류를 선택하세요. 선택된 분류의 확률과 모델 확신도가 모두 설정한 기준에 도달해야 합니다."
+  },
+  "ui_selected_original_post": {
+    "message": "선택한 원문"
+  },
+  "ui_set_between_2_and_255_output_options": {
+    "message": "출력 옵션을 2~255개 설정하세요."
+  },
+  "ui_set_inputs_instructions_and_blocking_options": {
+    "message": "입력 내용, 판단 방식, 차단 옵션을 설정하세요."
+  },
+  "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
+    "message": "다른 창에서 설정이 변경되었습니다. 초안을 복사한 뒤 최신 설정을 불러오세요."
+  },
+  "ui_settings_changed_in_another_window_your_draft_is_kept_copy": {
+    "message": "다른 창에서 설정이 변경되었습니다. 현재 초안은 유지됩니다. 초안을 복사한 뒤 최신 설정을 불러오세요."
+  },
+  "ui_show": {
+    "message": "표시"
+  },
+  "ui_show_details": {
+    "message": "상세 내용 보기 ($v0$)",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_show_entered_key": {
+    "message": "입력한 키 표시"
+  },
+  "ui_show_more_accounts": {
+    "message": "계정 더 보기"
+  },
+  "ui_show_more_tasks": {
+    "message": "작업 더 보기"
+  },
+  "ui_show_reply": {
+    "message": "답글 보기"
+  },
+  "ui_showing_of_records_undo_still_applies_to_the_entire_task": {
+    "message": "$v1$개 중 $v0$개 표시 중입니다. 되돌리기는 작업 전체에 적용됩니다.",
+    "placeholders": {
+      "v1": {
+        "content": "$2"
+      },
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_some_replies_lack_context": {
+    "message": " · 일부 답글의 맥락 부족"
+  },
+  "ui_start_from_a_post_s_menu_on_x": {
+    "message": "X 게시물 메뉴에서 시작하세요."
+  },
+  "ui_start_from_a_signed_in_x_page_in_a_regular": {
+    "message": "일반 창에서 로그인한 X 페이지로 작업을 시작하세요."
+  },
+  "ui_start_from_the_post_menu": {
+    "message": "게시물 메뉴에서 시작하세요."
+  },
+  "ui_stop": {
+    "message": "종료"
+  },
+  "ui_stop_task": {
+    "message": "작업 중단"
+  },
+  "ui_submission_failed": {
+    "message": "전송 실패"
+  },
+  "ui_submitted": {
+    "message": "전송됨"
+  },
+  "ui_submitted_blocked": {
+    "message": "전송됨 / 차단됨"
+  },
+  "ui_submitted_blocked_2": {
+    "message": "전송됨 / 차단됨"
+  },
+  "ui_submitting": {
+    "message": "전송 중"
+  },
+  "ui_switching_to_most_recent_using_the_page_menu": {
+    "message": "페이지 메뉴에서 최신순으로 전환 중"
+  },
+  "ui_target_identity_could_not_be_verified_action_stopped": {
+    "message": "대상 계정을 확인할 수 없어 작업을 중단했습니다."
+  },
+  "ui_task_canceled": {
+    "message": "작업 취소됨"
+  },
+  "ui_task_created_open_this_post_s_replies_to_switch_automatically": {
+    "message": "작업을 만들었습니다. 게시물의 답글을 열면 최신순으로 자동 전환합니다."
+  },
+  "ui_task_ended_page_changed_or_account_unavailable_start_again_from": {
+    "message": "작업이 종료되었거나 페이지 또는 계정이 변경되었습니다. 게시물 메뉴에서 다시 시작하세요."
+  },
+  "ui_task_history": {
+    "message": "작업 기록"
+  },
+  "ui_task_not_found_or_already_cleared": {
+    "message": "작업이 없거나 이미 삭제되었습니다."
+  },
+  "ui_task_running": {
+    "message": "작업 진행 중"
+  },
+  "ui_task_stopped": {
+    "message": "작업 중단됨"
+  },
+  "ui_task_stopped_accounts_queued_for_undo_unsent_requests_canceled_requests": {
+    "message": "작업을 중단했습니다. $v0$개 계정을 되돌리기 대기열에 추가했고, $v1$개 요청을 취소했으며, $v2$개는 응답 대기 중입니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_task_stopped_submitted_blocks_remain_use_undo_all_blocks_to": {
+    "message": "작업을 중단했습니다. 전송한 차단은 유지되며, 전체 차단 되돌리기로 해제할 수 있습니다."
+  },
+  "ui_tasks_resumed_failed_items_can_be_retried_individually": {
+    "message": "작업을 재개했습니다. 실패한 항목은 개별적으로 다시 시도할 수 있습니다."
+  },
+  "ui_templates_can_contain_up_to_12_000_characters": {
+    "message": "템플릿은 12,000자까지 입력할 수 있습니다."
+  },
+  "ui_the_background_service_could_not_authorize_this_action": {
+    "message": "백그라운드 서비스에서 작업 권한을 확인할 수 없습니다."
+  },
+  "ui_the_chosen_category_is_not_marked_for_blocking": {
+    "message": "선택된 분류가 차단 대상으로 지정되지 않았습니다"
+  },
+  "ui_the_model_did_not_classify_this_as_clear_support": {
+    "message": "모델이 명확한 동의로 판단하지 않았습니다"
+  },
+  "ui_the_original_author_is_allowlisted_remove_them_before_starting": {
+    "message": "원문 작성자가 허용 목록에 있습니다. 목록에서 삭제한 뒤 시작하세요."
+  },
+  "ui_the_original_post_contains_media": {
+    "message": "원문에 이미지 등의 미디어가 포함되어 있습니다"
+  },
+  "ui_the_original_post_contains_media_2": {
+    "message": "원문에 이미지 등의 미디어가 포함되어 있습니다"
+  },
+  "ui_the_username_now_belongs_to_a_different_account_action_stopped": {
+    "message": "사용자 이름에 연결된 계정이 변경되어 작업을 중단했습니다."
+  },
+  "ui_this_account_already_has_a_pending_action": {
+    "message": "이 계정에 이미 대기 중인 작업이 있습니다."
+  },
+  "ui_this_account_needs_review_open_the_trash_to_check_its": {
+    "message": "이 계정의 처리 상태를 확인해야 합니다. 휴지통에서 기록을 확인하세요."
+  },
+  "ui_this_extension_did_not_submit_the_block_so_it_cannot": {
+    "message": "이 확장 프로그램이 전송한 차단이 아니므로 여기서 되돌릴 수 없습니다."
+  },
+  "ui_this_record_cannot_be_unblocked_right_now": {
+    "message": "현재 이 기록에서 차단을 해제할 수 없습니다."
+  },
+  "ui_this_task_has_analyzed_2_000_replies_stop_and_start": {
+    "message": "이 작업에서 답글 2,000개를 분석했습니다. 종료 후 다시 시작하세요."
+  },
+  "ui_this_task_was_undone_start_again_from_the_original_post": {
+    "message": "이 작업은 되돌린 상태입니다. 다시 차단하려면 원문에서 작업을 다시 시작하세요."
+  },
+  "ui_this_user_is_allowlisted": {
+    "message": "허용 목록에 있는 사용자입니다"
+  },
+  "ui_this_user_is_allowlisted_remove_them_first": {
+    "message": "허용 목록에 있는 사용자입니다. 먼저 목록에서 삭제하세요."
+  },
+  "ui_this_user_is_already_allowlisted": {
+    "message": "이미 허용 목록에 있는 사용자입니다."
+  },
+  "ui_thread_changed_try_again": {
+    "message": "스레드가 변경되었습니다. 다시 시도하세요."
+  },
+  "ui_thread_task_changed": {
+    "message": "스레드 작업이 변경되었습니다."
+  },
+  "ui_threshold_must_be_between_0_and_1": {
+    "message": "기준값은 0~1 사이여야 합니다."
+  },
+  "ui_to_unblock_open_any_x_page_signed_in_as": {
+    "message": "차단을 해제하려면 @$v0$으로 로그인한 X 페이지를 열어 주세요.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_toggle_auto_load_from_the_replies": {
+    "message": "답글 영역에서 자동 불러오기를 전환하세요."
+  },
+  "ui_unblock": {
+    "message": "차단 해제"
+  },
+  "ui_unblock_failed": {
+    "message": "차단 해제 실패"
+  },
+  "ui_unblock_pending": {
+    "message": "차단 해제 대기"
+  },
+  "ui_unblock_request_queued": {
+    "message": "차단 해제 요청을 대기열에 추가했습니다."
+  },
+  "ui_unblocked": {
+    "message": "차단 해제됨"
+  },
+  "ui_unblocking": {
+    "message": "차단 해제 중"
+  },
+  "ui_undo_after_request_completes": {
+    "message": "요청 완료 후 되돌리기"
+  },
+  "ui_undo_all_blocks": {
+    "message": "전체 차단 되돌리기"
+  },
+  "ui_undo_needs_attention": {
+    "message": "되돌리기 확인 필요"
+  },
+  "ui_undo_task": {
+    "message": "작업 되돌리기"
+  },
+  "ui_undo_this_entire_task_for_s_post_using_includes_the": {
+    "message": "@$v1$ 계정으로 @$v0$ 게시물의 작업 전체를 되돌립니다. 현재 검색이나 필터와 관계없이 원문 작성자와 이 작업에 포함된 답글 계정이 대상입니다.",
+    "placeholders": {
+      "v1": {
+        "content": "$2"
+      },
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_undo_this_task_s_blocks": {
+    "message": "이 작업의 차단을 되돌릴까요?"
+  },
+  "ui_undoing": {
+    "message": "되돌리는 중"
+  },
+  "ui_undone": {
+    "message": "되돌림 완료"
+  },
+  "ui_undone_canceled": {
+    "message": "되돌림 / 취소됨"
+  },
+  "ui_unknown_action": {
+    "message": "알 수 없는 작업입니다."
+  },
+  "ui_unknown_animation_effect": {
+    "message": "알 수 없는 애니메이션 효과입니다."
+  },
+  "ui_unknown_decision_mode": {
+    "message": "알 수 없는 판단 모드입니다."
+  },
+  "ui_unknown_variable": {
+    "message": "알 수 없는 변수: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_unsaved_changes": {
+    "message": "저장하지 않은 변경 사항"
+  },
+  "ui_unsupported_rule_version_use_version_1": {
+    "message": "지원하지 않는 규칙 버전입니다. version은 1이어야 합니다."
+  },
+  "ui_use_a_unique_id_starting_with_a_lowercase_letter_containing": {
+    "message": "$v0$: ID는 중복 없이 소문자로 시작하며 영문자, 숫자, 밑줄만 사용할 수 있습니다(최대 48자).",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_use_s_x_session_to_unblock_keep_an_x_page": {
+    "message": "@$v0$의 X 로그인 상태로 @$v1$의 차단을 해제합니다. 해당 계정의 X 페이지를 열어 두세요. 이 작업에서는 해당 사용자를 다시 자동 차단하지 않습니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_use_the_button_next_to_a_reply": {
+    "message": "답글 옆 버튼을 사용하세요."
+  },
+  "ui_use_the_history_panel": {
+    "message": "기록 패널에서 작업하세요."
+  },
+  "ui_use_the_management_panel_for_this_action": {
+    "message": "관리 패널에서 이 작업을 수행하세요."
+  },
+  "ui_username_or_x_profile_link": {
+    "message": "@사용자이름 또는 X 프로필 링크"
+  },
+  "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
+    "message": "사용자 이름은 영문자, 숫자, 밑줄로 이루어진 1~15자여야 합니다."
+  },
+  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
+    "message": "시각적 편집과 같은 설정을 사용합니다. block이 true인 옵션이 차단 대상입니다."
+  },
+  "ui_verify_status": {
+    "message": "상태 확인"
+  },
+  "ui_verify_unknown_results_before_retrying": {
+    "message": "결과가 불분명한 작업은 먼저 상태를 확인하세요."
+  },
+  "ui_via_records": {
+    "message": "@$v0$ 계정 · $v1$ · 기록 $v2$개",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_view_original": {
+    "message": "원문 보기 ↗"
+  },
+  "ui_view_post_on_x": {
+    "message": "X에서 원문 보기 ↗"
+  },
+  "ui_view_probabilities_by_option": {
+    "message": "$v0$. 옵션별 확률 보기. $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_view_reason": {
+    "message": "이유 보기"
+  },
+  "ui_visual": {
+    "message": "시각적 편집"
+  },
+  "ui_waiting_for_recent_replies_check_if_x_needs_a_retry": {
+    "message": "최신 답글을 기다리는 중입니다. X 페이지에서 재시도가 필요한지 확인하세요"
+  },
+  "ui_waiting_for_the_first_page_of_recent_replies": {
+    "message": "최신순 첫 답글을 기다리는 중"
+  },
+  "ui_waiting_to_analyze_this_reply": {
+    "message": "이 답글의 분석 대기 중"
+  },
+  "ui_why_this_user_was_processed": {
+    "message": "이 사용자를 처리한 이유"
+  },
+  "ui_x_action_failed_http": {
+    "message": "X 작업 실패(HTTP $v0$).",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_x_did_not_confirm_the_unblock_verify_the_result_first": {
+    "message": "X에서 차단 해제를 확인해 주지 않았습니다. 먼저 결과를 확인하세요."
+  },
+  "ui_x_endpoint_or_target_account_is_unavailable": {
+    "message": "X API 또는 대상 계정을 사용할 수 없습니다."
+  },
+  "ui_x_rate_limit_reached_queue_paused": {
+    "message": "X 요청 제한에 도달하여 대기열을 일시 정지했습니다."
+  },
+  "ui_x_refused_the_request_check_your_account_status": {
+    "message": "X에서 요청을 거부했습니다. 계정 상태를 확인하세요."
+  },
+  "ui_x_refused_this_action_check_your_account_status": {
+    "message": "X에서 작업을 거부했습니다. 계정 상태를 확인하세요."
+  },
+  "ui_x_request_timed_out_or_connection_was_interrupted": {
+    "message": "X 요청 시간이 초과되었거나 연결이 끊겼습니다."
+  },
+  "ui_x_returned_a_result_that_could_not_be_verified": {
+    "message": "X 응답 결과를 확인할 수 없습니다."
+  },
+  "ui_x_returned_an_error": {
+    "message": "X에서 오류를 반환했습니다."
+  },
+  "ui_x_session_expired": {
+    "message": "X 로그인이 만료되었습니다."
+  },
+  "ui_x_session_expired_refresh_and_sign_in_again": {
+    "message": "X 세션이 만료되었습니다. 새로고침 후 다시 로그인하세요."
+  },
+  "ui_x_session_expired_sign_in_to_resume_the_queue": {
+    "message": "X 로그인이 만료되었습니다. 로그인한 뒤 대기열을 재개하세요."
+  },
+  "ui_x_session_unavailable_sign_in_before_resuming_the_queue": {
+    "message": "X 로그인 상태를 사용할 수 없습니다. 로그인한 뒤 대기열을 재개하세요."
+  },
+  "ui_you_can_retry_manually_in_history": {
+    "message": "기록에서 직접 다시 시도할 수 있습니다."
+  },
+  "ui_you_cannot_block_yourself": {
+    "message": "자신을 차단할 수 없습니다"
+  },
+  "ui_you_cannot_block_yourself_2": {
+    "message": "자신을 차단할 수 없습니다."
+  },
+  "ui_you_chose_to_block_the_original_author_no_model_decision": {
+    "message": "원문 작성자를 직접 선택해 차단했습니다. 모델 판단은 사용하지 않았습니다."
+  },
+  "ui_you_manually_blocked_this_user_using_the_reply_button_no": {
+    "message": "답글 옆 버튼으로 직접 차단했습니다. 모델 판단은 사용하지 않았습니다."
+  },
+  "ui_your_own_reply_not_analyzed": {
+    "message": "내 답글은 분석하지 않습니다"
+  },
+  "variable_incomplete_text": {
+    "message": "텍스트 불완전 여부"
+  },
+  "variable_original_post": {
+    "message": "원문 내용"
+  },
+  "variable_parent_reply": {
+    "message": "직접 답한 상위 답글"
+  },
+  "variable_reply": {
+    "message": "현재 답글"
+  },
+  "variable_reply_is_direct": {
+    "message": "원문에 직접 답했는지 여부"
+  },
+  "variable_unseen_media": {
+    "message": "읽지 않은 미디어 포함 여부"
+  }
+}

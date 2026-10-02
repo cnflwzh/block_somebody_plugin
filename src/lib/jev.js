@@ -1,3 +1,5 @@
+import "./i18n.js";
+const { t } = globalThis.BlockSBI18n;
 import { DEFAULT_ENDPOINT, normalizeEndpoint, endpointPermission } from "./core.js";
 
 /** Read a small classification response with a byte limit, including chunked responses.
@@ -5,13 +7,13 @@ import { DEFAULT_ENDPOINT, normalizeEndpoint, endpointPermission } from "./core.
  */
 async function readAnswer(response) {
   const limit = 256 * 1024;
-  const oversized = () => Object.assign(new Error("Jev 返回结果过大，已跳过此评论。"), { code: "JEV_INVALID_ANSWER" });
+  const oversized = () => Object.assign(new Error(t("ui_jev_response_too_large_reply_skipped")), { code: "JEV_INVALID_ANSWER" });
   if (Number(response.headers.get("content-length")) > limit) {
     void response.body?.cancel().catch(() => {});
     throw oversized();
   }
   const reader = response.body?.getReader();
-  if (!reader) throw Object.assign(new Error("Jev 返回了空结果。"), { code: "JEV_INVALID_ANSWER" });
+  if (!reader) throw Object.assign(new Error(t("ui_jev_returned_an_empty_result")), { code: "JEV_INVALID_ANSWER" });
   let size = 0, text = "", complete = false;
   const decoder = new TextDecoder();
   try {
@@ -23,7 +25,7 @@ async function readAnswer(response) {
       text += decoder.decode(value, { stream: true });
     }
     try { return JSON.parse(text + decoder.decode()); }
-    catch { throw Object.assign(new Error("Jev 返回了无法读取的结果。"), { code: "JEV_INVALID_ANSWER" }); }
+    catch { throw Object.assign(new Error(t("ui_jev_returned_an_unreadable_result")), { code: "JEV_INVALID_ANSWER" }); }
   } finally {
     if (!complete) void reader.cancel().catch(() => {});
     reader.releaseLock();
@@ -34,26 +36,26 @@ async function readAnswer(response) {
  * Requires a granted host permission; omits cookies and rejects redirects. Never logs credentials.
  */
 export async function askJev(request, apiKey, signal, endpoint = DEFAULT_ENDPOINT) {
-  if (!apiKey) throw new Error("请先在设置中填写 Jev API Key。");
+  if (!apiKey) throw new Error(t("ui_enter_your_jev_api_key_in_settings_first"));
   endpoint = normalizeEndpoint(endpoint);
-  if (endpoint !== DEFAULT_ENDPOINT && !await chrome.permissions.contains({ origins: [endpointPermission(endpoint)] })) throw new Error("未授权访问 API 端点，请在模型设置中重新保存并授权。");
-  if (signal?.aborted) throw new Error("分析已取消。");
+  if (endpoint !== DEFAULT_ENDPOINT && !await chrome.permissions.contains({ origins: [endpointPermission(endpoint)] })) throw new Error(t("ui_api_endpoint_access_not_granted_save_and_grant_access_in"));
+  if (signal?.aborted) throw new Error(t("ui_analysis_canceled"));
   const timeout = AbortSignal.timeout(22000);
   let response;
   try {
     response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }, body: JSON.stringify(request), signal: signal ? AbortSignal.any([timeout, signal]) : timeout, credentials: "omit", redirect: "error" });
   } catch (e) {
-    if (signal?.aborted) throw new Error("分析已取消。");
-    throw new Error(e.name === "TimeoutError" ? "Jev 响应超时，评论保持原样。" : "暂时无法连接 Jev，评论保持原样。");
+    if (signal?.aborted) throw new Error(t("ui_analysis_canceled"));
+    throw new Error(e.name === "TimeoutError" ? t("ui_jev_timed_out_reply_left_unchanged") : t("ui_cannot_connect_to_jev_right_now_reply_left_unchanged"));
   }
   if (!response.ok) {
-    const messages = { 401: "Jev 密钥无效，请重新设置。", 402: "Jev 余额不足，请检查账户。", 403: "Jev 拒绝访问，请检查账户权限。", 429: "Jev 暂时限流，已暂停分析，请稍后重试。" };
-    throw new Error(messages[response.status] || `Jev 返回 HTTP ${response.status}，评论保持原样。`);
+    const messages = { 401: t("ui_invalid_jev_key_update_it_in_settings"), 402: t("ui_insufficient_jev_balance_check_your_account"), 403: t("ui_jev_denied_access_check_your_permissions"), 429: t("ui_jev_rate_limit_reached_analysis_paused_retry_later") };
+    throw new Error(messages[response.status] || t("ui_jev_returned_http_reply_left_unchanged", response.status));
   }
   try { return await readAnswer(response); }
   catch (error) {
-    if (signal?.aborted) throw new Error("分析已取消。");
+    if (signal?.aborted) throw new Error(t("ui_analysis_canceled"));
     if (error.code === "JEV_INVALID_ANSWER") throw error;
-    throw new Error(timeout.aborted ? "Jev 响应超时，评论保持原样。" : "Jev 响应中断，评论保持原样。");
+    throw new Error(timeout.aborted ? t("ui_jev_timed_out_reply_left_unchanged") : t("ui_jev_response_interrupted_reply_left_unchanged"));
   }
 }

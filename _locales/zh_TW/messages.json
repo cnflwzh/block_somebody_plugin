@@ -1,0 +1,1750 @@
+{
+  "action_title": {
+    "message": "block s.b.・紀錄、允許清單與設定"
+  },
+  "agreement_probability": {
+    "message": "附和機率"
+  },
+  "allowlist": {
+    "message": "允許清單"
+  },
+  "api_key": {
+    "message": "API 金鑰"
+  },
+  "auto_load_off": {
+    "message": "自動載入：關"
+  },
+  "auto_load_on": {
+    "message": "自動載入：開"
+  },
+  "block_history": {
+    "message": "封鎖紀錄"
+  },
+  "category_neutral": {
+    "message": "無關內容"
+  },
+  "category_oppose": {
+    "message": "反對原始貼文"
+  },
+  "category_support": {
+    "message": "贊同原始貼文"
+  },
+  "category_uncertain": {
+    "message": "無法判斷"
+  },
+  "extension_description": {
+    "message": "顯示 X 回覆的附和機率，自動封鎖符合條件的帳號，支援手動封鎖、紀錄撤回與允許清單。"
+  },
+  "match_probability": {
+    "message": "符合機率"
+  },
+  "model_confidence": {
+    "message": "模型信心分數"
+  },
+  "pause": {
+    "message": "暫停"
+  },
+  "resume": {
+    "message": "繼續"
+  },
+  "save_settings": {
+    "message": "儲存設定"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "support_probability": {
+    "message": "支持機率"
+  },
+  "ui_access_to_this_api_endpoint_was_not_granted_settings_were": {
+    "message": "未授權存取此 API 端點，設定未儲存。"
+  },
+  "ui_account_changed_or_could_not_be_verified_action_stopped": {
+    "message": "無法確認登入帳號或帳號已切換，已停止操作。"
+  },
+  "ui_account_changed_start_the_task_again": {
+    "message": "登入帳號已切換，請重新啟動工作。"
+  },
+  "ui_account_verification_failed": {
+    "message": "帳號驗證失敗。"
+  },
+  "ui_accounts": {
+    "message": "$v0$：$v1$ 個帳號",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_action_already_started_submitted_requests_cannot_be_canceled": {
+    "message": "操作已開始，無法撤回已送出的請求。"
+  },
+  "ui_action_failed": {
+    "message": "操作失敗。"
+  },
+  "ui_add": {
+    "message": "新增"
+  },
+  "ui_add_an_allowlisted_user": {
+    "message": "新增允許清單使用者"
+  },
+  "ui_add_option": {
+    "message": "＋ 新增選項"
+  },
+  "ui_add_to_allowlist": {
+    "message": "加入允許清單"
+  },
+  "ui_add_to_allowlist_2": {
+    "message": "將 @$v0$ 加入允許清單",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist": {
+    "message": "已加入允許清單。"
+  },
+  "ui_added_to_allowlist_2": {
+    "message": "已將 @$v0$ 加入允許清單。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist_existing_blocks_can_be_undone_in_history": {
+    "message": "已加入允許清單。已有的封鎖可至紀錄中解除。"
+  },
+  "ui_added_when_unblocking": {
+    "message": "解除封鎖時加入"
+  },
+  "ui_aggressive": {
+    "message": "積極"
+  },
+  "ui_agreed_being_on_time_is_basic_courtesy": {
+    "message": "沒錯，守時是基本禮貌。"
+  },
+  "ui_all": {
+    "message": "全部"
+  },
+  "ui_all_accounts": {
+    "message": "所有帳號"
+  },
+  "ui_allowlist_is_empty": {
+    "message": "允許清單尚無使用者"
+  },
+  "ui_allowlist_note": {
+    "message": "允許清單備註"
+  },
+  "ui_allowlisted_not_sent_to_jev": {
+    "message": "允許清單中的使用者，不傳送給 Jev 分析"
+  },
+  "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
+    "message": "允許清單中的使用者不會被分析或自動封鎖。已有的封鎖須手動解除。"
+  },
+  "ui_already_blocked": {
+    "message": "原先已封鎖"
+  },
+  "ui_already_queued_for_undo": {
+    "message": "已在撤回佇列中"
+  },
+  "ui_also_allowlist_this_user_to_skip_future_analysis": {
+    "message": "同時加入允許清單，日後不再分析"
+  },
+  "ui_also_stops_analysis_of_this_post_in_all_tabs_to": {
+    "message": "同時停止所有分頁中此貼文的分析。解除封鎖時，保持任一登入相同帳號的 X 頁面開啟即可。"
+  },
+  "ui_analysis_canceled": {
+    "message": "分析已取消。"
+  },
+  "ui_analysis_needs_attention": {
+    "message": "分析服務待處理：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_analysis_paused": {
+    "message": "分析已暫停"
+  },
+  "ui_analysis_rules": {
+    "message": "分析規則"
+  },
+  "ui_analysis_rules_block_s_b": {
+    "message": "分析規則・block s.b."
+  },
+  "ui_analyzing_this_reply": {
+    "message": "正在分析此回覆"
+  },
+  "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
+    "message": "動畫預覽中：不分析、不新增封鎖工作。輸入 blockSBDebug.disable() 結束。"
+  },
+  "ui_animation_style": {
+    "message": "動畫效果"
+  },
+  "ui_api_domain_changed_enter_the_new_service_s_api_key": {
+    "message": "API 網域已變更，請重新輸入此服務的 API 金鑰。"
+  },
+  "ui_api_endpoint": {
+    "message": "API 端點"
+  },
+  "ui_api_endpoint_access_not_granted_save_and_grant_access_in": {
+    "message": "API 端點尚未取得授權，請至模型設定重新儲存並授權。"
+  },
+  "ui_api_endpoint_must_use_https_without_credentials_query_parameters_or": {
+    "message": "API 端點須使用 HTTPS，且不可包含帳密、查詢參數或片段。"
+  },
+  "ui_at_most": {
+    "message": "不超過"
+  },
+  "ui_auto_block": {
+    "message": "自動封鎖："
+  },
+  "ui_auto_block_model_confidence": {
+    "message": "自動封鎖：模型信心分數 ≥"
+  },
+  "ui_auto_hidden": {
+    "message": "已自動隱藏・$v0$ $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_auto_hide": {
+    "message": "自動隱藏："
+  },
+  "ui_auto_hide_replies": {
+    "message": "自動隱藏回覆"
+  },
+  "ui_auto_hide_threshold_must_be_below_the_auto_block_threshold": {
+    "message": "自動隱藏機率須低於自動封鎖機率。"
+  },
+  "ui_auto_load_stopped_due_to_a_service_or_loading_error": {
+    "message": "服務或載入異常，自動載入已停止，請處理後重新開啟"
+  },
+  "ui_auto_load_stopped_this_task_reached_the_2_000_reply": {
+    "message": "已達單次 2000 則分析上限，自動載入停止"
+  },
+  "ui_auto_loading": {
+    "message": "・自動載入中"
+  },
+  "ui_automatically_load_more_replies_pauses_when_you_switch_pages_or": {
+    "message": "自動向下載入回覆，切換頁面或分頁時暫停"
+  },
+  "ui_back": {
+    "message": "返回"
+  },
+  "ui_background_interrupted_before_submission_you_can_retry": {
+    "message": "背景於送出前中斷，可以重試。"
+  },
+  "ui_background_interrupted_before_the_final_http_response_no_automatic_retry": {
+    "message": "背景中斷，未收到最終 HTTP 回應，未自動重試；請手動處理紀錄。"
+  },
+  "ui_background_interrupted_result_unknown_verify_the_status_before_retrying": {
+    "message": "背景中斷，結果待確認，請先在紀錄中核對狀態再重試。"
+  },
+  "ui_balanced": {
+    "message": "平衡"
+  },
+  "ui_block": {
+    "message": "加入封鎖"
+  },
+  "ui_block_2": {
+    "message": "封鎖 @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_agreeing_repliers": {
+    "message": "封鎖 @$v0$ 及回覆中的支持者",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_apply_reply_rules": {
+    "message": "封鎖 @$v0$ 並依規則處理回覆",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_remove_their_other_replies": {
+    "message": "封鎖 @$v0$ 並移除其其他回覆",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_for_did_not_complete_replies_restored_check_the_trash": {
+    "message": "@$v0$ 封鎖未完成，已恢復回覆，請查看垃圾桶紀錄。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_must_be_true_or_false": {
+    "message": "$v0$的 block 須為 true 或 false。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_on_match": {
+    "message": "符合時封鎖"
+  },
+  "ui_block_queue_needs_attention_open_the_trash_to_review": {
+    "message": "封鎖佇列需要處理，請開啟垃圾桶確認。"
+  },
+  "ui_block_request_failed_http": {
+    "message": "封鎖請求失敗（HTTP $v0$）。$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_block_request_received_an_http_success_response_the_relationship_was": {
+    "message": "封鎖請求已收到 HTTP 成功回應，未另行查詢封鎖關係。"
+  },
+  "ui_block_request_timed_out_or_disconnected_without_http_success_not": {
+    "message": "封鎖請求逾時或連線中斷，未收到 HTTP 成功回應，未自動重試。"
+  },
+  "ui_block_requests_are_submitted_by_the_background_queue": {
+    "message": "封鎖請求由擴充功能的背景佇列送出。"
+  },
+  "ui_block_s_b_block_history": {
+    "message": "block s.b.・封鎖紀錄"
+  },
+  "ui_block_s_b_cache_cleanup_failed": {
+    "message": "block s.b.: 快取清理失敗。"
+  },
+  "ui_block_s_b_cache_read_failed_using_online_analysis": {
+    "message": "block s.b.: Jev 快取讀取失敗，本次改用線上分析。"
+  },
+  "ui_block_s_b_cache_write_failed_this_result_is_still": {
+    "message": "block s.b.: Jev 快取寫入失敗，本次分析結果仍可使用。"
+  },
+  "ui_block_s_b_cannot_read_queue_will_retry_on_next": {
+    "message": "block s.b.: 無法讀取佇列，將於下次喚醒時重試。"
+  },
+  "ui_block_s_b_no_reply_to_preview_scroll_to_the": {
+    "message": "[block s.b.] 找不到可預覽的回覆，請捲動至回覆區，或提供可見回覆的貼文 ID。"
+  },
+  "ui_block_s_b_panel": {
+    "message": "block s.b. 管理面板"
+  },
+  "ui_block_somebody_panel": {
+    "message": "block somebody 管理面板"
+  },
+  "ui_block_submission_failed_check_the_trash": {
+    "message": "・封鎖送出失敗，請查看垃圾桶紀錄"
+  },
+  "ui_block_target": {
+    "message": "封鎖選項"
+  },
+  "ui_block_threshold": {
+    "message": "封鎖門檻 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_threshold_cannot_be_below_0_5": {
+    "message": "封鎖門檻不可低於 0.5。"
+  },
+  "ui_block_threshold_confidence_must_be": {
+    "message": "封鎖門檻 $v0$・信心分數須 ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_blocked": {
+    "message": "已封鎖"
+  },
+  "ui_blocked_manually": {
+    "message": "手動加入封鎖"
+  },
+  "ui_cache_is_in_use_by_another_window": {
+    "message": "快取正由其他視窗使用"
+  },
+  "ui_cache_limit_must_be_an_integer_from_100_to_100": {
+    "message": "快取筆數須為 100～100000 的整數。"
+  },
+  "ui_cache_open_timed_out": {
+    "message": "開啟快取逾時"
+  },
+  "ui_cache_transaction_failed": {
+    "message": "快取交易失敗"
+  },
+  "ui_cancel_task": {
+    "message": "取消工作"
+  },
+  "ui_cancel_unsent_requests": {
+    "message": "取消尚未送出的請求"
+  },
+  "ui_canceled": {
+    "message": "已取消"
+  },
+  "ui_cannot_block_the_currently_signed_in_account": {
+    "message": "無法封鎖目前登入的帳號。"
+  },
+  "ui_cannot_connect_to_jev_right_now_reply_left_unchanged": {
+    "message": "暫時無法連線至 Jev，回覆保持原樣。"
+  },
+  "ui_cannot_connect_to_the_extension": {
+    "message": "無法連線至擴充功能背景服務。"
+  },
+  "ui_cannot_connect_to_the_extension_reload_the_extension_and_this": {
+    "message": "無法連線至擴充功能，請重新載入擴充功能與此頁面。"
+  },
+  "ui_cannot_identify_the_post_link": {
+    "message": "無法辨識貼文連結。"
+  },
+  "ui_cannot_identify_the_task_s_original_post": {
+    "message": "無法辨識工作的原始貼文。"
+  },
+  "ui_cannot_preview": {
+    "message": "無法預覽：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_cannot_verify_account_status": {
+    "message": "無法確認帳號狀態。"
+  },
+  "ui_cannot_verify_the_existing_block_no_action_taken": {
+    "message": "無法確認現有封鎖關係，未執行操作。"
+  },
+  "ui_category": {
+    "message": "分類"
+  },
+  "ui_cautious": {
+    "message": "謹慎"
+  },
+  "ui_checked": {
+    "message": "已檢查 $v0$ 則$v1$$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_classification_prompt": {
+    "message": "判斷提示詞"
+  },
+  "ui_clear_canceled_records": {
+    "message": "清除已取消的紀錄？"
+  },
+  "ui_clear_canceled_records_2": {
+    "message": "清除已取消紀錄"
+  },
+  "ui_clear_records": {
+    "message": "清除紀錄"
+  },
+  "ui_close": {
+    "message": "關閉"
+  },
+  "ui_close_panel": {
+    "message": "關閉管理面板"
+  },
+  "ui_close_preview": {
+    "message": "關閉預覽"
+  },
+  "ui_confidence": {
+    "message": "信心分數 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_confidence_2": {
+    "message": "$v0$・信心分數 $v1$%$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_configured": {
+    "message": "已設定"
+  },
+  "ui_confirm": {
+    "message": "確認"
+  },
+  "ui_connect_jev_first": {
+    "message": "請先連線至 Jev。"
+  },
+  "ui_connect_jev_in_settings_first": {
+    "message": "請先在設定中連線至 Jev。"
+  },
+  "ui_connecting": {
+    "message": "連線中…"
+  },
+  "ui_contains_an_unknown_variable": {
+    "message": "$v0$含有未知變數：$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_contains_unread_media": {
+    "message": "含有未讀取的媒體"
+  },
+  "ui_could_not_save_reply_context": {
+    "message": "無法儲存回覆脈絡"
+  },
+  "ui_could_not_save_reply_context_retrying": {
+    "message": "無法暫存回覆脈絡，正在重試"
+  },
+  "ui_could_not_switch_automatically_choose_most_recent_on_x_to": {
+    "message": "無法自動切換，請在 X 選單選擇最新排序，工作會自動繼續"
+  },
+  "ui_could_not_sync_task_status": {
+    "message": "工作狀態同步失敗：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria": {
+    "message": "$v0$判斷標準",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria_which_replies_belong_in_this_category": {
+    "message": "判斷標準：哪些回覆屬於此選項？"
+  },
+  "ui_current_block_status_on_x_verified": {
+    "message": "已確認目前在 X 的封鎖狀態。"
+  },
+  "ui_current_thread_task_changed": {
+    "message": "目前的回覆區工作已切換。"
+  },
+  "ui_current_thread_task_is_paused_or_changed": {
+    "message": "目前回覆區工作已暫停或切換。"
+  },
+  "ui_custom": {
+    "message": "自訂"
+  },
+  "ui_customize_prompt": {
+    "message": "自訂提示詞 ↗"
+  },
+  "ui_decision_details": {
+    "message": "判斷依據"
+  },
+  "ui_delete": {
+    "message": "刪除"
+  },
+  "ui_delete_option": {
+    "message": "刪除此選項"
+  },
+  "ui_detection_policy": {
+    "message": "判斷策略"
+  },
+  "ui_direct_parent_reply_context_is_missing": {
+    "message": "缺少直接回覆對象的脈絡"
+  },
+  "ui_discard_unsaved_changes_and_load_the_latest_settings": {
+    "message": "捨棄尚未儲存的草稿，載入最新設定？"
+  },
+  "ui_dismiss_allowlist_notice": {
+    "message": "關閉允許清單提示"
+  },
+  "ui_don_t_show_again": {
+    "message": "不再顯示"
+  },
+  "ui_edit_note": {
+    "message": "編輯備註"
+  },
+  "ui_editing_mode": {
+    "message": "編輯模式"
+  },
+  "ui_end_of_x_s_results_queued_blocks_will_continue": {
+    "message": "已到 X 回傳清單末端・封鎖佇列繼續處理"
+  },
+  "ui_endpoint_did_not_return_a_valid_jev_result_settings_were": {
+    "message": "介面未回傳有效的 Jev 分類結果，設定未儲存。"
+  },
+  "ui_enter_a_valid_api_key": {
+    "message": "請輸入有效的 API 金鑰。"
+  },
+  "ui_enter_an_x_username_or_profile_link": {
+    "message": "請輸入 X 使用者名稱或個人檔案連結。"
+  },
+  "ui_enter_api_key": {
+    "message": "輸入 API 金鑰"
+  },
+  "ui_enter_the_full_https_api_endpoint": {
+    "message": "請輸入完整的 HTTPS API 端點。"
+  },
+  "ui_enter_the_full_https_url_of_a_jev_compatible_endpoint": {
+    "message": "輸入與 Jev 相容的完整 HTTPS 介面網址。"
+  },
+  "ui_enter_this_service_s_api_key": {
+    "message": "輸入此服務的 API 金鑰"
+  },
+  "ui_enter_your_jev_api_key_in_settings_first": {
+    "message": "請先在設定中輸入 Jev API 金鑰。"
+  },
+  "ui_excluded_from_this_automatic_task": {
+    "message": "已從此自動工作排除"
+  },
+  "ui_existing_blocks_or_accounts_managed_by_later_records_will_be": {
+    "message": "$v0$ 筆原有封鎖或由後續紀錄管理的帳號將保留。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_expanded_request_too_large_reduce_repeated_variables_or_shorten_the": {
+    "message": "變數展開後的請求過大，請減少重複變數或縮短範本。"
+  },
+  "ui_expands_variables_locally_without_calling_an_api": {
+    "message": "僅在本機展開變數，不呼叫 API。"
+  },
+  "ui_export": {
+    "message": "匯出"
+  },
+  "ui_export_history_and_allowlist": {
+    "message": "匯出紀錄與允許清單"
+  },
+  "ui_extension_disconnected_refresh_this_page": {
+    "message": "擴充功能連線已中斷，請重新整理頁面。"
+  },
+  "ui_failed_or_unconfirmed_items_need_separate_review_they_will_not": {
+    "message": "$v0$ 筆失敗或結果不明的紀錄須個別處理，不會標示為已撤回。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_by_signed_in_account": {
+    "message": "依登入帳號篩選"
+  },
+  "ui_filter_records": {
+    "message": "篩選紀錄"
+  },
+  "ui_final_request_content": {
+    "message": "最終請求內容"
+  },
+  "ui_fly_to_trash": {
+    "message": "飛入垃圾桶"
+  },
+  "ui_follow_system_reduced_motion_preference": {
+    "message": "依系統設定減少動態效果"
+  },
+  "ui_for_http_only_records_the_previous_block_status_was_not": {
+    "message": "僅記錄 HTTP 成功的項目未確認原有封鎖關係，解除封鎖會移除目前的封鎖。"
+  },
+  "ui_future_replies_by_will_follow_the_current_rules_existing_blocks": {
+    "message": "@$v0$ 後續的回覆將依目前規則判斷，已有的封鎖不受影響。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_github_repository": {
+    "message": "GitHub 專案儲存庫"
+  },
+  "ui_has_unknown_fields_or_an_invalid_format": {
+    "message": "$v0$含有未知欄位或格式不正確。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_has_unmatched_variable_braces": {
+    "message": "$v0$的變數括號不完整。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_hide": {
+    "message": "隱藏"
+  },
+  "ui_hide_details": {
+    "message": "收合明細"
+  },
+  "ui_hide_range": {
+    "message": "隱藏範圍：$v0$% ≤ $v1$ < $v2$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_history_has_reached_5_000_records_export_and_clear_completed": {
+    "message": "操作紀錄已達 5000 筆，請匯出並清除已完成紀錄。"
+  },
+  "ui_if_you_agree_to_meet_you_should_be_on_time": {
+    "message": "約好見面就應該準時到。"
+  },
+  "ui_incomplete_text": {
+    "message": "文字不完整"
+  },
+  "ui_input": {
+    "message": "輸入內容"
+  },
+  "ui_input_template": {
+    "message": "輸入內容範本"
+  },
+  "ui_insert": {
+    "message": "插入 {{$v0$}}",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_insert_input_variable": {
+    "message": "插入輸入變數"
+  },
+  "ui_insert_prompt_variable": {
+    "message": "插入提示詞變數"
+  },
+  "ui_insufficient_jev_balance_check_your_account": {
+    "message": "Jev 餘額不足，請檢查帳戶。"
+  },
+  "ui_internal_id": {
+    "message": "內部識別碼・$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_analysis_result": {
+    "message": "分析結果異常"
+  },
+  "ui_invalid_context_request": {
+    "message": "無效的上下文請求。"
+  },
+  "ui_invalid_jev_classification_format_reply_skipped": {
+    "message": "Jev 分類格式無效，已略過此回覆"
+  },
+  "ui_invalid_jev_key_update_it_in_settings": {
+    "message": "Jev 金鑰無效，請重新設定。"
+  },
+  "ui_invalid_jev_probability_sum_reply_skipped": {
+    "message": "Jev 機率總和異常（$v0$），已略過此回覆",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_json_check_brackets_commas_and_quotes": {
+    "message": "Raw 不是有效的 JSON，請檢查括號、逗號與引號。"
+  },
+  "ui_invalid_model_name": {
+    "message": "模型名稱無效。"
+  },
+  "ui_invalid_page": {
+    "message": "頁面無效。"
+  },
+  "ui_invalid_request_source": {
+    "message": "請求來源無效。"
+  },
+  "ui_invalid_results": {
+    "message": "・$v0$ 則結果異常",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_x_origin": {
+    "message": "無效的 X 來源。"
+  },
+  "ui_is_below": {
+    "message": "$v0$未達 $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_jev_classification_disagrees_with_the_highest_probability_reply_skipped": {
+    "message": "Jev 分類與最高機率不一致，已略過此回覆"
+  },
+  "ui_jev_denied_access_check_your_permissions": {
+    "message": "Jev 拒絕存取，請確認帳戶權限。"
+  },
+  "ui_jev_rate_limit_reached_analysis_paused_retry_later": {
+    "message": "Jev 暫時限制請求頻率，分析已暫停，請稍後重試。"
+  },
+  "ui_jev_request_cache": {
+    "message": "Jev 請求快取"
+  },
+  "ui_jev_response_interrupted_reply_left_unchanged": {
+    "message": "Jev 回應中斷，回覆保持原樣。"
+  },
+  "ui_jev_response_too_large_reply_skipped": {
+    "message": "Jev 回傳結果過大，已略過此回覆。"
+  },
+  "ui_jev_returned_an_empty_result": {
+    "message": "Jev 回傳空白結果。"
+  },
+  "ui_jev_returned_an_unreadable_result": {
+    "message": "無法讀取 Jev 回傳的結果。"
+  },
+  "ui_jev_returned_http_reply_left_unchanged": {
+    "message": "Jev 回傳 HTTP $v0$，回覆保持原樣。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_jev_timed_out_reply_left_unchanged": {
+    "message": "Jev 回應逾時，回覆保持原樣。"
+  },
+  "ui_leave_blank_to_keep_the_saved_key": {
+    "message": "留空以沿用已儲存的金鑰"
+  },
+  "ui_left_thread_queued_blocks_continue_in_background": {
+    "message": "已離開回覆區・佇列仍在背景送出"
+  },
+  "ui_load_latest_settings": {
+    "message": "載入最新設定"
+  },
+  "ui_loading": {
+    "message": "讀取中…"
+  },
+  "ui_management": {
+    "message": "管理功能"
+  },
+  "ui_maximum_entries": {
+    "message": "保留筆數上限"
+  },
+  "ui_missing_parent_context_in_this_page_and_local_records_load": {
+    "message": "目前頁面與本機紀錄都找不到完整回覆脈絡，載入缺少的回覆後會繼續分析"
+  },
+  "ui_model": {
+    "message": "模型"
+  },
+  "ui_model_confidence_is_below": {
+    "message": "模型信心分數未達 $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_model_selection": {
+    "message": "模型判定"
+  },
+  "ui_model_settings": {
+    "message": "模型設定"
+  },
+  "ui_model_settings_changed_in_another_window_save_again": {
+    "message": "模型設定已在其他視窗變更，請重新儲存。"
+  },
+  "ui_move_down": {
+    "message": "下移"
+  },
+  "ui_move_up": {
+    "message": "上移"
+  },
+  "ui_must_be_text_characters": {
+    "message": "$v0$須為$v1$ $v2$ 個字元的文字。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_name": {
+    "message": "$v0$名稱",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_needs_attention": {
+    "message": "待處理"
+  },
+  "ui_needs_attention_2": {
+    "message": "待處理"
+  },
+  "ui_needs_attention_open_trash": {
+    "message": "工作待處理・請開啟垃圾桶"
+  },
+  "ui_needs_verification": {
+    "message": "結果待確認"
+  },
+  "ui_new_analysis_will_stop_block_history_and_the_allowlist_will": {
+    "message": "將停止分析新回覆，封鎖紀錄與允許清單會保留。"
+  },
+  "ui_no_analysis_no_automatic_blocking": {
+    "message": "不分析・不自動封鎖"
+  },
+  "ui_no_block_history_yet": {
+    "message": "尚無封鎖紀錄"
+  },
+  "ui_no_blocks_recorded_for_this_task_yet": {
+    "message": "此工作尚無封鎖紀錄。"
+  },
+  "ui_no_matching_tasks": {
+    "message": "找不到符合的工作"
+  },
+  "ui_no_matching_users": {
+    "message": "找不到符合的使用者"
+  },
+  "ui_no_new_replies_for_30_seconds_auto_load_stopped_check": {
+    "message": "30 秒內沒有新回覆，已停止自動載入，可手動確認後重新開啟"
+  },
+  "ui_no_probability_available": {
+    "message": "尚無機率資料"
+  },
+  "ui_no_readable_text": {
+    "message": "無可讀取的文字"
+  },
+  "ui_no_records_need_verification": {
+    "message": "沒有待確認的紀錄。"
+  },
+  "ui_no_text_to_analyze": {
+    "message": "沒有可分析的文字"
+  },
+  "ui_no_verifiable_result_received": {
+    "message": "未收到可確認的結果。"
+  },
+  "ui_nonempty_at_most": {
+    "message": "非空白且不超過"
+  },
+  "ui_not_analyzed_yet": {
+    "message": "尚無分析結果"
+  },
+  "ui_not_auto_blocked": {
+    "message": "・未自動封鎖：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_not_connected": {
+    "message": "尚未連線"
+  },
+  "ui_not_enough_text_to_decide": {
+    "message": "缺少可判斷的文字"
+  },
+  "ui_note": {
+    "message": "備註"
+  },
+  "ui_note_for": {
+    "message": "@$v0$ 的備註",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_note_optional": {
+    "message": "備註（選填）"
+  },
+  "ui_older_results_may_lack_a_full_distribution_missing_values_show": {
+    "message": "舊結果未儲存完整分布，缺少的項目顯示 —。"
+  },
+  "ui_only_http_success_was_recorded_the_prior_block_status_was": {
+    "message": "此紀錄僅確認 HTTP 成功回應，未查詢原先是否已封鎖。解除封鎖會移除目前的封鎖。"
+  },
+  "ui_only_unblocked_or_canceled_local_records_will_be_deleted_active": {
+    "message": "僅清除已解除封鎖或已取消工作的本機紀錄。現有封鎖與撤回功能會保留，不會變更 X 上的封鎖關係。"
+  },
+  "ui_open_settings": {
+    "message": "前往設定"
+  },
+  "ui_open_x_signed_in_as_first": {
+    "message": "請先開啟已登入 @$v0$ 的 X 頁面。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_open_x_signed_in_as_once_to_connect_this_older": {
+    "message": "請開啟一次已登入 @$v0$ 的 X 頁面，讓舊工作連結背景佇列。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option": {
+    "message": "選項 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_criteria": {
+    "message": "選項 $v0$ 判斷標準",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_internal_id": {
+    "message": "選項 $v0$ 內部識別碼",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_name": {
+    "message": "選項名稱"
+  },
+  "ui_option_name_2": {
+    "message": "選項 $v0$ 名稱",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_probabilities": {
+    "message": "選項機率"
+  },
+  "ui_options_blocking_options": {
+    "message": "$v0$ 個選項・$v1$ 個封鎖選項",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_original_author": {
+    "message": "原始貼文作者"
+  },
+  "ui_original_author_blocked_by_this_task": {
+    "message": "原作者，依選取的工作直接封鎖"
+  },
+  "ui_original_post_reply_or_parent_text_is_incomplete": {
+    "message": "原始貼文、回覆或上層回覆文字尚不完整"
+  },
+  "ui_output_options": {
+    "message": "輸出選項"
+  },
+  "ui_page_closed_or_connection_lost_verify_the_outcome": {
+    "message": "頁面已關閉或連線中斷，須確認操作結果。"
+  },
+  "ui_page_experience": {
+    "message": "頁面體驗"
+  },
+  "ui_particle_dissolve": {
+    "message": "粒子消散"
+  },
+  "ui_paused": {
+    "message": "已暫停"
+  },
+  "ui_pending": {
+    "message": "待送出"
+  },
+  "ui_post_by": {
+    "message": "@$v0$ 的貼文",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_preview_request": {
+    "message": "預覽請求"
+  },
+  "ui_probabilities_by_option": {
+    "message": "各選項機率"
+  },
+  "ui_processing": {
+    "message": "處理中"
+  },
+  "ui_prompt": {
+    "message": "提示詞"
+  },
+  "ui_prompt_can_contain_up_to_12_000_characters": {
+    "message": "提示詞最多 12000 個字元。"
+  },
+  "ui_queue_for_unblocking": {
+    "message": "加入解除封鎖佇列"
+  },
+  "ui_queue_waiting_for_to_sign_in_no_other_account_will": {
+    "message": "佇列等待登入 @$v0$，不會使用其他帳號送出。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_queued": {
+    "message": "佇列中"
+  },
+  "ui_raw_configuration": {
+    "message": "原始設定"
+  },
+  "ui_recorded": {
+    "message": "記錄時間 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reload": {
+    "message": "重新讀取"
+  },
+  "ui_remove": {
+    "message": "移除"
+  },
+  "ui_remove_from_allowlist": {
+    "message": "從允許清單移除"
+  },
+  "ui_remove_from_allowlist_2": {
+    "message": "從允許清單移除？"
+  },
+  "ui_remove_jev_api_key": {
+    "message": "移除 Jev 金鑰？"
+  },
+  "ui_remove_key": {
+    "message": "移除金鑰"
+  },
+  "ui_remove_users_from_the_allowlist_panel": {
+    "message": "請從允許清單面板移除。"
+  },
+  "ui_replies_failed_to_load_retry_on_x": {
+    "message": "回覆載入失敗$v0$，請在 X 頁面重試",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_replies_ready_syncing_task_status": {
+    "message": "回覆已就緒・正在同步工作狀態"
+  },
+  "ui_reply_automatically_hidden": {
+    "message": "回覆已自動隱藏"
+  },
+  "ui_reply_context_cache_is_in_use": {
+    "message": "回覆脈絡快取使用中"
+  },
+  "ui_reply_context_cache_open_timed_out": {
+    "message": "開啟回覆脈絡快取逾時"
+  },
+  "ui_reply_does_not_belong_to_the_selected_conversation": {
+    "message": "回覆不屬於目前選取的對話串。"
+  },
+  "ui_reply_kept_no_automatic_retry_in_this_task": {
+    "message": "$v0$；保留原文，此工作不會自動重試",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reply_removal_animation": {
+    "message": "回覆移除動畫"
+  },
+  "ui_reply_that_triggered_the_decision": {
+    "message": "觸發判斷的回覆"
+  },
+  "ui_request_preview": {
+    "message": "請求預覽"
+  },
+  "ui_restore_defaults": {
+    "message": "還原預設值"
+  },
+  "ui_resume_tasks": {
+    "message": "恢復工作"
+  },
+  "ui_retry": {
+    "message": "重試"
+  },
+  "ui_rule": {
+    "message": "規則"
+  },
+  "ui_rule_json": {
+    "message": "規則 JSON"
+  },
+  "ui_rule_too_large_shorten_descriptions_max_120_000_characters_total": {
+    "message": "規則內容過大，請縮短選項說明（合計最多 120000 字元）。"
+  },
+  "ui_sample_original_post": {
+    "message": "範例原始貼文"
+  },
+  "ui_sample_parent_reply_leave_blank_for_direct_replies": {
+    "message": "範例上層回覆（直接回覆原始貼文時留空）"
+  },
+  "ui_sample_reply": {
+    "message": "範例回覆"
+  },
+  "ui_save": {
+    "message": "儲存"
+  },
+  "ui_save_and_connect": {
+    "message": "儲存並連線"
+  },
+  "ui_save_connection_details_in_model_settings": {
+    "message": "請在模型設定中儲存連線資訊。"
+  },
+  "ui_save_failed": {
+    "message": "儲存失敗"
+  },
+  "ui_save_rules": {
+    "message": "儲存規則"
+  },
+  "ui_saved": {
+    "message": "已儲存"
+  },
+  "ui_saved_and_connected": {
+    "message": "已儲存並連線"
+  },
+  "ui_saving": {
+    "message": "儲存中…"
+  },
+  "ui_search_allowlist": {
+    "message": "搜尋允許清單"
+  },
+  "ui_search_block_history": {
+    "message": "搜尋封鎖紀錄"
+  },
+  "ui_search_usernames_or_reply_text": {
+    "message": "搜尋使用者名稱或回覆內容"
+  },
+  "ui_select_at_least_one_option_that_triggers_blocking": {
+    "message": "至少勾選一個可觸發封鎖的選項。"
+  },
+  "ui_select_categories_that_may_trigger_blocking_both_the_chosen_category": {
+    "message": "勾選可觸發封鎖的類別；判定類別的機率與模型信心分數，都須達到設定的門檻。"
+  },
+  "ui_selected_original_post": {
+    "message": "選取的原始貼文"
+  },
+  "ui_set_between_2_and_255_output_options": {
+    "message": "請設定 2～255 個輸出選項。"
+  },
+  "ui_set_inputs_instructions_and_blocking_options": {
+    "message": "設定輸入內容、判斷方式與封鎖選項。"
+  },
+  "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
+    "message": "設定已在其他視窗變更，請先複製草稿，再載入最新設定。"
+  },
+  "ui_settings_changed_in_another_window_your_draft_is_kept_copy": {
+    "message": "其他視窗已更新設定，已保留目前草稿。請先複製草稿，再載入最新設定。"
+  },
+  "ui_show": {
+    "message": "顯示"
+  },
+  "ui_show_details": {
+    "message": "展開明細（$v0$）",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_show_entered_key": {
+    "message": "顯示輸入的金鑰"
+  },
+  "ui_show_more_accounts": {
+    "message": "顯示更多帳號"
+  },
+  "ui_show_more_tasks": {
+    "message": "顯示更多工作"
+  },
+  "ui_show_reply": {
+    "message": "查看原文"
+  },
+  "ui_showing_of_records_undo_still_applies_to_the_entire_task": {
+    "message": "目前顯示 $v0$／$v1$ 筆；一鍵撤回仍適用於整項工作。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_some_replies_lack_context": {
+    "message": "・部分回覆缺少脈絡"
+  },
+  "ui_start_from_a_post_s_menu_on_x": {
+    "message": "從 X 貼文選單啟動。"
+  },
+  "ui_start_from_a_signed_in_x_page_in_a_regular": {
+    "message": "請從一般視窗中已登入的 X 頁面啟動。"
+  },
+  "ui_start_from_the_post_menu": {
+    "message": "請從貼文選單啟動。"
+  },
+  "ui_stop": {
+    "message": "結束"
+  },
+  "ui_stop_task": {
+    "message": "停止工作"
+  },
+  "ui_submission_failed": {
+    "message": "送出失敗"
+  },
+  "ui_submitted": {
+    "message": "已送出"
+  },
+  "ui_submitted_blocked": {
+    "message": "已送出／封鎖"
+  },
+  "ui_submitted_blocked_2": {
+    "message": "已送出／已封鎖"
+  },
+  "ui_submitting": {
+    "message": "正在送出"
+  },
+  "ui_switching_to_most_recent_using_the_page_menu": {
+    "message": "正在透過頁面選單切換至最新排序"
+  },
+  "ui_target_identity_could_not_be_verified_action_stopped": {
+    "message": "無法核對目標帳號身分，已停止操作。"
+  },
+  "ui_task_canceled": {
+    "message": "工作已取消"
+  },
+  "ui_task_created_open_this_post_s_replies_to_switch_automatically": {
+    "message": "工作已建立，請開啟此貼文的回覆區，擴充功能會自動切換至最新排序。"
+  },
+  "ui_task_ended_page_changed_or_account_unavailable_start_again_from": {
+    "message": "工作已結束、頁面已切換或無法確認登入帳號，請從貼文選單重新啟動。"
+  },
+  "ui_task_history": {
+    "message": "工作紀錄"
+  },
+  "ui_task_not_found_or_already_cleared": {
+    "message": "工作不存在或已清除。"
+  },
+  "ui_task_running": {
+    "message": "工作進行中"
+  },
+  "ui_task_stopped": {
+    "message": "工作已停止"
+  },
+  "ui_task_stopped_accounts_queued_for_undo_unsent_requests_canceled_requests": {
+    "message": "工作已停止：$v0$ 個帳號加入撤回佇列，$v1$ 筆取消送出，$v2$ 筆等待回應。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_task_stopped_submitted_blocks_remain_use_undo_all_blocks_to": {
+    "message": "工作已停止，已送出的封鎖仍保留，可另外整批撤回。"
+  },
+  "ui_tasks_resumed_failed_items_can_be_retried_individually": {
+    "message": "已恢復工作，可逐筆重試失敗紀錄。"
+  },
+  "ui_templates_can_contain_up_to_12_000_characters": {
+    "message": "範本最多 12000 個字元。"
+  },
+  "ui_the_background_service_could_not_authorize_this_action": {
+    "message": "背景服務無法確認操作權限。"
+  },
+  "ui_the_chosen_category_is_not_marked_for_blocking": {
+    "message": "模型判定的類別未勾選封鎖"
+  },
+  "ui_the_model_did_not_classify_this_as_clear_support": {
+    "message": "模型未判定為明確支持"
+  },
+  "ui_the_original_author_is_allowlisted_remove_them_before_starting": {
+    "message": "原作者在允許清單中，請先移除再啟動。"
+  },
+  "ui_the_original_post_contains_media": {
+    "message": "原始貼文含有圖片或其他媒體"
+  },
+  "ui_the_original_post_contains_media_2": {
+    "message": "原始貼文含有圖片或其他媒體"
+  },
+  "ui_the_username_now_belongs_to_a_different_account_action_stopped": {
+    "message": "使用者名稱對應的帳號已變更，操作已停止。"
+  },
+  "ui_this_account_already_has_a_pending_action": {
+    "message": "此帳號已有待處理操作。"
+  },
+  "ui_this_account_needs_review_open_the_trash_to_check_its": {
+    "message": "此帳號的操作待確認，請開啟垃圾桶查看紀錄。"
+  },
+  "ui_this_extension_did_not_submit_the_block_so_it_cannot": {
+    "message": "此封鎖並非由擴充功能送出，無法在此撤回。"
+  },
+  "ui_this_record_cannot_be_unblocked_right_now": {
+    "message": "目前無法透過此紀錄解除封鎖。"
+  },
+  "ui_this_task_has_analyzed_2_000_replies_stop_and_start": {
+    "message": "此工作已分析 2000 則回覆，請結束後重新啟動。"
+  },
+  "ui_this_task_was_undone_start_again_from_the_original_post": {
+    "message": "此工作已撤回。如需再次封鎖，請從原始貼文重新啟動。"
+  },
+  "ui_this_user_is_allowlisted": {
+    "message": "此使用者在允許清單中"
+  },
+  "ui_this_user_is_allowlisted_remove_them_first": {
+    "message": "此使用者在允許清單中，請先移除。"
+  },
+  "ui_this_user_is_already_allowlisted": {
+    "message": "此使用者已在允許清單中。"
+  },
+  "ui_thread_changed_try_again": {
+    "message": "回覆區已切換，請重新操作。"
+  },
+  "ui_thread_task_changed": {
+    "message": "回覆區工作已切換。"
+  },
+  "ui_threshold_must_be_between_0_and_1": {
+    "message": "門檻須介於 0 與 1 之間。"
+  },
+  "ui_to_unblock_open_any_x_page_signed_in_as": {
+    "message": "解除封鎖時，請開啟任一已登入 @$v0$ 的 X 頁面。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_toggle_auto_load_from_the_replies": {
+    "message": "請在回覆區切換自動載入。"
+  },
+  "ui_unblock": {
+    "message": "解除封鎖"
+  },
+  "ui_unblock_failed": {
+    "message": "解除封鎖失敗"
+  },
+  "ui_unblock_pending": {
+    "message": "等待解除封鎖"
+  },
+  "ui_unblock_request_queued": {
+    "message": "已加入解除封鎖佇列。"
+  },
+  "ui_unblocked": {
+    "message": "已解除封鎖"
+  },
+  "ui_unblocking": {
+    "message": "正在解除封鎖"
+  },
+  "ui_undo_after_request_completes": {
+    "message": "請求完成後撤回"
+  },
+  "ui_undo_all_blocks": {
+    "message": "一鍵撤回封鎖"
+  },
+  "ui_undo_needs_attention": {
+    "message": "撤回待處理"
+  },
+  "ui_undo_task": {
+    "message": "確認撤回"
+  },
+  "ui_undo_this_entire_task_for_s_post_using_includes_the": {
+    "message": "撤回 @$v0$ 這篇貼文的整項工作（使用 @$v1$ 帳號），包含原作者及此工作中的回覆帳號，不受目前搜尋或篩選條件限制。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_undo_this_task_s_blocks": {
+    "message": "撤回此工作的封鎖？"
+  },
+  "ui_undoing": {
+    "message": "撤回中"
+  },
+  "ui_undone": {
+    "message": "已撤回"
+  },
+  "ui_undone_canceled": {
+    "message": "已撤回／取消"
+  },
+  "ui_unknown_action": {
+    "message": "未知的操作。"
+  },
+  "ui_unknown_animation_effect": {
+    "message": "未知的動畫效果。"
+  },
+  "ui_unknown_decision_mode": {
+    "message": "未知的判斷模式。"
+  },
+  "ui_unknown_variable": {
+    "message": "未知變數：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_unsaved_changes": {
+    "message": "有尚未儲存的變更"
+  },
+  "ui_unsupported_rule_version_use_version_1": {
+    "message": "不支援此規則版本，version 須為 1。"
+  },
+  "ui_use_a_unique_id_starting_with_a_lowercase_letter_containing": {
+    "message": "$v0$的識別碼須唯一，以小寫字母開頭，僅含字母、數字及底線（最多 48 字元）。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_use_s_x_session_to_unblock_keep_an_x_page": {
+    "message": "使用 @$v0$ 的 X 登入狀態解除對 @$v1$ 的封鎖，請保持該帳號的 X 頁面開啟。此工作不會再次自動封鎖這位使用者。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_use_the_button_next_to_a_reply": {
+    "message": "請使用回覆旁的按鈕。"
+  },
+  "ui_use_the_history_panel": {
+    "message": "請從紀錄面板操作。"
+  },
+  "ui_use_the_management_panel_for_this_action": {
+    "message": "請從管理面板進行此操作。"
+  },
+  "ui_username_or_x_profile_link": {
+    "message": "@使用者名稱或 X 個人檔案連結"
+  },
+  "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
+    "message": "使用者名稱須為 1～15 位英文字母、數字或底線。"
+  },
+  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
+    "message": "與視覺化編輯共用同一份設定。block 為 true 的選項可觸發封鎖。"
+  },
+  "ui_verify_status": {
+    "message": "確認狀態"
+  },
+  "ui_verify_unknown_results_before_retrying": {
+    "message": "結果不明的操作須先確認狀態。"
+  },
+  "ui_via_records": {
+    "message": "使用 @$v0$ · $v1$ · $v2$ 筆紀錄",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_view_original": {
+    "message": "查看原始貼文 ↗"
+  },
+  "ui_view_post_on_x": {
+    "message": "前往 X 查看原始貼文 ↗"
+  },
+  "ui_view_probabilities_by_option": {
+    "message": "$v0$，查看各選項機率。$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_view_reason": {
+    "message": "查看原因"
+  },
+  "ui_visual": {
+    "message": "視覺化"
+  },
+  "ui_waiting_for_recent_replies_check_if_x_needs_a_retry": {
+    "message": "等待最新回覆，請確認 X 頁面是否需要重試"
+  },
+  "ui_waiting_for_the_first_page_of_recent_replies": {
+    "message": "等待最新排序的第一批回覆"
+  },
+  "ui_waiting_to_analyze_this_reply": {
+    "message": "等待分析此回覆"
+  },
+  "ui_why_this_user_was_processed": {
+    "message": "處理這位使用者的原因"
+  },
+  "ui_x_action_failed_http": {
+    "message": "X 操作失敗（HTTP $v0$）。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_x_did_not_confirm_the_unblock_verify_the_result_first": {
+    "message": "X 未明確確認解除封鎖，請先核對結果。"
+  },
+  "ui_x_endpoint_or_target_account_is_unavailable": {
+    "message": "X 介面或目標帳號無法使用。"
+  },
+  "ui_x_rate_limit_reached_queue_paused": {
+    "message": "X 暫時限制請求頻率，佇列已暫停。"
+  },
+  "ui_x_refused_the_request_check_your_account_status": {
+    "message": "X 拒絕此請求，請確認帳號狀態。"
+  },
+  "ui_x_refused_this_action_check_your_account_status": {
+    "message": "X 拒絕此操作，請確認帳號狀態。"
+  },
+  "ui_x_request_timed_out_or_connection_was_interrupted": {
+    "message": "X 請求逾時或連線中斷。"
+  },
+  "ui_x_returned_a_result_that_could_not_be_verified": {
+    "message": "無法確認 X 回傳的結果。"
+  },
+  "ui_x_returned_an_error": {
+    "message": "X 回傳錯誤訊息。"
+  },
+  "ui_x_session_expired": {
+    "message": "X 登入已失效。"
+  },
+  "ui_x_session_expired_refresh_and_sign_in_again": {
+    "message": "X 登入階段已失效，請重新整理並登入。"
+  },
+  "ui_x_session_expired_sign_in_to_resume_the_queue": {
+    "message": "X 登入已失效，請登入後恢復佇列。"
+  },
+  "ui_x_session_unavailable_sign_in_before_resuming_the_queue": {
+    "message": "X 登入狀態無法使用，請登入後恢復佇列。"
+  },
+  "ui_you_can_retry_manually_in_history": {
+    "message": "可至紀錄中手動重試。"
+  },
+  "ui_you_cannot_block_yourself": {
+    "message": "無法封鎖自己"
+  },
+  "ui_you_cannot_block_yourself_2": {
+    "message": "無法封鎖自己。"
+  },
+  "ui_you_chose_to_block_the_original_author_no_model_decision": {
+    "message": "你主動選擇封鎖原作者，未使用模型判斷。"
+  },
+  "ui_you_manually_blocked_this_user_using_the_reply_button_no": {
+    "message": "你透過回覆旁的按鈕手動封鎖，未使用模型判斷。"
+  },
+  "ui_your_own_reply_not_analyzed": {
+    "message": "自己的回覆，不進行分析"
+  },
+  "variable_incomplete_text": {
+    "message": "文字是否不完整"
+  },
+  "variable_original_post": {
+    "message": "原始貼文內容"
+  },
+  "variable_parent_reply": {
+    "message": "直接回覆的對象"
+  },
+  "variable_reply": {
+    "message": "目前回覆"
+  },
+  "variable_reply_is_direct": {
+    "message": "是否直接回覆原始貼文"
+  },
+  "variable_unseen_media": {
+    "message": "是否含未讀取的媒體"
+  }
+}

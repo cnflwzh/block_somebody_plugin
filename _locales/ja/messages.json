@@ -1,0 +1,1750 @@
+{
+  "action_title": {
+    "message": "block s.b.・履歴、許可リスト、設定"
+  },
+  "agreement_probability": {
+    "message": "賛同の確率"
+  },
+  "allowlist": {
+    "message": "許可リスト"
+  },
+  "api_key": {
+    "message": "API キー"
+  },
+  "auto_load_off": {
+    "message": "自動読み込み：オフ"
+  },
+  "auto_load_on": {
+    "message": "自動読み込み：オン"
+  },
+  "block_history": {
+    "message": "ブロック履歴"
+  },
+  "category_neutral": {
+    "message": "無関係な内容"
+  },
+  "category_oppose": {
+    "message": "元のポストに反対"
+  },
+  "category_support": {
+    "message": "元のポストに賛同"
+  },
+  "category_uncertain": {
+    "message": "判定できない"
+  },
+  "extension_description": {
+    "message": "X の返信の賛同確率を表示し、条件に合うアカウントをブロック。手動ブロック、履歴の取り消し、許可リストに対応。"
+  },
+  "match_probability": {
+    "message": "該当する確率"
+  },
+  "model_confidence": {
+    "message": "モデルの確信度"
+  },
+  "pause": {
+    "message": "一時停止"
+  },
+  "resume": {
+    "message": "再開"
+  },
+  "save_settings": {
+    "message": "設定を保存"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "support_probability": {
+    "message": "賛同の確率"
+  },
+  "ui_access_to_this_api_endpoint_was_not_granted_settings_were": {
+    "message": "この API エンドポイントへのアクセスが許可されていないため、設定を保存していません。"
+  },
+  "ui_account_changed_or_could_not_be_verified_action_stopped": {
+    "message": "ログイン中のアカウントが変わったか確認できないため、操作を停止しました。"
+  },
+  "ui_account_changed_start_the_task_again": {
+    "message": "アカウントが切り替わりました。タスクを再開してください。"
+  },
+  "ui_account_verification_failed": {
+    "message": "アカウントの確認に失敗しました。"
+  },
+  "ui_accounts": {
+    "message": "$v0$：$v1$ アカウント",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_action_already_started_submitted_requests_cannot_be_canceled": {
+    "message": "操作は開始済みです。送信済みのリクエストは取り消せません。"
+  },
+  "ui_action_failed": {
+    "message": "操作に失敗しました。"
+  },
+  "ui_add": {
+    "message": "追加"
+  },
+  "ui_add_an_allowlisted_user": {
+    "message": "許可リストにユーザーを追加"
+  },
+  "ui_add_option": {
+    "message": "＋ 項目を追加"
+  },
+  "ui_add_to_allowlist": {
+    "message": "許可リストに追加"
+  },
+  "ui_add_to_allowlist_2": {
+    "message": "@$v0$ を許可リストに追加",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist": {
+    "message": "許可リストに追加しました。"
+  },
+  "ui_added_to_allowlist_2": {
+    "message": "@$v0$ を許可リストに追加しました。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist_existing_blocks_can_be_undone_in_history": {
+    "message": "許可リストに追加しました。既存のブロックは履歴から解除できます。"
+  },
+  "ui_added_when_unblocking": {
+    "message": "ブロック解除時に追加"
+  },
+  "ui_aggressive": {
+    "message": "積極的"
+  },
+  "ui_agreed_being_on_time_is_basic_courtesy": {
+    "message": "その通り。時間を守るのは基本的なマナーだと思う。"
+  },
+  "ui_all": {
+    "message": "すべて"
+  },
+  "ui_all_accounts": {
+    "message": "すべてのアカウント"
+  },
+  "ui_allowlist_is_empty": {
+    "message": "許可リストは空です"
+  },
+  "ui_allowlist_note": {
+    "message": "許可リストのメモ"
+  },
+  "ui_allowlisted_not_sent_to_jev": {
+    "message": "許可リスト内のため Jev に送信しません"
+  },
+  "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
+    "message": "許可リストのユーザーは分析・自動ブロックされません。既存のブロックは手動で解除してください。"
+  },
+  "ui_already_blocked": {
+    "message": "以前からブロック済み"
+  },
+  "ui_already_queued_for_undo": {
+    "message": "取り消し待ち"
+  },
+  "ui_also_allowlist_this_user_to_skip_future_analysis": {
+    "message": "許可リストにも追加し、今後の分析から除外する"
+  },
+  "ui_also_stops_analysis_of_this_post_in_all_tabs_to": {
+    "message": "すべてのタブでこのポストの分析を停止します。解除中は、同じアカウントでログインした X のページをどれか1つ開いておいてください。"
+  },
+  "ui_analysis_canceled": {
+    "message": "分析をキャンセルしました。"
+  },
+  "ui_analysis_needs_attention": {
+    "message": "分析サービスの確認が必要：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_analysis_paused": {
+    "message": "分析を一時停止中"
+  },
+  "ui_analysis_rules": {
+    "message": "分析ルール"
+  },
+  "ui_analysis_rules_block_s_b": {
+    "message": "分析ルール・block s.b."
+  },
+  "ui_analyzing_this_reply": {
+    "message": "この返信を分析中"
+  },
+  "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
+    "message": "アニメーションのプレビュー中は分析・新規ブロックを行いません。blockSBDebug.disable() で終了します。"
+  },
+  "ui_animation_style": {
+    "message": "アニメーションの種類"
+  },
+  "ui_api_domain_changed_enter_the_new_service_s_api_key": {
+    "message": "API のドメインが変わりました。新しいサービスの API キーを入力してください。"
+  },
+  "ui_api_endpoint": {
+    "message": "API エンドポイント"
+  },
+  "ui_api_endpoint_access_not_granted_save_and_grant_access_in": {
+    "message": "API エンドポイントへのアクセスが未許可です。モデル設定で保存し直して許可してください。"
+  },
+  "ui_api_endpoint_must_use_https_without_credentials_query_parameters_or": {
+    "message": "HTTPS を使用し、認証情報、クエリパラメータ、フラグメントを含めないでください。"
+  },
+  "ui_at_most": {
+    "message": "上限"
+  },
+  "ui_auto_block": {
+    "message": "自動ブロック："
+  },
+  "ui_auto_block_model_confidence": {
+    "message": "自動ブロック：モデルの確信度 ≥"
+  },
+  "ui_auto_hidden": {
+    "message": "自動で非表示・$v0$ $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_auto_hide": {
+    "message": "自動非表示："
+  },
+  "ui_auto_hide_replies": {
+    "message": "返信を自動で非表示"
+  },
+  "ui_auto_hide_threshold_must_be_below_the_auto_block_threshold": {
+    "message": "自動非表示のしきい値は、自動ブロックより低くしてください。"
+  },
+  "ui_auto_load_stopped_due_to_a_service_or_loading_error": {
+    "message": "サービスまたは読み込みエラーで自動読み込みを停止しました。解決後に再度有効にしてください"
+  },
+  "ui_auto_load_stopped_this_task_reached_the_2_000_reply": {
+    "message": "分析上限の2,000件に達したため自動読み込みを停止しました"
+  },
+  "ui_auto_loading": {
+    "message": "・自動読み込み中"
+  },
+  "ui_automatically_load_more_replies_pauses_when_you_switch_pages_or": {
+    "message": "返信を自動で読み込みます。ページやタブを切り替えると一時停止します"
+  },
+  "ui_back": {
+    "message": "戻る"
+  },
+  "ui_background_interrupted_before_submission_you_can_retry": {
+    "message": "送信前にバックグラウンド処理が中断されました。再試行できます。"
+  },
+  "ui_background_interrupted_before_the_final_http_response_no_automatic_retry": {
+    "message": "バックグラウンド処理が中断され、最終 HTTP 応答を受信できませんでした。自動再試行はせず、履歴での確認を待ちます。"
+  },
+  "ui_background_interrupted_result_unknown_verify_the_status_before_retrying": {
+    "message": "バックグラウンド処理が中断され、結果は不明です。履歴で状態を確認してから再試行してください。"
+  },
+  "ui_balanced": {
+    "message": "バランス"
+  },
+  "ui_block": {
+    "message": "ブロック"
+  },
+  "ui_block_2": {
+    "message": "@$v0$ をブロック",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_agreeing_repliers": {
+    "message": "@$v0$ と賛同する返信者をブロック",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_apply_reply_rules": {
+    "message": "@$v0$ をブロックして返信にルールを適用",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_remove_their_other_replies": {
+    "message": "@$v0$ をブロックし、同じユーザーの他の返信も非表示にする",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_for_did_not_complete_replies_restored_check_the_trash": {
+    "message": "@$v0$ のブロックが完了しなかったため返信を再表示しました。ゴミ箱の履歴を確認してください。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_must_be_true_or_false": {
+    "message": "$v0$ の block は true または false にしてください。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_on_match": {
+    "message": "該当時にブロック"
+  },
+  "ui_block_queue_needs_attention_open_the_trash_to_review": {
+    "message": "ブロックキューに対応が必要です。ゴミ箱を開いて確認してください。"
+  },
+  "ui_block_request_failed_http": {
+    "message": "ブロック要求に失敗しました（HTTP $v0$）。$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_block_request_received_an_http_success_response_the_relationship_was": {
+    "message": "ブロック要求への HTTP 成功応答を受信しました。ブロック状態の照会は行っていません。"
+  },
+  "ui_block_request_timed_out_or_disconnected_without_http_success_not": {
+    "message": "ブロック要求がタイムアウトまたは切断され、HTTP 成功を確認できませんでした。自動再試行はしていません。"
+  },
+  "ui_block_requests_are_submitted_by_the_background_queue": {
+    "message": "ブロックは拡張機能のバックグラウンドキューから送信します。"
+  },
+  "ui_block_s_b_block_history": {
+    "message": "block s.b.・ブロック履歴"
+  },
+  "ui_block_s_b_cache_cleanup_failed": {
+    "message": "block s.b.: キャッシュの削除に失敗しました。"
+  },
+  "ui_block_s_b_cache_read_failed_using_online_analysis": {
+    "message": "block s.b.: キャッシュを読み取れません。今回はオンラインで分析します。"
+  },
+  "ui_block_s_b_cache_write_failed_this_result_is_still": {
+    "message": "block s.b.: キャッシュを保存できませんが、今回の分析結果は利用できます。"
+  },
+  "ui_block_s_b_cannot_read_queue_will_retry_on_next": {
+    "message": "block s.b.: キューを読み込めません。次回起動時に再試行します。"
+  },
+  "ui_block_s_b_no_reply_to_preview_scroll_to_the": {
+    "message": "[block s.b.] プレビュー対象がありません。返信までスクロールするか、表示中の返信のポスト ID を指定してください。"
+  },
+  "ui_block_s_b_panel": {
+    "message": "block s.b. 管理パネル"
+  },
+  "ui_block_somebody_panel": {
+    "message": "block somebody 管理パネル"
+  },
+  "ui_block_submission_failed_check_the_trash": {
+    "message": "・ブロックの送信失敗。ゴミ箱の履歴を確認してください"
+  },
+  "ui_block_target": {
+    "message": "ブロック対象"
+  },
+  "ui_block_threshold": {
+    "message": "ブロックのしきい値 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_threshold_cannot_be_below_0_5": {
+    "message": "ブロックのしきい値は0.5以上にしてください。"
+  },
+  "ui_block_threshold_confidence_must_be": {
+    "message": "ブロックのしきい値 $v0$・確信度 ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_blocked": {
+    "message": "ブロック済み"
+  },
+  "ui_blocked_manually": {
+    "message": "手動でブロック"
+  },
+  "ui_cache_is_in_use_by_another_window": {
+    "message": "別のウィンドウがキャッシュを使用中です"
+  },
+  "ui_cache_limit_must_be_an_integer_from_100_to_100": {
+    "message": "キャッシュ件数は100～100,000の整数で指定してください。"
+  },
+  "ui_cache_open_timed_out": {
+    "message": "キャッシュを開く操作がタイムアウトしました"
+  },
+  "ui_cache_transaction_failed": {
+    "message": "キャッシュの処理に失敗しました"
+  },
+  "ui_cancel_task": {
+    "message": "タスクをキャンセル"
+  },
+  "ui_cancel_unsent_requests": {
+    "message": "未送信のリクエストを取り消す"
+  },
+  "ui_canceled": {
+    "message": "キャンセル済み"
+  },
+  "ui_cannot_block_the_currently_signed_in_account": {
+    "message": "現在ログイン中のアカウントはブロックできません。"
+  },
+  "ui_cannot_connect_to_jev_right_now_reply_left_unchanged": {
+    "message": "現在 Jev に接続できません。返信はそのまま表示します。"
+  },
+  "ui_cannot_connect_to_the_extension": {
+    "message": "拡張機能に接続できません。"
+  },
+  "ui_cannot_connect_to_the_extension_reload_the_extension_and_this": {
+    "message": "拡張機能に接続できません。拡張機能とこのページを再読み込みしてください。"
+  },
+  "ui_cannot_identify_the_post_link": {
+    "message": "ポストのリンクを確認できません。"
+  },
+  "ui_cannot_identify_the_task_s_original_post": {
+    "message": "タスクの元のポストを確認できません。"
+  },
+  "ui_cannot_preview": {
+    "message": "プレビューできません：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_cannot_verify_account_status": {
+    "message": "アカウント状態を確認できません。"
+  },
+  "ui_cannot_verify_the_existing_block_no_action_taken": {
+    "message": "現在のブロック状態を確認できないため、操作していません。"
+  },
+  "ui_category": {
+    "message": "分類"
+  },
+  "ui_cautious": {
+    "message": "慎重"
+  },
+  "ui_checked": {
+    "message": "$v0$ 件を確認済み$v1$$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_classification_prompt": {
+    "message": "判定用プロンプト"
+  },
+  "ui_clear_canceled_records": {
+    "message": "キャンセル済みの記録を削除しますか？"
+  },
+  "ui_clear_canceled_records_2": {
+    "message": "キャンセル済みの記録を削除"
+  },
+  "ui_clear_records": {
+    "message": "記録を削除"
+  },
+  "ui_close": {
+    "message": "閉じる"
+  },
+  "ui_close_panel": {
+    "message": "パネルを閉じる"
+  },
+  "ui_close_preview": {
+    "message": "プレビューを閉じる"
+  },
+  "ui_confidence": {
+    "message": "確信度 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_confidence_2": {
+    "message": "$v0$・確信度 $v1$%$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_configured": {
+    "message": "設定済み"
+  },
+  "ui_confirm": {
+    "message": "確認"
+  },
+  "ui_connect_jev_first": {
+    "message": "先に Jev に接続してください。"
+  },
+  "ui_connect_jev_in_settings_first": {
+    "message": "先に設定で Jev に接続してください。"
+  },
+  "ui_connecting": {
+    "message": "接続中…"
+  },
+  "ui_contains_an_unknown_variable": {
+    "message": "$v0$ に不明な変数があります：$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_contains_unread_media": {
+    "message": "未読のメディアを含む"
+  },
+  "ui_could_not_save_reply_context": {
+    "message": "返信の文脈を保存できません"
+  },
+  "ui_could_not_save_reply_context_retrying": {
+    "message": "返信の文脈を保存できません。再試行中です"
+  },
+  "ui_could_not_switch_automatically_choose_most_recent_on_x_to": {
+    "message": "自動で切り替えられません。X のメニューで新しい順を選ぶと再開します"
+  },
+  "ui_could_not_sync_task_status": {
+    "message": "タスク状態の同期に失敗：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria": {
+    "message": "$v0$ の判定基準",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria_which_replies_belong_in_this_category": {
+    "message": "この項目に該当する返信の基準"
+  },
+  "ui_current_block_status_on_x_verified": {
+    "message": "X の現在のブロック状態を確認しました。"
+  },
+  "ui_current_thread_task_changed": {
+    "message": "現在のスレッドのタスクが変わりました。"
+  },
+  "ui_current_thread_task_is_paused_or_changed": {
+    "message": "現在のスレッドのタスクは一時停止中か、変更されています。"
+  },
+  "ui_custom": {
+    "message": "カスタム"
+  },
+  "ui_customize_prompt": {
+    "message": "プロンプトをカスタマイズ ↗"
+  },
+  "ui_decision_details": {
+    "message": "判定の根拠"
+  },
+  "ui_delete": {
+    "message": "削除"
+  },
+  "ui_delete_option": {
+    "message": "この項目を削除"
+  },
+  "ui_detection_policy": {
+    "message": "判定の設定"
+  },
+  "ui_direct_parent_reply_context_is_missing": {
+    "message": "直接の返信先の文脈が不足しています"
+  },
+  "ui_discard_unsaved_changes_and_load_the_latest_settings": {
+    "message": "未保存の変更を破棄して最新の設定を読み込みますか？"
+  },
+  "ui_dismiss_allowlist_notice": {
+    "message": "許可リストの案内を閉じる"
+  },
+  "ui_don_t_show_again": {
+    "message": "次回から表示しない"
+  },
+  "ui_edit_note": {
+    "message": "メモを編集"
+  },
+  "ui_editing_mode": {
+    "message": "編集モード"
+  },
+  "ui_end_of_x_s_results_queued_blocks_will_continue": {
+    "message": "X のリストの末尾です・キューのブロックは継続"
+  },
+  "ui_endpoint_did_not_return_a_valid_jev_result_settings_were": {
+    "message": "有効な Jev の分類結果が返らなかったため、設定を保存していません。"
+  },
+  "ui_enter_a_valid_api_key": {
+    "message": "有効な API キーを入力してください。"
+  },
+  "ui_enter_an_x_username_or_profile_link": {
+    "message": "X のユーザー名またはプロフィールのリンクを入力してください。"
+  },
+  "ui_enter_api_key": {
+    "message": "API キーを入力"
+  },
+  "ui_enter_the_full_https_api_endpoint": {
+    "message": "HTTPS の API エンドポイントを省略せず入力してください。"
+  },
+  "ui_enter_the_full_https_url_of_a_jev_compatible_endpoint": {
+    "message": "Jev 互換 API の HTTPS URL を省略せず入力してください。"
+  },
+  "ui_enter_this_service_s_api_key": {
+    "message": "このサービスの API キーを入力"
+  },
+  "ui_enter_your_jev_api_key_in_settings_first": {
+    "message": "先に設定で Jev の API キーを入力してください。"
+  },
+  "ui_excluded_from_this_automatic_task": {
+    "message": "この自動処理から除外済み"
+  },
+  "ui_existing_blocks_or_accounts_managed_by_later_records_will_be": {
+    "message": "既存のブロック、または後の記録で管理されている $v0$ 件は維持します。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_expanded_request_too_large_reduce_repeated_variables_or_shorten_the": {
+    "message": "変数展開後のリクエストが大きすぎます。変数の重複を減らすか、テンプレートを短くしてください。"
+  },
+  "ui_expands_variables_locally_without_calling_an_api": {
+    "message": "変数の展開はローカルで行い、API は呼び出しません。"
+  },
+  "ui_export": {
+    "message": "エクスポート"
+  },
+  "ui_export_history_and_allowlist": {
+    "message": "履歴と許可リストをエクスポート"
+  },
+  "ui_extension_disconnected_refresh_this_page": {
+    "message": "拡張機能との接続が切れました。ページを再読み込みしてください。"
+  },
+  "ui_failed_or_unconfirmed_items_need_separate_review_they_will_not": {
+    "message": "失敗または結果不明の $v0$ 件は個別に確認が必要です。取り消し済みにはしません。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_by_signed_in_account": {
+    "message": "ログインアカウントで絞り込む"
+  },
+  "ui_filter_records": {
+    "message": "履歴の絞り込み"
+  },
+  "ui_final_request_content": {
+    "message": "最終リクエストの内容"
+  },
+  "ui_fly_to_trash": {
+    "message": "ゴミ箱へ飛ばす"
+  },
+  "ui_follow_system_reduced_motion_preference": {
+    "message": "システムの視差効果の軽減設定に従う"
+  },
+  "ui_for_http_only_records_the_previous_block_status_was_not": {
+    "message": "HTTP 成功のみを記録した項目では、以前のブロック状態を確認していません。解除すると現在のブロックが外れます。"
+  },
+  "ui_future_replies_by_will_follow_the_current_rules_existing_blocks": {
+    "message": "@$v0$ の今後の返信には現在のルールが適用されます。既存のブロックは変わりません。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_github_repository": {
+    "message": "GitHub リポジトリ"
+  },
+  "ui_has_unknown_fields_or_an_invalid_format": {
+    "message": "$v0$ に不明なフィールド、または形式の誤りがあります。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_has_unmatched_variable_braces": {
+    "message": "$v0$ の変数の括弧が閉じていません。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_hide": {
+    "message": "非表示"
+  },
+  "ui_hide_details": {
+    "message": "詳細を閉じる"
+  },
+  "ui_hide_range": {
+    "message": "非表示の範囲：$v0$% ≤ $v1$ < $v2$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_history_has_reached_5_000_records_export_and_clear_completed": {
+    "message": "履歴が5,000件に達しました。エクスポートして完了済みの記録を削除してください。"
+  },
+  "ui_if_you_agree_to_meet_you_should_be_on_time": {
+    "message": "待ち合わせの約束をしたら、時間を守るべきだ。"
+  },
+  "ui_incomplete_text": {
+    "message": "テキストが不完全"
+  },
+  "ui_input": {
+    "message": "入力内容"
+  },
+  "ui_input_template": {
+    "message": "入力テンプレート"
+  },
+  "ui_insert": {
+    "message": "{{$v0$}} を挿入",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_insert_input_variable": {
+    "message": "入力の変数を挿入"
+  },
+  "ui_insert_prompt_variable": {
+    "message": "プロンプトの変数を挿入"
+  },
+  "ui_insufficient_jev_balance_check_your_account": {
+    "message": "Jev の残高が不足しています。アカウントを確認してください。"
+  },
+  "ui_internal_id": {
+    "message": "内部 ID・$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_analysis_result": {
+    "message": "分析結果に問題があります"
+  },
+  "ui_invalid_context_request": {
+    "message": "文脈のリクエストが無効です。"
+  },
+  "ui_invalid_jev_classification_format_reply_skipped": {
+    "message": "Jev の分類形式が無効なため、この返信をスキップしました"
+  },
+  "ui_invalid_jev_key_update_it_in_settings": {
+    "message": "Jev のキーが無効です。設定し直してください。"
+  },
+  "ui_invalid_jev_probability_sum_reply_skipped": {
+    "message": "Jev の確率の合計が不正（$v0$）なためスキップしました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_json_check_brackets_commas_and_quotes": {
+    "message": "JSON が無効です。括弧、カンマ、引用符を確認してください。"
+  },
+  "ui_invalid_model_name": {
+    "message": "モデル名が無効です。"
+  },
+  "ui_invalid_page": {
+    "message": "無効なページです。"
+  },
+  "ui_invalid_request_source": {
+    "message": "リクエスト元が無効です。"
+  },
+  "ui_invalid_results": {
+    "message": "・結果異常 $v0$ 件",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_x_origin": {
+    "message": "X の接続元が無効です。"
+  },
+  "ui_is_below": {
+    "message": "$v0$ が $v1$% 未満",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_jev_classification_disagrees_with_the_highest_probability_reply_skipped": {
+    "message": "Jev の分類が最大確率と一致しないためスキップしました"
+  },
+  "ui_jev_denied_access_check_your_permissions": {
+    "message": "Jev がアクセスを拒否しました。権限を確認してください。"
+  },
+  "ui_jev_rate_limit_reached_analysis_paused_retry_later": {
+    "message": "Jev のレート制限で分析を一時停止しました。後でもう一度お試しください。"
+  },
+  "ui_jev_request_cache": {
+    "message": "Jev リクエストのキャッシュ"
+  },
+  "ui_jev_response_interrupted_reply_left_unchanged": {
+    "message": "Jev の応答が途切れました。返信はそのまま表示します。"
+  },
+  "ui_jev_response_too_large_reply_skipped": {
+    "message": "Jev の応答が大きすぎるため返信をスキップしました。"
+  },
+  "ui_jev_returned_an_empty_result": {
+    "message": "Jev の応答が空です。"
+  },
+  "ui_jev_returned_an_unreadable_result": {
+    "message": "Jev の応答を読み取れません。"
+  },
+  "ui_jev_returned_http_reply_left_unchanged": {
+    "message": "Jev が HTTP $v0$ を返しました。返信はそのまま表示します。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_jev_timed_out_reply_left_unchanged": {
+    "message": "Jev がタイムアウトしました。返信はそのまま表示します。"
+  },
+  "ui_leave_blank_to_keep_the_saved_key": {
+    "message": "空欄なら保存済みのキーを使用"
+  },
+  "ui_left_thread_queued_blocks_continue_in_background": {
+    "message": "スレッド外・キューはバックグラウンドで継続"
+  },
+  "ui_load_latest_settings": {
+    "message": "最新の設定を読み込む"
+  },
+  "ui_loading": {
+    "message": "読み込み中…"
+  },
+  "ui_management": {
+    "message": "管理メニュー"
+  },
+  "ui_maximum_entries": {
+    "message": "保存件数の上限"
+  },
+  "ui_missing_parent_context_in_this_page_and_local_records_load": {
+    "message": "ページとローカル記録に返信の文脈が不足しています。元の返信を読み込むと分析を再開します"
+  },
+  "ui_model": {
+    "message": "モデル"
+  },
+  "ui_model_confidence_is_below": {
+    "message": "モデルの確信度が $v0$% 未満",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_model_selection": {
+    "message": "モデルの判定"
+  },
+  "ui_model_settings": {
+    "message": "モデル設定"
+  },
+  "ui_model_settings_changed_in_another_window_save_again": {
+    "message": "別のウィンドウでモデル設定が変わりました。再度保存してください。"
+  },
+  "ui_move_down": {
+    "message": "下へ移動"
+  },
+  "ui_move_up": {
+    "message": "上へ移動"
+  },
+  "ui_must_be_text_characters": {
+    "message": "$v0$ はテキストで指定してください（$v1$ $v2$ 文字）。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_name": {
+    "message": "$v0$ の名前",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_needs_attention": {
+    "message": "要対応"
+  },
+  "ui_needs_attention_2": {
+    "message": "要対応"
+  },
+  "ui_needs_attention_open_trash": {
+    "message": "要対応・ゴミ箱を開いて確認"
+  },
+  "ui_needs_verification": {
+    "message": "結果の確認が必要"
+  },
+  "ui_new_analysis_will_stop_block_history_and_the_allowlist_will": {
+    "message": "新しい返信の分析を停止します。ブロック履歴と許可リストは残ります。"
+  },
+  "ui_no_analysis_no_automatic_blocking": {
+    "message": "分析・自動ブロックの対象外"
+  },
+  "ui_no_block_history_yet": {
+    "message": "ブロック履歴はまだありません"
+  },
+  "ui_no_blocks_recorded_for_this_task_yet": {
+    "message": "このタスクのブロック履歴はまだありません。"
+  },
+  "ui_no_matching_tasks": {
+    "message": "一致するタスクはありません"
+  },
+  "ui_no_matching_users": {
+    "message": "一致するユーザーはいません"
+  },
+  "ui_no_new_replies_for_30_seconds_auto_load_stopped_check": {
+    "message": "30秒間新しい返信がないため自動読み込みを停止しました。手動で確認後、再度有効にできます"
+  },
+  "ui_no_probability_available": {
+    "message": "確率データなし"
+  },
+  "ui_no_readable_text": {
+    "message": "読み取れるテキストがありません"
+  },
+  "ui_no_records_need_verification": {
+    "message": "確認待ちの記録はありません。"
+  },
+  "ui_no_text_to_analyze": {
+    "message": "分析できるテキストがありません"
+  },
+  "ui_no_verifiable_result_received": {
+    "message": "確認可能な結果を受信していません。"
+  },
+  "ui_nonempty_at_most": {
+    "message": "空欄不可、上限"
+  },
+  "ui_not_analyzed_yet": {
+    "message": "分析結果はまだありません"
+  },
+  "ui_not_auto_blocked": {
+    "message": "・自動ブロックしない理由：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_not_connected": {
+    "message": "未接続"
+  },
+  "ui_not_enough_text_to_decide": {
+    "message": "判定に必要なテキストが不足しています"
+  },
+  "ui_note": {
+    "message": "メモ"
+  },
+  "ui_note_for": {
+    "message": "@$v0$ のメモ",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_note_optional": {
+    "message": "メモ（任意）"
+  },
+  "ui_older_results_may_lack_a_full_distribution_missing_values_show": {
+    "message": "以前の結果には確率分布が保存されていない場合があります。不明な項目は — と表示します。"
+  },
+  "ui_only_http_success_was_recorded_the_prior_block_status_was": {
+    "message": "HTTP 成功のみを確認しており、以前からのブロックの有無は未確認です。解除すると現在のブロックが外れます。"
+  },
+  "ui_only_unblocked_or_canceled_local_records_will_be_deleted_active": {
+    "message": "解除・キャンセル済みのローカル記録のみ削除します。有効なブロックと解除操作は残ります。X のブロック状態は変わりません。"
+  },
+  "ui_open_settings": {
+    "message": "設定を開く"
+  },
+  "ui_open_x_signed_in_as_first": {
+    "message": "先に @$v0$ でログインした X のページを開いてください。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_open_x_signed_in_as_once_to_connect_this_older": {
+    "message": "以前のタスクをキューに関連付けるため、@$v0$ でログインした X を一度開いてください。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option": {
+    "message": "項目 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_criteria": {
+    "message": "項目 $v0$ の判定基準",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_internal_id": {
+    "message": "項目 $v0$ の内部 ID",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_name": {
+    "message": "項目名"
+  },
+  "ui_option_name_2": {
+    "message": "項目 $v0$ の名前",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_probabilities": {
+    "message": "項目の確率"
+  },
+  "ui_options_blocking_options": {
+    "message": "$v0$ 項目・ブロック対象 $v1$ 項目",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_original_author": {
+    "message": "元のポストの投稿者"
+  },
+  "ui_original_author_blocked_by_this_task": {
+    "message": "元の投稿者としてブロック対象"
+  },
+  "ui_original_post_reply_or_parent_text_is_incomplete": {
+    "message": "元のポスト、返信、または返信先のテキストが不完全です"
+  },
+  "ui_output_options": {
+    "message": "出力項目"
+  },
+  "ui_page_closed_or_connection_lost_verify_the_outcome": {
+    "message": "ページが閉じられたか接続が切れました。結果を確認してください。"
+  },
+  "ui_page_experience": {
+    "message": "ページの表示"
+  },
+  "ui_particle_dissolve": {
+    "message": "粒子になって消える"
+  },
+  "ui_paused": {
+    "message": "一時停止中"
+  },
+  "ui_pending": {
+    "message": "送信待ち"
+  },
+  "ui_post_by": {
+    "message": "@$v0$ のポスト",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_preview_request": {
+    "message": "リクエストをプレビュー"
+  },
+  "ui_probabilities_by_option": {
+    "message": "項目ごとの確率"
+  },
+  "ui_processing": {
+    "message": "処理中"
+  },
+  "ui_prompt": {
+    "message": "プロンプト"
+  },
+  "ui_prompt_can_contain_up_to_12_000_characters": {
+    "message": "プロンプトは12,000文字以内にしてください。"
+  },
+  "ui_queue_for_unblocking": {
+    "message": "解除キューに追加"
+  },
+  "ui_queue_waiting_for_to_sign_in_no_other_account_will": {
+    "message": "@$v0$ のログイン待ちです。他のアカウントでは送信しません。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_queued": {
+    "message": "キュー内"
+  },
+  "ui_raw_configuration": {
+    "message": "Raw 設定"
+  },
+  "ui_recorded": {
+    "message": "記録日時 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reload": {
+    "message": "再読み込み"
+  },
+  "ui_remove": {
+    "message": "削除"
+  },
+  "ui_remove_from_allowlist": {
+    "message": "許可リストから削除"
+  },
+  "ui_remove_from_allowlist_2": {
+    "message": "許可リストから削除しますか？"
+  },
+  "ui_remove_jev_api_key": {
+    "message": "Jev の API キーを削除しますか？"
+  },
+  "ui_remove_key": {
+    "message": "キーを削除"
+  },
+  "ui_remove_users_from_the_allowlist_panel": {
+    "message": "許可リストのパネルから削除してください。"
+  },
+  "ui_replies_failed_to_load_retry_on_x": {
+    "message": "返信を読み込めません$v0$。X のページで再試行してください",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_replies_ready_syncing_task_status": {
+    "message": "返信の準備完了・状態を同期中"
+  },
+  "ui_reply_automatically_hidden": {
+    "message": "返信を自動で非表示にしました"
+  },
+  "ui_reply_context_cache_is_in_use": {
+    "message": "返信の文脈キャッシュが使用中です"
+  },
+  "ui_reply_context_cache_open_timed_out": {
+    "message": "返信の文脈キャッシュを開く操作がタイムアウトしました"
+  },
+  "ui_reply_does_not_belong_to_the_selected_conversation": {
+    "message": "選択した会話の返信ではありません。"
+  },
+  "ui_reply_kept_no_automatic_retry_in_this_task": {
+    "message": "$v0$。返信はそのまま表示し、このタスクでは自動再試行しません",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reply_removal_animation": {
+    "message": "返信を消すアニメーション"
+  },
+  "ui_reply_that_triggered_the_decision": {
+    "message": "判定の対象となった返信"
+  },
+  "ui_request_preview": {
+    "message": "リクエストのプレビュー"
+  },
+  "ui_restore_defaults": {
+    "message": "初期設定に戻す"
+  },
+  "ui_resume_tasks": {
+    "message": "タスクを再開"
+  },
+  "ui_retry": {
+    "message": "再試行"
+  },
+  "ui_rule": {
+    "message": "ルール"
+  },
+  "ui_rule_json": {
+    "message": "ルールの JSON"
+  },
+  "ui_rule_too_large_shorten_descriptions_max_120_000_characters_total": {
+    "message": "ルールが大きすぎます。説明を短くしてください（合計120,000文字まで）。"
+  },
+  "ui_sample_original_post": {
+    "message": "元のポストの例"
+  },
+  "ui_sample_parent_reply_leave_blank_for_direct_replies": {
+    "message": "返信先の例（元のポストへの直接返信なら空欄）"
+  },
+  "ui_sample_reply": {
+    "message": "返信の例"
+  },
+  "ui_save": {
+    "message": "保存"
+  },
+  "ui_save_and_connect": {
+    "message": "保存して接続"
+  },
+  "ui_save_connection_details_in_model_settings": {
+    "message": "接続情報はモデル設定から保存してください。"
+  },
+  "ui_save_failed": {
+    "message": "保存に失敗しました"
+  },
+  "ui_save_rules": {
+    "message": "ルールを保存"
+  },
+  "ui_saved": {
+    "message": "保存済み"
+  },
+  "ui_saved_and_connected": {
+    "message": "保存・接続しました"
+  },
+  "ui_saving": {
+    "message": "保存中…"
+  },
+  "ui_search_allowlist": {
+    "message": "許可リストを検索"
+  },
+  "ui_search_block_history": {
+    "message": "ブロック履歴を検索"
+  },
+  "ui_search_usernames_or_reply_text": {
+    "message": "ユーザー名や返信の内容で検索"
+  },
+  "ui_select_at_least_one_option_that_triggers_blocking": {
+    "message": "ブロック対象の項目を1つ以上選んでください。"
+  },
+  "ui_select_categories_that_may_trigger_blocking_both_the_chosen_category": {
+    "message": "ブロック対象の分類を選んでください。選ばれた分類の確率とモデルの確信度の両方が、設定したしきい値を満たす必要があります。"
+  },
+  "ui_selected_original_post": {
+    "message": "選択した元のポスト"
+  },
+  "ui_set_between_2_and_255_output_options": {
+    "message": "出力項目は2～255個にしてください。"
+  },
+  "ui_set_inputs_instructions_and_blocking_options": {
+    "message": "入力内容、判定方法、ブロック対象を設定します。"
+  },
+  "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
+    "message": "別のウィンドウで設定が変更されました。下書きをコピーしてから最新の設定を読み込んでください。"
+  },
+  "ui_settings_changed_in_another_window_your_draft_is_kept_copy": {
+    "message": "別のウィンドウで設定が更新されました。下書きは保持しています。コピーしてから最新の設定を読み込んでください。"
+  },
+  "ui_show": {
+    "message": "表示"
+  },
+  "ui_show_details": {
+    "message": "詳細を表示（$v0$）",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_show_entered_key": {
+    "message": "入力したキーを表示"
+  },
+  "ui_show_more_accounts": {
+    "message": "アカウントをさらに表示"
+  },
+  "ui_show_more_tasks": {
+    "message": "タスクをさらに表示"
+  },
+  "ui_show_reply": {
+    "message": "返信を表示"
+  },
+  "ui_showing_of_records_undo_still_applies_to_the_entire_task": {
+    "message": "$v1$ 件中 $v0$ 件を表示中です。一括取り消しはタスク全体に適用されます。",
+    "placeholders": {
+      "v1": {
+        "content": "$2"
+      },
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_some_replies_lack_context": {
+    "message": "・一部の返信の文脈が不足"
+  },
+  "ui_start_from_a_post_s_menu_on_x": {
+    "message": "X のポストメニューから開始できます。"
+  },
+  "ui_start_from_a_signed_in_x_page_in_a_regular": {
+    "message": "通常のウィンドウでログイン済みの X ページから開始してください。"
+  },
+  "ui_start_from_the_post_menu": {
+    "message": "ポストのメニューから開始してください。"
+  },
+  "ui_stop": {
+    "message": "終了"
+  },
+  "ui_stop_task": {
+    "message": "タスクを停止"
+  },
+  "ui_submission_failed": {
+    "message": "送信失敗"
+  },
+  "ui_submitted": {
+    "message": "送信済み"
+  },
+  "ui_submitted_blocked": {
+    "message": "送信・ブロック済み"
+  },
+  "ui_submitted_blocked_2": {
+    "message": "送信・ブロック済み"
+  },
+  "ui_submitting": {
+    "message": "送信中"
+  },
+  "ui_switching_to_most_recent_using_the_page_menu": {
+    "message": "ページのメニューから新しい順に切り替え中"
+  },
+  "ui_target_identity_could_not_be_verified_action_stopped": {
+    "message": "対象アカウントを確認できないため操作を停止しました。"
+  },
+  "ui_task_canceled": {
+    "message": "タスクをキャンセル済み"
+  },
+  "ui_task_created_open_this_post_s_replies_to_switch_automatically": {
+    "message": "タスクを作成しました。このポストの返信を開くと、新しい順に自動で切り替わります。"
+  },
+  "ui_task_ended_page_changed_or_account_unavailable_start_again_from": {
+    "message": "タスク終了、ページ移動、またはアカウントを確認できない状態です。ポストメニューから再開してください。"
+  },
+  "ui_task_history": {
+    "message": "タスク履歴"
+  },
+  "ui_task_not_found_or_already_cleared": {
+    "message": "タスクが存在しないか、削除済みです。"
+  },
+  "ui_task_running": {
+    "message": "実行中"
+  },
+  "ui_task_stopped": {
+    "message": "停止済み"
+  },
+  "ui_task_stopped_accounts_queued_for_undo_unsent_requests_canceled_requests": {
+    "message": "停止しました：$v0$ 件を取り消しキューに追加、$v1$ 件の送信をキャンセル、$v2$ 件は応答待ちです。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_task_stopped_submitted_blocks_remain_use_undo_all_blocks_to": {
+    "message": "タスクを停止しました。送信済みのブロックは残ります。一括取り消しで解除できます。"
+  },
+  "ui_tasks_resumed_failed_items_can_be_retried_individually": {
+    "message": "タスクを再開しました。失敗した項目は個別に再試行できます。"
+  },
+  "ui_templates_can_contain_up_to_12_000_characters": {
+    "message": "テンプレートは12,000文字以内にしてください。"
+  },
+  "ui_the_background_service_could_not_authorize_this_action": {
+    "message": "バックグラウンドで操作の許可を確認できません。"
+  },
+  "ui_the_chosen_category_is_not_marked_for_blocking": {
+    "message": "選ばれた分類はブロック対象ではありません"
+  },
+  "ui_the_model_did_not_classify_this_as_clear_support": {
+    "message": "明確な賛同とは判定されませんでした"
+  },
+  "ui_the_original_author_is_allowlisted_remove_them_before_starting": {
+    "message": "元の投稿者が許可リストに登録されています。削除してから開始してください。"
+  },
+  "ui_the_original_post_contains_media": {
+    "message": "元のポストに画像などのメディアが含まれています"
+  },
+  "ui_the_original_post_contains_media_2": {
+    "message": "元のポストに画像などのメディアが含まれています"
+  },
+  "ui_the_username_now_belongs_to_a_different_account_action_stopped": {
+    "message": "ユーザー名に対応するアカウントが変わったため、操作を停止しました。"
+  },
+  "ui_this_account_already_has_a_pending_action": {
+    "message": "このアカウントには処理待ちの操作があります。"
+  },
+  "ui_this_account_needs_review_open_the_trash_to_check_its": {
+    "message": "このアカウントは確認が必要です。ゴミ箱から履歴を確認してください。"
+  },
+  "ui_this_extension_did_not_submit_the_block_so_it_cannot": {
+    "message": "この拡張機能から送信したブロックではないため、ここでは取り消せません。"
+  },
+  "ui_this_record_cannot_be_unblocked_right_now": {
+    "message": "この記録は現在解除できません。"
+  },
+  "ui_this_task_has_analyzed_2_000_replies_stop_and_start": {
+    "message": "2,000件を分析しました。タスクを終了して再度開始してください。"
+  },
+  "ui_this_task_was_undone_start_again_from_the_original_post": {
+    "message": "このタスクは取り消し済みです。再度ブロックするには元のポストから開始してください。"
+  },
+  "ui_this_user_is_allowlisted": {
+    "message": "許可リスト内のユーザーです"
+  },
+  "ui_this_user_is_allowlisted_remove_them_first": {
+    "message": "許可リストに登録されたユーザーです。先に削除してください。"
+  },
+  "ui_this_user_is_already_allowlisted": {
+    "message": "すでに許可リストに登録されています。"
+  },
+  "ui_thread_changed_try_again": {
+    "message": "スレッドが変わりました。もう一度操作してください。"
+  },
+  "ui_thread_task_changed": {
+    "message": "スレッドのタスクが変わりました。"
+  },
+  "ui_threshold_must_be_between_0_and_1": {
+    "message": "しきい値は0～1で指定してください。"
+  },
+  "ui_to_unblock_open_any_x_page_signed_in_as": {
+    "message": "解除するには @$v0$ でログインした X のページを開いてください。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_toggle_auto_load_from_the_replies": {
+    "message": "自動読み込みは返信欄から切り替えてください。"
+  },
+  "ui_unblock": {
+    "message": "ブロックを解除"
+  },
+  "ui_unblock_failed": {
+    "message": "解除失敗"
+  },
+  "ui_unblock_pending": {
+    "message": "解除待ち"
+  },
+  "ui_unblock_request_queued": {
+    "message": "ブロック解除をキューに追加しました。"
+  },
+  "ui_unblocked": {
+    "message": "ブロック解除済み"
+  },
+  "ui_unblocking": {
+    "message": "解除中"
+  },
+  "ui_undo_after_request_completes": {
+    "message": "リクエスト完了後に取り消す"
+  },
+  "ui_undo_all_blocks": {
+    "message": "ブロックを一括で取り消す"
+  },
+  "ui_undo_needs_attention": {
+    "message": "取り消しに対応が必要"
+  },
+  "ui_undo_task": {
+    "message": "タスクを取り消す"
+  },
+  "ui_undo_this_entire_task_for_s_post_using_includes_the": {
+    "message": "@$v1$ のアカウントで、@$v0$ のポストに対するタスク全体を取り消します。検索・絞り込みに関係なく、投稿者と対象の返信アカウントが含まれます。",
+    "placeholders": {
+      "v1": {
+        "content": "$2"
+      },
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_undo_this_task_s_blocks": {
+    "message": "このタスクのブロックを取り消しますか？"
+  },
+  "ui_undoing": {
+    "message": "取り消し中"
+  },
+  "ui_undone": {
+    "message": "取り消し済み"
+  },
+  "ui_undone_canceled": {
+    "message": "取り消し・キャンセル済み"
+  },
+  "ui_unknown_action": {
+    "message": "不明な操作です。"
+  },
+  "ui_unknown_animation_effect": {
+    "message": "不明なアニメーション効果です。"
+  },
+  "ui_unknown_decision_mode": {
+    "message": "不明な判定モードです。"
+  },
+  "ui_unknown_variable": {
+    "message": "不明な変数：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_unsaved_changes": {
+    "message": "未保存の変更があります"
+  },
+  "ui_unsupported_rule_version_use_version_1": {
+    "message": "非対応のルールです。version は 1 にしてください。"
+  },
+  "ui_use_a_unique_id_starting_with_a_lowercase_letter_containing": {
+    "message": "$v0$：ID は重複不可です。小文字の英字で始まり、英数字とアンダースコアのみ、48文字以内にしてください。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_use_s_x_session_to_unblock_keep_an_x_page": {
+    "message": "@$v0$ のログイン状態で @$v1$ のブロックを解除します。そのアカウントの X ページを開いたままにしてください。このタスクで再び自動ブロックされることはありません。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_use_the_button_next_to_a_reply": {
+    "message": "返信の横にあるボタンを使ってください。"
+  },
+  "ui_use_the_history_panel": {
+    "message": "履歴パネルから操作してください。"
+  },
+  "ui_use_the_management_panel_for_this_action": {
+    "message": "管理パネルから操作してください。"
+  },
+  "ui_username_or_x_profile_link": {
+    "message": "@ユーザー名または X のプロフィール URL"
+  },
+  "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
+    "message": "ユーザー名は英数字とアンダースコアで1～15文字にしてください。"
+  },
+  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
+    "message": "ビジュアル編集と同じ設定を使用します。block が true の項目がブロック対象です。"
+  },
+  "ui_verify_status": {
+    "message": "状態を確認"
+  },
+  "ui_verify_unknown_results_before_retrying": {
+    "message": "結果が不明な操作は、先に状態を確認してください。"
+  },
+  "ui_via_records": {
+    "message": "@$v0$ で実行 · $v1$ · $v2$ 件",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_view_original": {
+    "message": "元のポストを見る ↗"
+  },
+  "ui_view_post_on_x": {
+    "message": "X で元のポストを見る ↗"
+  },
+  "ui_view_probabilities_by_option": {
+    "message": "$v0$。項目ごとの確率を表示。$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_view_reason": {
+    "message": "理由を表示"
+  },
+  "ui_visual": {
+    "message": "ビジュアル"
+  },
+  "ui_waiting_for_recent_replies_check_if_x_needs_a_retry": {
+    "message": "新しい返信を待っています。X のページで再試行が必要か確認してください"
+  },
+  "ui_waiting_for_the_first_page_of_recent_replies": {
+    "message": "新しい順の返信の読み込み待ち"
+  },
+  "ui_waiting_to_analyze_this_reply": {
+    "message": "この返信の分析待ち"
+  },
+  "ui_why_this_user_was_processed": {
+    "message": "このユーザーを処理した理由"
+  },
+  "ui_x_action_failed_http": {
+    "message": "X の操作に失敗しました（HTTP $v0$）。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_x_did_not_confirm_the_unblock_verify_the_result_first": {
+    "message": "X から解除の確認が取れていません。先に結果を確認してください。"
+  },
+  "ui_x_endpoint_or_target_account_is_unavailable": {
+    "message": "X の API または対象アカウントを利用できません。"
+  },
+  "ui_x_rate_limit_reached_queue_paused": {
+    "message": "X のレート制限によりキューを一時停止しました。"
+  },
+  "ui_x_refused_the_request_check_your_account_status": {
+    "message": "X がリクエストを拒否しました。アカウント状態を確認してください。"
+  },
+  "ui_x_refused_this_action_check_your_account_status": {
+    "message": "X が操作を拒否しました。アカウント状態を確認してください。"
+  },
+  "ui_x_request_timed_out_or_connection_was_interrupted": {
+    "message": "X へのリクエストがタイムアウトしたか、接続が切れました。"
+  },
+  "ui_x_returned_a_result_that_could_not_be_verified": {
+    "message": "X の応答結果を確認できません。"
+  },
+  "ui_x_returned_an_error": {
+    "message": "X がエラーを返しました。"
+  },
+  "ui_x_session_expired": {
+    "message": "X のログインが切れました。"
+  },
+  "ui_x_session_expired_refresh_and_sign_in_again": {
+    "message": "X のセッションが切れました。再読み込みしてログインし直してください。"
+  },
+  "ui_x_session_expired_sign_in_to_resume_the_queue": {
+    "message": "X のログインが切れました。ログインしてキューを再開してください。"
+  },
+  "ui_x_session_unavailable_sign_in_before_resuming_the_queue": {
+    "message": "X にログインしてからキューを再開してください。"
+  },
+  "ui_you_can_retry_manually_in_history": {
+    "message": "履歴から手動で再試行できます。"
+  },
+  "ui_you_cannot_block_yourself": {
+    "message": "自分自身はブロックできません"
+  },
+  "ui_you_cannot_block_yourself_2": {
+    "message": "自分自身はブロックできません。"
+  },
+  "ui_you_chose_to_block_the_original_author_no_model_decision": {
+    "message": "元の投稿者を指定してブロックしました。モデルによる判定は行っていません。"
+  },
+  "ui_you_manually_blocked_this_user_using_the_reply_button_no": {
+    "message": "返信のボタンから手動でブロックしました。モデルによる判定は行っていません。"
+  },
+  "ui_your_own_reply_not_analyzed": {
+    "message": "自分の返信は分析しません"
+  },
+  "variable_incomplete_text": {
+    "message": "テキストが不完全か"
+  },
+  "variable_original_post": {
+    "message": "元のポストの本文"
+  },
+  "variable_parent_reply": {
+    "message": "直接の返信先"
+  },
+  "variable_reply": {
+    "message": "現在の返信"
+  },
+  "variable_reply_is_direct": {
+    "message": "元のポストへの直接返信か"
+  },
+  "variable_unseen_media": {
+    "message": "未読のメディアを含むか"
+  }
+}

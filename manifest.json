@@ -2,8 +2,9 @@
   "manifest_version": 3,
   "name": "block somebody",
   "short_name": "block s.b.",
-  "version": "0.1.17",
-  "description": "为选定的 X 评论展示附和概率，自动屏蔽明确支持者，支持手动屏蔽、历史撤销和白名单。",
+  "version": "1.0.0",
+  "description": "__MSG_extension_description__",
+  "default_locale": "en",
   "minimum_chrome_version": "120",
   "permissions": [
     "storage",
@@ -20,7 +21,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "block s.b. · 历史、白名单与设置",
+    "default_title": "__MSG_action_title__",
     "default_popup": "src/manager/manager.html?popup=1",
     "default_icon": {
       "16": "assets/icons/icon-16.png",
@@ -50,6 +51,7 @@
         "https://twitter.com/*"
       ],
       "js": [
+        "src/lib/i18n.js",
         "src/content/x-client.js",
         "src/content/content.js"
       ],

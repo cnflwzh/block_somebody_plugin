@@ -1,3 +1,5 @@
+import "./i18n.js";
+const { t } = globalThis.BlockSBI18n;
 import { DEFAULTS, STANCE_PROMPT_VERSION, JEV_CACHE_TTL } from "./core.js";
 let cache;
 let chain = Promise.resolve();
@@ -28,13 +30,13 @@ export const ready = (async () => {
     if (job.kind === "block" && job.transport === "worker") {
       // The request may have reached X; never automatically send it a second time.
       job.status = "failed";
-      job.error = "后台中断，未收到请求的最终 HTTP 结果；未自动重试，可在记录中手动处理。";
+      job.error = t("ui_background_interrupted_before_the_final_http_response_no_automatic_retry");
       const h = cache.history.find(h => h.id === job.historyId);
       if (h) { h.status = "failed"; h.error = job.error; }
       continue;
     }
     job.status = job.submitted ? "uncertain" : "failed";
-    job.error = job.submitted ? "后台中断，结果待核对。请在历史中核对状态后重试。" : "后台在提交操作前中断，可以重试。";
+    job.error = job.submitted ? t("ui_background_interrupted_result_unknown_verify_the_status_before_retrying") : t("ui_background_interrupted_before_submission_you_can_retry");
     const h = cache.history.find(h => h.id === job.historyId);
     if (h) { h.status = job.submitted ? "uncertain" : job.kind === "unblock" ? "undo_failed" : "failed"; h.error = job.error; }
     cache.queueError = job.error;

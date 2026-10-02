@@ -1,0 +1,1750 @@
+{
+  "action_title": {
+    "message": "block s.b. · 历史、白名单与设置"
+  },
+  "agreement_probability": {
+    "message": "附和概率"
+  },
+  "allowlist": {
+    "message": "白名单"
+  },
+  "api_key": {
+    "message": "API Key"
+  },
+  "auto_load_off": {
+    "message": "自动加载：关"
+  },
+  "auto_load_on": {
+    "message": "自动加载：开"
+  },
+  "block_history": {
+    "message": "屏蔽记录"
+  },
+  "category_neutral": {
+    "message": "无关内容"
+  },
+  "category_oppose": {
+    "message": "反对原帖"
+  },
+  "category_support": {
+    "message": "赞同原帖"
+  },
+  "category_uncertain": {
+    "message": "无法判断"
+  },
+  "extension_description": {
+    "message": "为选定的 X 评论展示附和概率，自动屏蔽明确支持者，支持手动屏蔽、历史撤销和白名单。"
+  },
+  "match_probability": {
+    "message": "命中概率"
+  },
+  "model_confidence": {
+    "message": "模型置信度"
+  },
+  "pause": {
+    "message": "暂停"
+  },
+  "resume": {
+    "message": "继续"
+  },
+  "save_settings": {
+    "message": "保存设置"
+  },
+  "settings": {
+    "message": "设置"
+  },
+  "support_probability": {
+    "message": "支持概率"
+  },
+  "ui_access_to_this_api_endpoint_was_not_granted_settings_were": {
+    "message": "未授权访问该 API 端点，配置未保存。"
+  },
+  "ui_account_changed_or_could_not_be_verified_action_stopped": {
+    "message": "当前登录账号无法确认或已经切换，操作已停止。"
+  },
+  "ui_account_changed_start_the_task_again": {
+    "message": "登录账号已切换，请重新启动任务。"
+  },
+  "ui_account_verification_failed": {
+    "message": "账号核验失败。"
+  },
+  "ui_accounts": {
+    "message": "$v0$：$v1$ 位",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_action_already_started_submitted_requests_cannot_be_canceled": {
+    "message": "操作已开始，不能撤回已提交的请求。"
+  },
+  "ui_action_failed": {
+    "message": "操作失败。"
+  },
+  "ui_add": {
+    "message": "添加"
+  },
+  "ui_add_an_allowlisted_user": {
+    "message": "添加白名单用户"
+  },
+  "ui_add_option": {
+    "message": "＋ 添加选项"
+  },
+  "ui_add_to_allowlist": {
+    "message": "加入白名单"
+  },
+  "ui_add_to_allowlist_2": {
+    "message": "将 @$v0$ 加入白名单",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist": {
+    "message": "已加入白名单。"
+  },
+  "ui_added_to_allowlist_2": {
+    "message": "@$v0$ 已加入白名单。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_added_to_allowlist_existing_blocks_can_be_undone_in_history": {
+    "message": "已加入白名单。已有屏蔽可在记录中取消。"
+  },
+  "ui_added_when_unblocking": {
+    "message": "取消屏蔽时加入"
+  },
+  "ui_aggressive": {
+    "message": "积极"
+  },
+  "ui_agreed_being_on_time_is_basic_courtesy": {
+    "message": "说得对，守时是基本礼貌。"
+  },
+  "ui_all": {
+    "message": "全部"
+  },
+  "ui_all_accounts": {
+    "message": "全部账号"
+  },
+  "ui_allowlist_is_empty": {
+    "message": "暂无白名单"
+  },
+  "ui_allowlist_note": {
+    "message": "白名单备注"
+  },
+  "ui_allowlisted_not_sent_to_jev": {
+    "message": "白名单用户，不发送给 Jev 分析"
+  },
+  "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
+    "message": "白名单用户不分析、不自动屏蔽。已有屏蔽需手动取消。"
+  },
+  "ui_already_blocked": {
+    "message": "原本已屏蔽"
+  },
+  "ui_already_queued_for_undo": {
+    "message": "已在撤回队列"
+  },
+  "ui_also_allowlist_this_user_to_skip_future_analysis": {
+    "message": "同时加入白名单，以后也不再分析"
+  },
+  "ui_also_stops_analysis_of_this_post_in_all_tabs_to": {
+    "message": "同时停止这个原帖在所有标签页中的分析。取消屏蔽需要保持同一账号的任意 X 页面打开，无需停留在原帖。"
+  },
+  "ui_analysis_canceled": {
+    "message": "分析已取消。"
+  },
+  "ui_analysis_needs_attention": {
+    "message": "分析服务需处理：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_analysis_paused": {
+    "message": "分析已暂停"
+  },
+  "ui_analysis_rules": {
+    "message": "分析规则"
+  },
+  "ui_analysis_rules_block_s_b": {
+    "message": "分析规则 · block s.b."
+  },
+  "ui_analyzing_this_reply": {
+    "message": "正在分析这条评论"
+  },
+  "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
+    "message": "动画调试中：不分析、不创建屏蔽任务。使用 blockSBDebug.disable() 退出。"
+  },
+  "ui_animation_style": {
+    "message": "动画效果"
+  },
+  "ui_api_domain_changed_enter_the_new_service_s_api_key": {
+    "message": "更换 API 域名后，请重新输入该服务的 API Key。"
+  },
+  "ui_api_endpoint": {
+    "message": "API 端点"
+  },
+  "ui_api_endpoint_access_not_granted_save_and_grant_access_in": {
+    "message": "未授权访问 API 端点，请在模型设置中重新保存并授权。"
+  },
+  "ui_api_endpoint_must_use_https_without_credentials_query_parameters_or": {
+    "message": "API 端点须为 HTTPS，且不能包含账号、查询参数或片段。"
+  },
+  "ui_at_most": {
+    "message": "不超过"
+  },
+  "ui_auto_block": {
+    "message": "自动屏蔽："
+  },
+  "ui_auto_block_model_confidence": {
+    "message": "自动屏蔽：模型置信度 ≥"
+  },
+  "ui_auto_hidden": {
+    "message": "已自动隐藏 · $v0$ $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_auto_hide": {
+    "message": "自动隐藏："
+  },
+  "ui_auto_hide_replies": {
+    "message": "自动隐藏评论"
+  },
+  "ui_auto_hide_threshold_must_be_below_the_auto_block_threshold": {
+    "message": "自动隐藏概率必须低于自动屏蔽概率。"
+  },
+  "ui_auto_load_stopped_due_to_a_service_or_loading_error": {
+    "message": "自动加载已停止：服务或评论加载异常，请处理后重新开启"
+  },
+  "ui_auto_load_stopped_this_task_reached_the_2_000_reply": {
+    "message": "自动加载已停止：本次任务达到 2000 条分析上限"
+  },
+  "ui_auto_loading": {
+    "message": " · 自动加载中"
+  },
+  "ui_automatically_load_more_replies_pauses_when_you_switch_pages_or": {
+    "message": "开启后自动向下加载评论；切到其他页面或标签页时暂停翻页"
+  },
+  "ui_back": {
+    "message": "返回"
+  },
+  "ui_background_interrupted_before_submission_you_can_retry": {
+    "message": "后台在提交操作前中断，可以重试。"
+  },
+  "ui_background_interrupted_before_the_final_http_response_no_automatic_retry": {
+    "message": "后台中断，未收到请求的最终 HTTP 结果；未自动重试，可在记录中手动处理。"
+  },
+  "ui_background_interrupted_result_unknown_verify_the_status_before_retrying": {
+    "message": "后台中断，结果待核对。请在历史中核对状态后重试。"
+  },
+  "ui_balanced": {
+    "message": "平衡"
+  },
+  "ui_block": {
+    "message": "加入屏蔽"
+  },
+  "ui_block_2": {
+    "message": "加入屏蔽 @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_agreeing_repliers": {
+    "message": "屏蔽 @$v0$ 及其评论区的支持者",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_apply_reply_rules": {
+    "message": "屏蔽 @$v0$ 并按规则处理评论区",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_and_remove_their_other_replies": {
+    "message": "屏蔽 @$v0$，同时移除其其他回复",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_for_did_not_complete_replies_restored_check_the_trash": {
+    "message": "@$v0$ 屏蔽未完成，已恢复评论；请在垃圾桶中查看记录。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_must_be_true_or_false": {
+    "message": "$v0$的 block 必须为 true 或 false。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_on_match": {
+    "message": "命中后屏蔽"
+  },
+  "ui_block_queue_needs_attention_open_the_trash_to_review": {
+    "message": "屏蔽队列需要处理，请打开垃圾桶查看或核对状态。"
+  },
+  "ui_block_request_failed_http": {
+    "message": "屏蔽请求失败（HTTP $v0$）。$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_block_request_received_an_http_success_response_the_relationship_was": {
+    "message": "屏蔽请求已收到 HTTP 成功响应；未进行屏蔽关系查询。"
+  },
+  "ui_block_request_timed_out_or_disconnected_without_http_success_not": {
+    "message": "屏蔽请求超时或连接中断，未收到 HTTP 成功响应；未自动重试。"
+  },
+  "ui_block_requests_are_submitted_by_the_background_queue": {
+    "message": "屏蔽请求由扩展后台队列提交。"
+  },
+  "ui_block_s_b_block_history": {
+    "message": "block s.b. · 屏蔽记录"
+  },
+  "ui_block_s_b_cache_cleanup_failed": {
+    "message": "block s.b.: 缓存清理失败。"
+  },
+  "ui_block_s_b_cache_read_failed_using_online_analysis": {
+    "message": "block s.b.: Jev 缓存读取失败，本次使用在线分析。"
+  },
+  "ui_block_s_b_cache_write_failed_this_result_is_still": {
+    "message": "block s.b.: Jev 缓存写入失败，本次分析结果仍可使用。"
+  },
+  "ui_block_s_b_cannot_read_queue_will_retry_on_next": {
+    "message": "block s.b.: 无法读取队列，将由下一次唤醒重试。"
+  },
+  "ui_block_s_b_no_reply_to_preview_scroll_to_the": {
+    "message": "[block s.b.] 找不到可预览的评论，请滚动到评论区或提供可见评论的帖子 ID。"
+  },
+  "ui_block_s_b_panel": {
+    "message": "block s.b. 管理面板"
+  },
+  "ui_block_somebody_panel": {
+    "message": "block somebody 管理面板"
+  },
+  "ui_block_submission_failed_check_the_trash": {
+    "message": " · 屏蔽提交失败，请在垃圾桶查看记录"
+  },
+  "ui_block_target": {
+    "message": "屏蔽项"
+  },
+  "ui_block_threshold": {
+    "message": "屏蔽阈值 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_block_threshold_cannot_be_below_0_5": {
+    "message": "屏蔽阈值不能低于 0.5。"
+  },
+  "ui_block_threshold_confidence_must_be": {
+    "message": "屏蔽阈值 $v0$ · 置信度须 ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_blocked": {
+    "message": "已屏蔽"
+  },
+  "ui_blocked_manually": {
+    "message": "手动加入屏蔽"
+  },
+  "ui_cache_is_in_use_by_another_window": {
+    "message": "缓存正在被其他窗口占用"
+  },
+  "ui_cache_limit_must_be_an_integer_from_100_to_100": {
+    "message": "缓存条数应为 100～100000 的整数。"
+  },
+  "ui_cache_open_timed_out": {
+    "message": "缓存打开超时"
+  },
+  "ui_cache_transaction_failed": {
+    "message": "缓存事务失败"
+  },
+  "ui_cancel_task": {
+    "message": "取消任务"
+  },
+  "ui_cancel_unsent_requests": {
+    "message": "取消尚未提交请求"
+  },
+  "ui_canceled": {
+    "message": "已取消"
+  },
+  "ui_cannot_block_the_currently_signed_in_account": {
+    "message": "不能屏蔽当前登录账号。"
+  },
+  "ui_cannot_connect_to_jev_right_now_reply_left_unchanged": {
+    "message": "暂时无法连接 Jev，评论保持原样。"
+  },
+  "ui_cannot_connect_to_the_extension": {
+    "message": "无法连接扩展后台。"
+  },
+  "ui_cannot_connect_to_the_extension_reload_the_extension_and_this": {
+    "message": "无法连接扩展后台，请重新加载扩展和本页。"
+  },
+  "ui_cannot_identify_the_post_link": {
+    "message": "无法识别帖子链接。"
+  },
+  "ui_cannot_identify_the_task_s_original_post": {
+    "message": "无法识别任务原帖。"
+  },
+  "ui_cannot_preview": {
+    "message": "无法预览：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_cannot_verify_account_status": {
+    "message": "无法核对账号状态。"
+  },
+  "ui_cannot_verify_the_existing_block_no_action_taken": {
+    "message": "无法核对现有屏蔽关系，未执行操作。"
+  },
+  "ui_category": {
+    "message": "分类"
+  },
+  "ui_cautious": {
+    "message": "谨慎"
+  },
+  "ui_checked": {
+    "message": "已检查 $v0$ 条$v1$$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_classification_prompt": {
+    "message": "判断提示词"
+  },
+  "ui_clear_canceled_records": {
+    "message": "清理已取消的记录？"
+  },
+  "ui_clear_canceled_records_2": {
+    "message": "清理已取消记录"
+  },
+  "ui_clear_records": {
+    "message": "清理记录"
+  },
+  "ui_close": {
+    "message": "关闭"
+  },
+  "ui_close_panel": {
+    "message": "关闭管理面板"
+  },
+  "ui_close_preview": {
+    "message": "关闭预览"
+  },
+  "ui_confidence": {
+    "message": "置信度 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_confidence_2": {
+    "message": "$v0$ · 置信度 $v1$%$v2$$v3$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      },
+      "v3": {
+        "content": "$4"
+      }
+    }
+  },
+  "ui_configured": {
+    "message": "已配置"
+  },
+  "ui_confirm": {
+    "message": "确认"
+  },
+  "ui_connect_jev_first": {
+    "message": "请先连接 Jev。"
+  },
+  "ui_connect_jev_in_settings_first": {
+    "message": "请先在设置中连接 Jev。"
+  },
+  "ui_connecting": {
+    "message": "连接中…"
+  },
+  "ui_contains_an_unknown_variable": {
+    "message": "$v0$中有未知变量：$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_contains_unread_media": {
+    "message": "含未读取的媒体"
+  },
+  "ui_could_not_save_reply_context": {
+    "message": "评论上下文保存失败"
+  },
+  "ui_could_not_save_reply_context_retrying": {
+    "message": "评论上下文暂存失败，正在重试"
+  },
+  "ui_could_not_switch_automatically_choose_most_recent_on_x_to": {
+    "message": "未能自动选择排序，请在 X 菜单中选择最近，任务会自动继续"
+  },
+  "ui_could_not_sync_task_status": {
+    "message": "任务状态同步失败：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria": {
+    "message": "$v0$判断标准",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_criteria_which_replies_belong_in_this_category": {
+    "message": "判断标准：什么样的评论属于这个选项？"
+  },
+  "ui_current_block_status_on_x_verified": {
+    "message": "已核对当前 X 屏蔽状态。"
+  },
+  "ui_current_thread_task_changed": {
+    "message": "当前评论区任务已切换。"
+  },
+  "ui_current_thread_task_is_paused_or_changed": {
+    "message": "当前评论区任务已暂停或切换。"
+  },
+  "ui_custom": {
+    "message": "自定义"
+  },
+  "ui_customize_prompt": {
+    "message": "自定义 Prompt ↗"
+  },
+  "ui_decision_details": {
+    "message": "判断依据"
+  },
+  "ui_delete": {
+    "message": "删除"
+  },
+  "ui_delete_option": {
+    "message": "删除此选项"
+  },
+  "ui_detection_policy": {
+    "message": "识别策略"
+  },
+  "ui_direct_parent_reply_context_is_missing": {
+    "message": "缺少直接父评论上下文"
+  },
+  "ui_discard_unsaved_changes_and_load_the_latest_settings": {
+    "message": "丢弃当前未保存的草稿，加载最新配置？"
+  },
+  "ui_dismiss_allowlist_notice": {
+    "message": "关闭白名单提示"
+  },
+  "ui_don_t_show_again": {
+    "message": "不再提示"
+  },
+  "ui_edit_note": {
+    "message": "编辑备注"
+  },
+  "ui_editing_mode": {
+    "message": "编辑模式"
+  },
+  "ui_end_of_x_s_results_queued_blocks_will_continue": {
+    "message": "已到 X 返回的列表末尾 · 已入队屏蔽继续处理"
+  },
+  "ui_endpoint_did_not_return_a_valid_jev_result_settings_were": {
+    "message": "接口未返回有效的 Jev 分类结果，配置未保存。"
+  },
+  "ui_enter_a_valid_api_key": {
+    "message": "请输入有效的 API Key。"
+  },
+  "ui_enter_an_x_username_or_profile_link": {
+    "message": "请输入 X 用户名或个人主页链接。"
+  },
+  "ui_enter_api_key": {
+    "message": "输入 API Key"
+  },
+  "ui_enter_the_full_https_api_endpoint": {
+    "message": "请输入完整的 HTTPS API 端点。"
+  },
+  "ui_enter_the_full_https_url_of_a_jev_compatible_endpoint": {
+    "message": "填写兼容 Jev 的完整 HTTPS 接口地址。"
+  },
+  "ui_enter_this_service_s_api_key": {
+    "message": "输入该服务的 API Key"
+  },
+  "ui_enter_your_jev_api_key_in_settings_first": {
+    "message": "请先在设置中填写 Jev API Key。"
+  },
+  "ui_excluded_from_this_automatic_task": {
+    "message": "该用户已从本次自动任务中排除"
+  },
+  "ui_existing_blocks_or_accounts_managed_by_later_records_will_be": {
+    "message": "$v0$ 条原有屏蔽或由后续记录管理的账号将保留。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_expanded_request_too_large_reduce_repeated_variables_or_shorten_the": {
+    "message": "变量展开后的请求过大，请减少重复变量或缩短模板。"
+  },
+  "ui_expands_variables_locally_without_calling_an_api": {
+    "message": "本地展开变量，不调用 API。"
+  },
+  "ui_export": {
+    "message": "导出"
+  },
+  "ui_export_history_and_allowlist": {
+    "message": "导出记录与白名单"
+  },
+  "ui_extension_disconnected_refresh_this_page": {
+    "message": "扩展连接已断开，请刷新页面。"
+  },
+  "ui_failed_or_unconfirmed_items_need_separate_review_they_will_not": {
+    "message": "$v0$ 条失败或结果未知的记录需单独处理，不会宣称它们已撤回。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_by_signed_in_account": {
+    "message": "按登录账号筛选"
+  },
+  "ui_filter_records": {
+    "message": "记录筛选"
+  },
+  "ui_final_request_content": {
+    "message": "最终请求内容"
+  },
+  "ui_fly_to_trash": {
+    "message": "飞入垃圾桶"
+  },
+  "ui_follow_system_reduced_motion_preference": {
+    "message": "跟随系统减少动态效果"
+  },
+  "ui_for_http_only_records_the_previous_block_status_was_not": {
+    "message": "此前只记录 HTTP 成功的屏蔽没有核对原有关系，取消屏蔽会解除账号当前的屏蔽关系。"
+  },
+  "ui_future_replies_by_will_follow_the_current_rules_existing_blocks": {
+    "message": "@$v0$ 的后续评论将重新按当前策略判断，已有的屏蔽不会因此改变。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_github_repository": {
+    "message": "GitHub 项目仓库"
+  },
+  "ui_has_unknown_fields_or_an_invalid_format": {
+    "message": "$v0$包含未知字段或格式不正确。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_has_unmatched_variable_braces": {
+    "message": "$v0$中的变量括号不完整。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_hide": {
+    "message": "隐藏"
+  },
+  "ui_hide_details": {
+    "message": "收起明细"
+  },
+  "ui_hide_range": {
+    "message": "隐藏区间：$v0$% ≤ $v1$ < $v2$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_history_has_reached_5_000_records_export_and_clear_completed": {
+    "message": "操作记录已达到 5000 条，请导出并清理已完成的记录。"
+  },
+  "ui_if_you_agree_to_meet_you_should_be_on_time": {
+    "message": "约好了见面就应该按时到。"
+  },
+  "ui_incomplete_text": {
+    "message": "文本不完整"
+  },
+  "ui_input": {
+    "message": "输入内容"
+  },
+  "ui_input_template": {
+    "message": "输入内容模板"
+  },
+  "ui_insert": {
+    "message": "插入 {{$v0$}}",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_insert_input_variable": {
+    "message": "插入输入变量"
+  },
+  "ui_insert_prompt_variable": {
+    "message": "插入提示词变量"
+  },
+  "ui_insufficient_jev_balance_check_your_account": {
+    "message": "Jev 余额不足，请检查账户。"
+  },
+  "ui_internal_id": {
+    "message": "内部标识 · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_analysis_result": {
+    "message": "分析结果异常"
+  },
+  "ui_invalid_context_request": {
+    "message": "无效上下文请求。"
+  },
+  "ui_invalid_jev_classification_format_reply_skipped": {
+    "message": "Jev 分类格式无效，已跳过此评论"
+  },
+  "ui_invalid_jev_key_update_it_in_settings": {
+    "message": "Jev 密钥无效，请重新设置。"
+  },
+  "ui_invalid_jev_probability_sum_reply_skipped": {
+    "message": "Jev 概率合计异常（$v0$），已跳过此评论",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_json_check_brackets_commas_and_quotes": {
+    "message": "Raw 不是有效的 JSON，请检查括号、逗号和引号。"
+  },
+  "ui_invalid_model_name": {
+    "message": "模型名称无效。"
+  },
+  "ui_invalid_page": {
+    "message": "无效页面。"
+  },
+  "ui_invalid_request_source": {
+    "message": "无效请求来源。"
+  },
+  "ui_invalid_results": {
+    "message": " · $v0$ 条结果异常",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_invalid_x_origin": {
+    "message": "无效的 X 来源。"
+  },
+  "ui_is_below": {
+    "message": "$v0$未达到 $v1$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_jev_classification_disagrees_with_the_highest_probability_reply_skipped": {
+    "message": "Jev 分类与最高概率不一致，已跳过此评论"
+  },
+  "ui_jev_denied_access_check_your_permissions": {
+    "message": "Jev 拒绝访问，请检查账户权限。"
+  },
+  "ui_jev_rate_limit_reached_analysis_paused_retry_later": {
+    "message": "Jev 暂时限流，已暂停分析，请稍后重试。"
+  },
+  "ui_jev_request_cache": {
+    "message": "Jev 请求缓存"
+  },
+  "ui_jev_response_interrupted_reply_left_unchanged": {
+    "message": "Jev 响应中断，评论保持原样。"
+  },
+  "ui_jev_response_too_large_reply_skipped": {
+    "message": "Jev 返回结果过大，已跳过此评论。"
+  },
+  "ui_jev_returned_an_empty_result": {
+    "message": "Jev 返回了空结果。"
+  },
+  "ui_jev_returned_an_unreadable_result": {
+    "message": "Jev 返回了无法读取的结果。"
+  },
+  "ui_jev_returned_http_reply_left_unchanged": {
+    "message": "Jev 返回 HTTP $v0$，评论保持原样。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_jev_timed_out_reply_left_unchanged": {
+    "message": "Jev 响应超时，评论保持原样。"
+  },
+  "ui_leave_blank_to_keep_the_saved_key": {
+    "message": "留空沿用已保存的 Key"
+  },
+  "ui_left_thread_queued_blocks_continue_in_background": {
+    "message": "已离开评论区 · 已入队账号继续后台提交"
+  },
+  "ui_load_latest_settings": {
+    "message": "加载最新配置"
+  },
+  "ui_loading": {
+    "message": "正在读取…"
+  },
+  "ui_management": {
+    "message": "管理功能"
+  },
+  "ui_maximum_entries": {
+    "message": "最多保留条数"
+  },
+  "ui_missing_parent_context_in_this_page_and_local_records_load": {
+    "message": "缺少父评论上下文：本地记录和当前页面中均未找到完整回复链，加载对应回复后会继续"
+  },
+  "ui_model": {
+    "message": "模型"
+  },
+  "ui_model_confidence_is_below": {
+    "message": "模型置信度未达到 $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_model_selection": {
+    "message": "模型选择"
+  },
+  "ui_model_settings": {
+    "message": "模型设置"
+  },
+  "ui_model_settings_changed_in_another_window_save_again": {
+    "message": "模型设置已在其他窗口更改，请重新保存。"
+  },
+  "ui_move_down": {
+    "message": "下移选项"
+  },
+  "ui_move_up": {
+    "message": "上移选项"
+  },
+  "ui_must_be_text_characters": {
+    "message": "$v0$须为$v1$ $v2$ 字符的文本。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_name": {
+    "message": "$v0$名称",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_needs_attention": {
+    "message": "需处理"
+  },
+  "ui_needs_attention_2": {
+    "message": "需要处理"
+  },
+  "ui_needs_attention_open_trash": {
+    "message": "任务需处理 · 打开垃圾桶查看"
+  },
+  "ui_needs_verification": {
+    "message": "结果待核对"
+  },
+  "ui_new_analysis_will_stop_block_history_and_the_allowlist_will": {
+    "message": "新的评论分析将停止，屏蔽记录和白名单仍会保留。"
+  },
+  "ui_no_analysis_no_automatic_blocking": {
+    "message": "不分析 · 不自动屏蔽"
+  },
+  "ui_no_block_history_yet": {
+    "message": "暂无屏蔽记录"
+  },
+  "ui_no_blocks_recorded_for_this_task_yet": {
+    "message": "任务尚未产生屏蔽记录。"
+  },
+  "ui_no_matching_tasks": {
+    "message": "没有匹配的任务"
+  },
+  "ui_no_matching_users": {
+    "message": "没有匹配的用户"
+  },
+  "ui_no_new_replies_for_30_seconds_auto_load_stopped_check": {
+    "message": "30 秒没有新评论，自动加载已停止；可手动检查后重新开启"
+  },
+  "ui_no_probability_available": {
+    "message": "暂无概率"
+  },
+  "ui_no_readable_text": {
+    "message": "无可读取文本"
+  },
+  "ui_no_records_need_verification": {
+    "message": "没有待核对的记录。"
+  },
+  "ui_no_text_to_analyze": {
+    "message": "没有可分析的文字"
+  },
+  "ui_no_verifiable_result_received": {
+    "message": "没有收到可验证的结果。"
+  },
+  "ui_nonempty_at_most": {
+    "message": "非空且不超过"
+  },
+  "ui_not_analyzed_yet": {
+    "message": "尚无分析结果"
+  },
+  "ui_not_auto_blocked": {
+    "message": " · 未自动屏蔽：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_not_connected": {
+    "message": "未连接"
+  },
+  "ui_not_enough_text_to_decide": {
+    "message": "缺少可判断的文本"
+  },
+  "ui_note": {
+    "message": "备注"
+  },
+  "ui_note_for": {
+    "message": "@$v0$ 的备注",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_note_optional": {
+    "message": "备注（可选）"
+  },
+  "ui_older_results_may_lack_a_full_distribution_missing_values_show": {
+    "message": "旧结果未保存完整分布，缺失项显示 —。"
+  },
+  "ui_only_http_success_was_recorded_the_prior_block_status_was": {
+    "message": "这条记录只确认了屏蔽请求的 HTTP 成功响应，未查询此前是否已经屏蔽。取消屏蔽会解除该账号当前的屏蔽关系。"
+  },
+  "ui_only_unblocked_or_canceled_local_records_will_be_deleted_active": {
+    "message": "仅清理已取消屏蔽和已取消任务的本地记录。当前已屏蔽的账号及其撤销入口会保留。此操作不会改变 X 上的屏蔽关系。"
+  },
+  "ui_open_settings": {
+    "message": "去设置"
+  },
+  "ui_open_x_signed_in_as_first": {
+    "message": "请先打开已登录 @$v0$ 的 X 页面。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_open_x_signed_in_as_once_to_connect_this_older": {
+    "message": "旧任务需要打开一次已登录 @$v0$ 的 X 页面以绑定后台队列。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option": {
+    "message": "选项 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_criteria": {
+    "message": "选项 $v0$ 判断标准",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_internal_id": {
+    "message": "选项 $v0$ 内部标识",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_name": {
+    "message": "选项名称"
+  },
+  "ui_option_name_2": {
+    "message": "选项 $v0$ 名称",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_option_probabilities": {
+    "message": "选项概率"
+  },
+  "ui_options_blocking_options": {
+    "message": "$v0$ 个选项 · $v1$ 个屏蔽项",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_original_author": {
+    "message": "原帖作者"
+  },
+  "ui_original_author_blocked_by_this_task": {
+    "message": "原作者，按所选任务直接屏蔽"
+  },
+  "ui_original_post_reply_or_parent_text_is_incomplete": {
+    "message": "原帖、评论或父评论文本尚不完整"
+  },
+  "ui_output_options": {
+    "message": "输出选项"
+  },
+  "ui_page_closed_or_connection_lost_verify_the_outcome": {
+    "message": "页面关闭或连接中断，操作结果需要核对。"
+  },
+  "ui_page_experience": {
+    "message": "页面体验"
+  },
+  "ui_particle_dissolve": {
+    "message": "粒子消散"
+  },
+  "ui_paused": {
+    "message": "已暂停"
+  },
+  "ui_pending": {
+    "message": "待提交"
+  },
+  "ui_post_by": {
+    "message": "@$v0$ 的推文",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_preview_request": {
+    "message": "预览请求"
+  },
+  "ui_probabilities_by_option": {
+    "message": "各选项概率"
+  },
+  "ui_processing": {
+    "message": "处理中"
+  },
+  "ui_prompt": {
+    "message": "提示词"
+  },
+  "ui_prompt_can_contain_up_to_12_000_characters": {
+    "message": "Prompt 最多 12000 字符。"
+  },
+  "ui_queue_for_unblocking": {
+    "message": "加入取消屏蔽队列"
+  },
+  "ui_queue_waiting_for_to_sign_in_no_other_account_will": {
+    "message": "队列等待登录 @$v0$；不会使用另一个账号提交。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_queued": {
+    "message": "队列中"
+  },
+  "ui_raw_configuration": {
+    "message": "Raw 配置"
+  },
+  "ui_recorded": {
+    "message": "记录时间 $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reload": {
+    "message": "重新读取"
+  },
+  "ui_remove": {
+    "message": "移出"
+  },
+  "ui_remove_from_allowlist": {
+    "message": "移出白名单"
+  },
+  "ui_remove_from_allowlist_2": {
+    "message": "移出白名单？"
+  },
+  "ui_remove_jev_api_key": {
+    "message": "移除 Jev 密钥？"
+  },
+  "ui_remove_key": {
+    "message": "移除密钥"
+  },
+  "ui_remove_users_from_the_allowlist_panel": {
+    "message": "请从白名单面板移除。"
+  },
+  "ui_replies_failed_to_load_retry_on_x": {
+    "message": "评论加载失败$v0$，请在 X 页面重试",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_replies_ready_syncing_task_status": {
+    "message": "评论已就绪 · 正在同步任务状态"
+  },
+  "ui_reply_automatically_hidden": {
+    "message": "评论已自动隐藏"
+  },
+  "ui_reply_context_cache_is_in_use": {
+    "message": "评论上下文缓存被占用"
+  },
+  "ui_reply_context_cache_open_timed_out": {
+    "message": "评论上下文缓存打开超时"
+  },
+  "ui_reply_does_not_belong_to_the_selected_conversation": {
+    "message": "评论不属于当前选中的会话。"
+  },
+  "ui_reply_kept_no_automatic_retry_in_this_task": {
+    "message": "$v0$；已保留原文，本次任务不自动重试",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_reply_removal_animation": {
+    "message": "评论移除动画"
+  },
+  "ui_reply_that_triggered_the_decision": {
+    "message": "触发判断的评论"
+  },
+  "ui_request_preview": {
+    "message": "请求预览"
+  },
+  "ui_restore_defaults": {
+    "message": "恢复默认"
+  },
+  "ui_resume_tasks": {
+    "message": "恢复任务"
+  },
+  "ui_retry": {
+    "message": "重试"
+  },
+  "ui_rule": {
+    "message": "规则"
+  },
+  "ui_rule_json": {
+    "message": "规则 JSON"
+  },
+  "ui_rule_too_large_shorten_descriptions_max_120_000_characters_total": {
+    "message": "规则内容过大，请缩短选项描述（总计最多 120000 字符）。"
+  },
+  "ui_sample_original_post": {
+    "message": "示例原帖"
+  },
+  "ui_sample_parent_reply_leave_blank_for_direct_replies": {
+    "message": "示例父评论（直接回复原帖时留空）"
+  },
+  "ui_sample_reply": {
+    "message": "示例评论"
+  },
+  "ui_save": {
+    "message": "保存"
+  },
+  "ui_save_and_connect": {
+    "message": "保存并连接"
+  },
+  "ui_save_connection_details_in_model_settings": {
+    "message": "请在模型设置中保存连接配置。"
+  },
+  "ui_save_failed": {
+    "message": "保存失败"
+  },
+  "ui_save_rules": {
+    "message": "保存规则"
+  },
+  "ui_saved": {
+    "message": "已保存"
+  },
+  "ui_saved_and_connected": {
+    "message": "已保存并连接"
+  },
+  "ui_saving": {
+    "message": "正在保存…"
+  },
+  "ui_search_allowlist": {
+    "message": "搜索白名单"
+  },
+  "ui_search_block_history": {
+    "message": "搜索屏蔽记录"
+  },
+  "ui_search_usernames_or_reply_text": {
+    "message": "搜索用户名或评论内容"
+  },
+  "ui_select_at_least_one_option_that_triggers_blocking": {
+    "message": "至少勾选一个可以触发屏蔽的选项。"
+  },
+  "ui_select_categories_that_may_trigger_blocking_both_the_chosen_category": {
+    "message": "勾选可触发屏蔽的类别；选中类别的概率与模型置信度均须达到设置页阈值。"
+  },
+  "ui_selected_original_post": {
+    "message": "选中的原帖"
+  },
+  "ui_set_between_2_and_255_output_options": {
+    "message": "请设置 2～255 个输出选项。"
+  },
+  "ui_set_inputs_instructions_and_blocking_options": {
+    "message": "配置输入、判断方式和屏蔽选项。"
+  },
+  "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
+    "message": "配置已在其他窗口更改。请复制当前草稿，再重新加载最新配置。"
+  },
+  "ui_settings_changed_in_another_window_your_draft_is_kept_copy": {
+    "message": "其他窗口更新了配置。当前草稿已保留，请先复制草稿，再加载最新配置。"
+  },
+  "ui_show": {
+    "message": "显示"
+  },
+  "ui_show_details": {
+    "message": "展开明细 ($v0$)",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_show_entered_key": {
+    "message": "显示输入的密钥"
+  },
+  "ui_show_more_accounts": {
+    "message": "显示更多账号"
+  },
+  "ui_show_more_tasks": {
+    "message": "显示更多任务"
+  },
+  "ui_show_reply": {
+    "message": "查看原文"
+  },
+  "ui_showing_of_records_undo_still_applies_to_the_entire_task": {
+    "message": "当前筛选显示 $v0$ / $v1$ 条；一键撤回仍作用于整个任务。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_some_replies_lack_context": {
+    "message": " · 部分评论缺少上下文"
+  },
+  "ui_start_from_a_post_s_menu_on_x": {
+    "message": "从 X 帖子菜单启动。"
+  },
+  "ui_start_from_a_signed_in_x_page_in_a_regular": {
+    "message": "请在普通窗口中已登录的 X 页面启动任务。"
+  },
+  "ui_start_from_the_post_menu": {
+    "message": "请从帖子菜单启动。"
+  },
+  "ui_stop": {
+    "message": "结束"
+  },
+  "ui_stop_task": {
+    "message": "停止任务"
+  },
+  "ui_submission_failed": {
+    "message": "提交失败"
+  },
+  "ui_submitted": {
+    "message": "已提交"
+  },
+  "ui_submitted_blocked": {
+    "message": "已提交 / 屏蔽"
+  },
+  "ui_submitted_blocked_2": {
+    "message": "已提交 / 已屏蔽"
+  },
+  "ui_submitting": {
+    "message": "正在提交"
+  },
+  "ui_switching_to_most_recent_using_the_page_menu": {
+    "message": "正在通过页面菜单切换为最近排序"
+  },
+  "ui_target_identity_could_not_be_verified_action_stopped": {
+    "message": "目标账号身份无法核对，已停止操作。"
+  },
+  "ui_task_canceled": {
+    "message": "任务已取消"
+  },
+  "ui_task_created_open_this_post_s_replies_to_switch_automatically": {
+    "message": "任务已建立，请打开这条帖子的评论区，插件会自动选择最近排序。"
+  },
+  "ui_task_ended_page_changed_or_account_unavailable_start_again_from": {
+    "message": "任务已结束、页面已切换或无法确认登录账号，请重新从帖子菜单启动。"
+  },
+  "ui_task_history": {
+    "message": "任务记录"
+  },
+  "ui_task_not_found_or_already_cleared": {
+    "message": "任务不存在或已经清理。"
+  },
+  "ui_task_running": {
+    "message": "任务进行中"
+  },
+  "ui_task_stopped": {
+    "message": "已停止任务"
+  },
+  "ui_task_stopped_accounts_queued_for_undo_unsent_requests_canceled_requests": {
+    "message": "已停止任务：$v0$ 位加入撤回队列，$v1$ 条取消提交，$v2$ 条等待请求返回。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_task_stopped_submitted_blocks_remain_use_undo_all_blocks_to": {
+    "message": "任务已停止；已提交的屏蔽保留，可另行整组撤回。"
+  },
+  "ui_tasks_resumed_failed_items_can_be_retried_individually": {
+    "message": "已恢复任务。失败记录可以单独重试。"
+  },
+  "ui_templates_can_contain_up_to_12_000_characters": {
+    "message": "模板最多 12000 字符。"
+  },
+  "ui_the_background_service_could_not_authorize_this_action": {
+    "message": "后台无法确认操作许可。"
+  },
+  "ui_the_chosen_category_is_not_marked_for_blocking": {
+    "message": "模型选中的类别未勾选屏蔽"
+  },
+  "ui_the_model_did_not_classify_this_as_clear_support": {
+    "message": "模型未判定为明确支持"
+  },
+  "ui_the_original_author_is_allowlisted_remove_them_before_starting": {
+    "message": "原作者在白名单中，请先移除白名单再启用。"
+  },
+  "ui_the_original_post_contains_media": {
+    "message": "原帖含有图片或其他媒体"
+  },
+  "ui_the_original_post_contains_media_2": {
+    "message": "原帖包含图片或其他媒体"
+  },
+  "ui_the_username_now_belongs_to_a_different_account_action_stopped": {
+    "message": "用户名对应的账号已变化，已停止操作。"
+  },
+  "ui_this_account_already_has_a_pending_action": {
+    "message": "该账号已有待处理操作。"
+  },
+  "ui_this_account_needs_review_open_the_trash_to_check_its": {
+    "message": "该账号的操作需要核对，请在垃圾桶中处理。"
+  },
+  "ui_this_extension_did_not_submit_the_block_so_it_cannot": {
+    "message": "这条记录没有由本插件提交的屏蔽请求，不能在此撤销。"
+  },
+  "ui_this_record_cannot_be_unblocked_right_now": {
+    "message": "该记录暂时不能取消屏蔽。"
+  },
+  "ui_this_task_has_analyzed_2_000_replies_stop_and_start": {
+    "message": "本次任务已分析 2000 条，请结束后重新启用。"
+  },
+  "ui_this_task_was_undone_start_again_from_the_original_post": {
+    "message": "此任务已经撤回。若要重新屏蔽，请从原帖重新启动任务。"
+  },
+  "ui_this_user_is_allowlisted": {
+    "message": "该用户在白名单中"
+  },
+  "ui_this_user_is_allowlisted_remove_them_first": {
+    "message": "该用户在白名单中，请先移除白名单。"
+  },
+  "ui_this_user_is_already_allowlisted": {
+    "message": "该用户已在白名单中。"
+  },
+  "ui_thread_changed_try_again": {
+    "message": "评论区已切换，请重新操作。"
+  },
+  "ui_thread_task_changed": {
+    "message": "评论区任务已切换。"
+  },
+  "ui_threshold_must_be_between_0_and_1": {
+    "message": "阈值应在 0 和 1 之间。"
+  },
+  "ui_to_unblock_open_any_x_page_signed_in_as": {
+    "message": "取消屏蔽需要打开已登录 @$v0$ 的任意 X 页面。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_toggle_auto_load_from_the_replies": {
+    "message": "请从评论区切换自动加载。"
+  },
+  "ui_unblock": {
+    "message": "取消屏蔽"
+  },
+  "ui_unblock_failed": {
+    "message": "取消失败"
+  },
+  "ui_unblock_pending": {
+    "message": "等待取消"
+  },
+  "ui_unblock_request_queued": {
+    "message": "取消屏蔽已加入队列。"
+  },
+  "ui_unblocked": {
+    "message": "已取消屏蔽"
+  },
+  "ui_unblocking": {
+    "message": "正在取消"
+  },
+  "ui_undo_after_request_completes": {
+    "message": "请求完成后安排撤回"
+  },
+  "ui_undo_all_blocks": {
+    "message": "一键撤回屏蔽"
+  },
+  "ui_undo_needs_attention": {
+    "message": "撤回需处理"
+  },
+  "ui_undo_task": {
+    "message": "确认撤回本任务"
+  },
+  "ui_undo_this_entire_task_for_s_post_using_includes_the": {
+    "message": "撤回 @$v0$ 这条推文的整个任务（由 @$v1$ 操作），包括原帖作者和本任务中的评论账号，不受当前搜索或筛选限制。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_undo_this_task_s_blocks": {
+    "message": "撤回本任务的屏蔽？"
+  },
+  "ui_undoing": {
+    "message": "撤回中"
+  },
+  "ui_undone": {
+    "message": "已撤回"
+  },
+  "ui_undone_canceled": {
+    "message": "已撤回 / 取消"
+  },
+  "ui_unknown_action": {
+    "message": "未知操作。"
+  },
+  "ui_unknown_animation_effect": {
+    "message": "未知动画效果。"
+  },
+  "ui_unknown_decision_mode": {
+    "message": "未知判定模式。"
+  },
+  "ui_unknown_variable": {
+    "message": "未知变量：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_unsaved_changes": {
+    "message": "有未保存的更改"
+  },
+  "ui_unsupported_rule_version_use_version_1": {
+    "message": "不支持此规则版本，version 应为 1。"
+  },
+  "ui_use_a_unique_id_starting_with_a_lowercase_letter_containing": {
+    "message": "$v0$的标识须唯一，由小写字母开头，仅含字母、数字、下划线（最多 48 位）。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_use_s_x_session_to_unblock_keep_an_x_page": {
+    "message": "将使用 @$v0$ 的 X 登录状态取消对 @$v1$ 的屏蔽。请保持该账号的 X 页面打开。该用户不会在当前任务中再次被自动屏蔽。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_use_the_button_next_to_a_reply": {
+    "message": "请从评论旁的按钮操作。"
+  },
+  "ui_use_the_history_panel": {
+    "message": "请从历史面板操作。"
+  },
+  "ui_use_the_management_panel_for_this_action": {
+    "message": "请从管理面板进行此操作。"
+  },
+  "ui_username_or_x_profile_link": {
+    "message": "@用户名或 X 主页链接"
+  },
+  "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
+    "message": "用户名应为 1～15 位字母、数字或下划线。"
+  },
+  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
+    "message": "与可视化编辑使用同一份配置。block 为 true 的选项可触发屏蔽。"
+  },
+  "ui_verify_status": {
+    "message": "核对状态"
+  },
+  "ui_verify_unknown_results_before_retrying": {
+    "message": "结果未知的操作必须先核对状态。"
+  },
+  "ui_via_records": {
+    "message": "由 @$v0$ 操作 · $v1$ · $v2$ 条记录",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_view_original": {
+    "message": "查看原帖 ↗"
+  },
+  "ui_view_post_on_x": {
+    "message": "查看 X 原帖 ↗"
+  },
+  "ui_view_probabilities_by_option": {
+    "message": "$v0$，查看各选项概率。$v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_view_reason": {
+    "message": "查看原因"
+  },
+  "ui_visual": {
+    "message": "可视化"
+  },
+  "ui_waiting_for_recent_replies_check_if_x_needs_a_retry": {
+    "message": "等待最近评论加载，请检查 X 页面是否需要重试"
+  },
+  "ui_waiting_for_the_first_page_of_recent_replies": {
+    "message": "等待最近排序的首批评论加载"
+  },
+  "ui_waiting_to_analyze_this_reply": {
+    "message": "等待分析这条评论"
+  },
+  "ui_why_this_user_was_processed": {
+    "message": "为什么处理这位用户"
+  },
+  "ui_x_action_failed_http": {
+    "message": "X 操作失败（HTTP $v0$）。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_x_did_not_confirm_the_unblock_verify_the_result_first": {
+    "message": "X 未明确确认取消屏蔽状态，请先核对结果。"
+  },
+  "ui_x_endpoint_or_target_account_is_unavailable": {
+    "message": "X 接口或目标账号不可用。"
+  },
+  "ui_x_rate_limit_reached_queue_paused": {
+    "message": "X 暂时限流，队列已暂停。"
+  },
+  "ui_x_refused_the_request_check_your_account_status": {
+    "message": "X 拒绝此次请求，请检查账号状态。"
+  },
+  "ui_x_refused_this_action_check_your_account_status": {
+    "message": "X 拒绝此次操作，请检查账号状态。"
+  },
+  "ui_x_request_timed_out_or_connection_was_interrupted": {
+    "message": "X 请求超时或连接中断。"
+  },
+  "ui_x_returned_a_result_that_could_not_be_verified": {
+    "message": "X 返回了无法核对的结果。"
+  },
+  "ui_x_returned_an_error": {
+    "message": "X 返回了错误信息。"
+  },
+  "ui_x_session_expired": {
+    "message": "X 登录已失效。"
+  },
+  "ui_x_session_expired_refresh_and_sign_in_again": {
+    "message": "X 登录会话已失效，请刷新并重新登录。"
+  },
+  "ui_x_session_expired_sign_in_to_resume_the_queue": {
+    "message": "X 登录已失效，请登录后恢复队列。"
+  },
+  "ui_x_session_unavailable_sign_in_before_resuming_the_queue": {
+    "message": "X 登录状态不可用，请登录后再恢复队列。"
+  },
+  "ui_you_can_retry_manually_in_history": {
+    "message": "可在记录中手动重试。"
+  },
+  "ui_you_cannot_block_yourself": {
+    "message": "不能屏蔽自己"
+  },
+  "ui_you_cannot_block_yourself_2": {
+    "message": "不能屏蔽自己。"
+  },
+  "ui_you_chose_to_block_the_original_author_no_model_decision": {
+    "message": "此账号是你主动选择屏蔽的原作者，未经过模型判断。"
+  },
+  "ui_you_manually_blocked_this_user_using_the_reply_button_no": {
+    "message": "你通过评论旁的按钮主动加入屏蔽，未经过模型判断。"
+  },
+  "ui_your_own_reply_not_analyzed": {
+    "message": "自己的评论，不分析"
+  },
+  "variable_incomplete_text": {
+    "message": "文本是否不完整"
+  },
+  "variable_original_post": {
+    "message": "原帖正文"
+  },
+  "variable_parent_reply": {
+    "message": "直接父评论"
+  },
+  "variable_reply": {
+    "message": "当前评论"
+  },
+  "variable_reply_is_direct": {
+    "message": "是否直接回复原帖"
+  },
+  "variable_unseen_media": {
+    "message": "是否含未读取媒体"
+  }
+}

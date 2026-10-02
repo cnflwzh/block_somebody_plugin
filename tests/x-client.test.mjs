@@ -1,3 +1,4 @@
+import { testI18n } from "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -8,7 +9,7 @@ const source = readFileSync(new URL("../src/content/x-client.js", import.meta.ur
 function adapter({ user = "viewer", blocking = true, mutate, allowed = true, postBlocking } = {}) {
   let receive;
   const requests = [], grants = [];
-  const context = { URL, URLSearchParams, AbortSignal, setTimeout, clearTimeout,
+  const context = { URL, URLSearchParams, AbortSignal, setTimeout, clearTimeout, BlockSBI18n: testI18n,
     location: { origin: "https://x.com" }, document: { cookie: "ct0=fixture-csrf", querySelector: () => ({ innerText: `Current account\n@${user}` }) },
     chrome: { runtime: { id: "fixture", onMessage: { addListener: fn => { receive = fn; } }, sendMessage: async m => { grants.push(m); return { ok: true, data: allowed }; } } },
     fetch: async (url, options) => {

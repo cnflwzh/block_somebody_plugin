@@ -1,13 +1,16 @@
 {
   "name": "block-somebody",
-  "version": "0.1.17",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "Dependency-free Chrome extension — block s.b.",
   "license": "AGPL-3.0-only",
   "scripts": {
     "check": "node scripts/check.mjs",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --import fake-indexeddb/auto --test tests/*.test.mjs",
     "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "6.2.5"
   }
 }

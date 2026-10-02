@@ -1,11 +1,15 @@
 (() => {
+  const { t, locale } = globalThis.BlockSBI18n;
   const metadata = new Map(), busy = new Set(), skipped = new Map(), rowState = new WeakMap(), manualPending = new Set();
+  const contextPosts = new Map(), savedContext = new Map(), requestedContext = new Set();
+  let contextFlight = null, contextRetryAt = 0, contextError = "";
+  let contextRevision = 0, syncedContextRevision = -1;
   const maskState = new WeakMap(), revealedMasks = new Set();
   const timelineState = new Map();
   const whiteHandles = new Set(), whiteIds = new Set(), historyHandles = new Map(), historyIds = new Map();
   const movingRows = new Set(), played = new Set(), reportedFailures = new Set(), debugRows = new Map();
   let animationDebug = false, debugEffect = "fly", debugRoute = "", anchorUsers = 0, anchorStyle;
-  let pageReady = false, sortFlow = null, loadNote = "", autoAt = 0, loadWait = null, autoStopping = false;
+  let pageReady = false, sortFlow = null, loadNote = "", lastSortNote = "", autoAt = 0, loadWait = null, autoStopping = false;
   const openedSpam = new WeakSet();
   let state = null, menuTarget = null, menuTrigger = null, timer, refreshTimer, refreshing = false, refreshAgain = false, lastLocation = "", sessionId = "", failure = "", drawerOpen = false;
   let locationSending = false, locationRetryAt = 0, locationError = "";
@@ -38,26 +42,93 @@
   const isBlocked = h => h && ["submitted", "blocked", "preexisting", "undo_pending", "undo_running", "undo_failed"].includes(h.status);
   const send = async (type, payload = {}) => {
     // Console preview is local only, including clicks on the normal controls while it is enabled.
-    if (animationDebug && ["ARM", "CLASSIFY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error("动画调试中：不分析、不创建屏蔽任务。使用 blockSBDebug.disable() 退出。");
+    if (animationDebug && ["ARM", "CLASSIFY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
     const r = await chrome.runtime.sendMessage({ type, ...payload });
-    if (!r?.ok) throw new Error(r?.error || "扩展连接已断开，请刷新页面。");
+    if (!r?.ok) throw new Error(r?.error || t("ui_extension_disconnected_refresh_this_page"));
     return r.data;
   };
   const element = (tag, className, text) => { const el = document.createElement(tag); if (className) el.className = className; if (text !== undefined) el.textContent = text; return el; };
+  // Keep this merge consistent with thread-context.js; page scripts cannot import worker modules.
+  function mergeContext(previous, post) {
+    if (!previous || previous.id !== post.id || previous.handle !== post.handle) return post;
+    const keepText = previous.text && (!post.text || !previous.incomplete && post.incomplete);
+    return { ...post, userId: post.userId || previous.userId, conversationId: post.conversationId || previous.conversationId,
+      parentId: post.parentId || previous.parentId, text: keepText ? previous.text : post.text,
+      incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia };
+  }
+  const sameContext = (a, b) => a && ["handle", "userId", "conversationId", "parentId", "text", "incomplete", "hasMedia"].every(key => a[key] === b[key]);
+  const contextFor = id => {
+    const live = metadata.get(id), cached = contextPosts.get(id);
+    return live ? mergeContext(cached, live) : cached;
+  };
+  /** Persist observed text before hiding/analysis. Restored parents never become scan candidates.
+   * Each bounded batch is tied to a session; late replies cannot leak into a different task.
+   */
+  function syncContext(s, account) {
+    if (contextFlight) return true;
+    if (Date.now() < contextRetryAt) return true;
+    if (syncedContextRevision === contextRevision) return false;
+    const posts = [], missing = new Set();
+    for (const raw of metadata.values()) {
+      const p = mergeContext(contextPosts.get(raw.id), raw);
+      if (p.conversationId !== s.root.conversationId || white(p)) continue;
+      if (!sameContext(savedContext.get(p.id), p) && posts.length < 40) posts.push(p);
+      let next = p.parentId;
+      const seen = new Set([p.id]);
+      for (let depth = 0; next && next !== s.root.id && depth < 30 && !seen.has(next); depth++) {
+        seen.add(next);
+        const parent = contextFor(next);
+        if (!parent || !parent.text || !parent.parentId) {
+          if (!requestedContext.has(next) && missing.size < 40) missing.add(next);
+          break;
+        }
+        if (white(parent)) break;
+        next = parent.parentId;
+      }
+    }
+    if (!posts.length && !missing.size) { syncedContextRevision = contextRevision; return false; }
+    const token = {}; contextFlight = token;
+    send("THREAD_CONTEXT", { sessionId: s.id, account, posts, missingIds: [...missing] }).then(result => {
+      if (state.session?.id !== s.id || viewer() !== account || route() !== s.root.id) return;
+      for (const p of posts) savedContext.set(p.id, p);
+      for (const p of result) {
+        if (white(p)) continue;
+        contextPosts.delete(p.id); contextPosts.set(p.id, p);
+        const live = metadata.get(p.id);
+        if (live) {
+          const merged = mergeContext(p, live);
+          metadata.set(p.id, merged);
+          // A new observation can arrive while the transaction is pending; only mark the
+          // returned version durable so richer/newer live text is saved by the next batch.
+          savedContext.set(p.id, p);
+        }
+      }
+      for (const id of missing) requestedContext.add(id);
+      while (contextPosts.size > 3000) contextPosts.delete(contextPosts.keys().next().value);
+      while (savedContext.size > 3000) savedContext.delete(savedContext.keys().next().value);
+      while (requestedContext.size > 3000) requestedContext.delete(requestedContext.values().next().value);
+      contextError = ""; contextRetryAt = 0;
+    }).catch(() => {
+      if (state.session?.id === s.id && viewer() === account) {
+        contextError = t("ui_could_not_save_reply_context_retrying"); contextRetryAt = Date.now() + 5000;
+      }
+    }).finally(() => { if (contextFlight === token) contextFlight = null; schedule(); });
+    return true;
+  }
   const button = (text, action, className = "") => { const b = element("button", className, text); b.type = "button"; b.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); action(e); }); return b; };
-  const host = element("div"); host.id = "blocksb-overlay";
+  const host = element("div"); host.id = "blocksb-overlay"; host.lang = locale;
   const shadow = host.attachShadow({ mode: "closed" });
   const css = element("link"); css.rel = "stylesheet"; css.href = chrome.runtime.getURL("src/content/overlay.css"); shadow.append(css);
-  const trash = button("", () => openDrawer("history"), "trash"); trash.title = "block s.b. · 屏蔽记录"; trash.setAttribute("aria-label", trash.title);
+  const trash = button("", () => openDrawer("history"), "trash"); trash.title = t("ui_block_s_b_block_history"); trash.setAttribute("aria-label", trash.title);
   trash.hidden = true;
   // Static SVG only. All page-derived strings use textContent.
   trash.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7M14 10v7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const badge = element("span", "badge", "0"); trash.append(badge);
   const status = element("div", "session-bar"); status.hidden = true;
   const statusText = element("span");
-  const pause = button("暂停", async () => { try { await send("TOGGLE_PAUSE"); } catch (e) { toast(e.message); } });
-  const stop = button("结束", async () => { try { await send("STOP_SESSION"); } catch (e) { toast(e.message); } });
-  const autoLoad = button("自动加载：关", async () => {
+  const pause = button(t("pause"), async () => { try { await send("TOGGLE_PAUSE"); } catch (e) { toast(e.message); } });
+  const stop = button(t("ui_stop"), async () => { try { await send("STOP_SESSION"); } catch (e) { toast(e.message); } });
+  const autoLoad = button(t("auto_load_off"), async () => {
     if (autoLoad.disabled) return;
     autoLoad.disabled = true;
     try {
@@ -66,18 +137,115 @@
     } catch (e) { toast(e.message); }
     finally { autoLoad.disabled = false; }
   });
-  autoLoad.title = "开启后自动向下加载评论；切到其他页面或标签页时暂停翻页";
+  autoLoad.title = t("ui_automatically_load_more_replies_pauses_when_you_switch_pages_or");
   status.append(statusText, autoLoad, pause, stop);
-  const backdrop = button("", closeDrawer, "backdrop"); backdrop.hidden = true; backdrop.setAttribute("aria-label", "关闭管理面板");
-  const drawer = element("section", "drawer"); drawer.hidden = true; drawer.setAttribute("role", "dialog"); drawer.setAttribute("aria-modal", "true"); drawer.setAttribute("aria-label", "block s.b. 管理面板");
-  const close = button("×", closeDrawer, "drawer-close"); close.setAttribute("aria-label", "关闭管理面板");
-  const iframe = element("iframe"); iframe.title = "block somebody 管理面板";
+  const backdrop = button("", closeDrawer, "backdrop"); backdrop.hidden = true; backdrop.setAttribute("aria-label", t("ui_close_panel"));
+  const drawer = element("section", "drawer"); drawer.hidden = true; drawer.setAttribute("role", "dialog"); drawer.setAttribute("aria-modal", "true"); drawer.setAttribute("aria-label", t("ui_block_s_b_panel"));
+  const close = button("×", closeDrawer, "drawer-close"); close.setAttribute("aria-label", t("ui_close_panel"));
+  const iframe = element("iframe"); iframe.title = t("ui_block_somebody_panel");
   drawer.append(close, iframe);
   const toastEl = element("div", "toast"); toastEl.hidden = true; toastEl.setAttribute("role", "status");
-  shadow.append(trash, status, backdrop, drawer, toastEl); document.body.append(host);
+  const probabilityPanel = element("section", "probability-panel"); probabilityPanel.hidden = true;
+  probabilityPanel.setAttribute("role", "tooltip"); probabilityPanel.setAttribute("aria-label", t("ui_probabilities_by_option"));
+  const probabilityDetails = new WeakMap();
+  let probabilityAnchor = null, probabilityHideTimer, probabilitySignature = "";
+  shadow.append(trash, status, backdrop, drawer, toastEl, probabilityPanel); document.body.append(host);
+  const probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const probabilityPercent = value => `${probabilityFormat.format(value * 100)}%`;
+  function hideProbabilityPanel() {
+    clearTimeout(probabilityHideTimer);
+    probabilityAnchor?.setAttribute("aria-expanded", "false");
+    probabilityAnchor = null; probabilitySignature = ""; probabilityPanel.hidden = true;
+  }
+  function deferProbabilityHide() {
+    clearTimeout(probabilityHideTimer);
+    probabilityHideTimer = setTimeout(() => {
+      if (!probabilityPanel.matches(":hover") && !probabilityAnchor?.matches(":hover,:focus")) hideProbabilityPanel();
+    }, 180);
+  }
+  /** One floating panel outside X's virtual list. Missing legacy scores stay unknown, never invented.
+   * Rebuild only when data changes, and discard anchors as soon as X recycles or hides their card.
+   */
+  function refreshProbabilityPanel() {
+    const anchor = probabilityAnchor, detail = anchor && probabilityDetails.get(anchor);
+    if (!anchor?.isConnected || !detail || !threadEnabled() || drawerOpen || document.hidden
+      || detail.sessionId !== state.session?.id || detail.revision !== state.settings.analysisRevision
+      || anchor.closest(".blocksb-masked,.blocksb-exiting,.blocksb-removed")
+      || anchor.closest(".blocksb-comment-tools")?.dataset.postId !== detail.postId) { hideProbabilityPanel(); return; }
+    const rect = anchor.getBoundingClientRect();
+    if (rect.bottom <= 0 || rect.top >= innerHeight || !rect.width) { hideProbabilityPanel(); return; }
+    const options = state.settings.ruleOptions || [], decision = detail.decision;
+    const signature = JSON.stringify([detail, options, state.settings.high, state.settings.confidence]);
+    if (signature !== probabilitySignature) {
+      probabilitySignature = signature;
+      probabilityPanel.replaceChildren();
+      const heading = element("div", "probability-heading");
+      heading.append(element("strong", "", t("ui_option_probabilities")), element("span", "", Number.isFinite(decision?.confidence) ? t("ui_confidence", probabilityPercent(decision.confidence)) : t("ui_not_analyzed_yet")));
+      probabilityPanel.append(heading);
+      const list = element("div", "probability-options");
+      const palette = ["#d97706", "#0d9488", "#3982d5", "#9261cb", "#dc5277", "#728b20"];
+      let missing = false;
+      options.forEach((option, index) => {
+        // Before full distributions were stored, only the built-in support score was retained.
+        const value = decision?.probabilities?.[option.id] ?? (!decision?.customRule && option.id === "support" ? decision?.support : undefined);
+        const known = Number.isFinite(value) && value >= 0 && value <= 1;
+        if (!known) missing = true;
+        const row = element("div", "probability-option");
+        row.style.setProperty("--option-color", palette[index] || `hsl(${Math.round(index * 137.508) % 360} 62% 48%)`);
+        const optionName = !state.settings.customRule && ["support", "oppose", "neutral", "uncertain"].includes(option.id) ? t(`category_${option.id}`) : option.name;
+        const line = element("div", "probability-option-heading"), name = element("span", "probability-option-name", optionName);
+        const tags = element("span", "probability-tags");
+        if (option.block) tags.append(element("span", "probability-tag", t("ui_block_target")));
+        if (decision?.label === option.id) tags.append(element("span", "probability-tag chosen", t("ui_model_selection")));
+        line.append(name, tags, element("strong", "probability-value", known ? probabilityPercent(value) : "—"));
+        const bar = element("div", "probability-bar");
+        bar.setAttribute("role", "progressbar"); bar.setAttribute("aria-label", optionName);
+        bar.setAttribute("aria-valuemin", "0"); bar.setAttribute("aria-valuemax", "100");
+        if (known) bar.setAttribute("aria-valuenow", String(Math.round(value * 1000) / 10));
+        else bar.setAttribute("aria-valuetext", t("ui_no_probability_available"));
+        const fill = element("div", "probability-fill"); fill.style.width = `${known ? value * 100 : 0}%`; bar.append(fill);
+        if (option.block) {
+          const marker = element("span", "probability-threshold"); marker.style.left = `${state.settings.high * 100}%`;
+          marker.setAttribute("aria-label", t("ui_block_threshold", probabilityPercent(state.settings.high))); bar.append(marker);
+        }
+        const scale = element("div", "probability-scale"); scale.append(element("span", "", "0%"), element("span", "", "100%"));
+        row.append(line, bar, scale); list.append(row);
+      });
+      const legend = element("div", "probability-legend");
+      legend.append(element("span", "probability-legend-marker"), document.createTextNode(t("ui_block_threshold_confidence_must_be", probabilityPercent(state.settings.high), probabilityPercent(state.settings.confidence))));
+      probabilityPanel.append(list, legend);
+      if (missing && decision && !decision.error) probabilityPanel.append(element("p", "probability-note", t("ui_older_results_may_lack_a_full_distribution_missing_values_show")));
+      probabilityPanel.append(element("p", "probability-note", detail.explanation));
+    }
+    probabilityPanel.hidden = false;
+    const bounds = probabilityPanel.getBoundingClientRect(), margin = 12, gap = 10;
+    const left = Math.max(margin, Math.min(rect.left, innerWidth - bounds.width - margin));
+    const below = rect.bottom + gap, above = rect.top - bounds.height - gap;
+    const top = below + bounds.height <= innerHeight - margin ? below : above >= margin ? above : Math.max(margin, Math.min(below, innerHeight - bounds.height - margin));
+    probabilityPanel.style.left = `${left}px`; probabilityPanel.style.top = `${top}px`;
+  }
+  function showProbabilityPanel(anchor) {
+    clearTimeout(probabilityHideTimer);
+    if (probabilityAnchor !== anchor) probabilityAnchor?.setAttribute("aria-expanded", "false");
+    probabilityAnchor = anchor; anchor.setAttribute("aria-expanded", "true"); refreshProbabilityPanel();
+  }
+  function probabilityBadge() {
+    const badge = element("button", "blocksb-probability"); badge.type = "button"; badge.setAttribute("aria-expanded", "false");
+    badge.addEventListener("pointerenter", e => { if (e.pointerType !== "touch") showProbabilityPanel(badge); });
+    badge.addEventListener("pointerleave", deferProbabilityHide);
+    badge.addEventListener("focus", () => showProbabilityPanel(badge)); badge.addEventListener("blur", deferProbabilityHide);
+    badge.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); showProbabilityPanel(badge); });
+    return badge;
+  }
+  probabilityPanel.addEventListener("pointerenter", () => clearTimeout(probabilityHideTimer));
+  probabilityPanel.addEventListener("pointerleave", deferProbabilityHide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hideProbabilityPanel(); }, true);
+  document.addEventListener("pointerdown", e => { if (e.target !== probabilityAnchor && !e.composedPath().includes(host)) hideProbabilityPanel(); }, true);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) hideProbabilityPanel(); });
   let toastTimer;
-  function toast(text) { toastEl.textContent = text; toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
+  function toast(text) { toastEl.textContent = String(text); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
   function openDrawer(tab) {
+    hideProbabilityPanel();
     // An empty srcdoc injected by another page script takes precedence over src and leaves the drawer blank.
     iframe.removeAttribute("srcdoc");
     iframe.src = chrome.runtime.getURL(`src/manager/manager.html?embedded=1&tab=${tab}&account=${encodeURIComponent(viewer())}`);
@@ -101,7 +269,7 @@
         });
         const article = candidates[0], post = article && readPost(article);
         if (post) { debugRows.set(post.id, post.handle); updateOverlay(); removeCard(article, post, true, true); }
-        else console.info("[block s.b.] 找不到可预览的评论，请滚动到评论区或提供可见评论的帖子 ID。");
+        else console.info(t("ui_block_s_b_no_reply_to_preview_scroll_to_the"));
       }
       updateOverlay(); schedule(); return;
     }
@@ -119,12 +287,13 @@
       if (!p || !/^\d{5,25}$/.test(p.id) || !/^[a-z0-9_]{1,15}$/.test(p.handle)) continue;
       const previous = metadata.get(p.id);
       const observedAt = Number.isFinite(e.data.observedAt) ? Math.min(Date.now(), e.data.observedAt) : 0;
-      metadata.set(p.id, { id: p.id, handle: p.handle, userId: /^\d{5,25}$/.test(p.userId) ? p.userId : "", name: String(p.name || p.handle).slice(0, 80),
+      metadata.set(p.id, mergeContext(previous, { id: p.id, handle: p.handle, userId: /^\d{5,25}$/.test(p.userId) ? p.userId : "", name: String(p.name || p.handle).slice(0, 80),
         text: String(p.text || "").slice(0, 14000), conversationId: String(p.conversationId || ""), parentId: String(p.parentId || ""), hasMedia: !!p.hasMedia, incomplete: !!p.incomplete,
         domSeen: e.data.source === "dom" || !!previous?.domSeen,
-        networkAt: e.data.source === "network" ? Math.max(previous?.networkAt || 0, observedAt) : previous?.networkAt || 0 });
+        networkAt: e.data.source === "network" ? Math.max(previous?.networkAt || 0, observedAt) : previous?.networkAt || 0 }));
     }
     while (metadata.size > 2500) metadata.delete(metadata.keys().next().value);
+    contextRevision++;
     schedule();
   });
   window.postMessage({ channel: "blocksb:replay:v1" }, location.origin);
@@ -141,8 +310,7 @@
     const p = { id, handle, name: article.querySelector('[data-testid="User-Name"] a')?.textContent || handle, text,
       userId: "", conversationId: "", parentId: "", hasMedia: !!article.querySelector('[data-testid="tweetPhoto"],video,[data-testid="card.wrapper"]'),
       incomplete: !!article.querySelector('[data-testid="tweet-text-show-more-link"]'), url: `https://x.com/${handle}/status/${id}` };
-    if (meta?.handle === handle) Object.assign(p, meta);
-    return p;
+    return meta?.handle === handle ? Object.assign(p, mergeContext(p, mergeContext(contextPosts.get(id), meta))) : p;
   }
   const articles = () => [...document.querySelectorAll('[data-testid="primaryColumn"] article[data-testid="tweet"]')];
   /** Prove descent to the selected post, not merely membership of a larger conversation. */
@@ -152,8 +320,8 @@
     while (next && next !== root.id && chain.length < 30) {
       if (seen.has(next)) return null;
       seen.add(next);
-      const p = metadata.get(next);
-      if (!p || p.conversationId !== root.conversationId || white(p)) return null;
+      const p = contextFor(next);
+      if (!p || !p.text.trim() && !p.hasMedia || p.conversationId !== root.conversationId || white(p)) return null;
       chain.push(p); next = p.parentId;
     }
     return next === root.id ? chain : null;
@@ -186,7 +354,7 @@
     const native = [...menu.querySelectorAll('[role="menuitem"]')].find(n => ["block", "unblock"].includes(n.dataset.testid) || /^(屏蔽\s*@|封鎖\s*@|封锁\s*@|Block\s*@|Unblock\s*@|解除屏蔽|取消屏蔽)/i.test(n.textContent.trim()));
     if (!native) return;
     const target = { ...menuTarget };
-    const entry = button(`屏蔽 @${target.handle} 及其评论区的支持者`, async e => {
+    const entry = button(state?.settings.customRule ? t("ui_block_and_apply_reply_rules", target.handle) : t("ui_block_and_agreeing_repliers", target.handle), async e => {
       dismissMenu(e.currentTarget);
       try {
         if (!state?.settings.configured) { openDrawer("settings"); return; }
@@ -197,15 +365,15 @@
         // Let X's router open the existing permalink. Sorting itself always uses X's menu.
         if (route() !== target.id) {
           if (link?.isConnected && link.getAttribute("href")?.match(/\/status\/(\d+)/)?.[1] === target.id) link.click();
-          else toast("任务已建立，请打开这条帖子的评论区，插件会自动选择最近排序。");
+          else toast(t("ui_task_created_open_this_post_s_replies_to_switch_automatically"));
         }
         schedule();
       } catch (e) { toast(e.message); }
     }, "blocksb-menu-item");
     entry.setAttribute("role", "menuitem"); native.after(entry);
-    const allow = button(`将 @${target.handle} 加入白名单`, async e => {
+    const allow = button(t("ui_add_to_allowlist_2", target.handle), async e => {
       dismissMenu(e.currentTarget);
-      try { await send("WHITELIST_ADD", target); toast(`@${target.handle} 已加入白名单。`); } catch (e) { toast(e.message); }
+      try { await send("WHITELIST_ADD", target); toast(t("ui_added_to_allowlist_2", target.handle)); } catch (e) { toast(e.message); }
     }, "blocksb-menu-item blocksb-allow-item");
     allow.setAttribute("role", "menuitem"); entry.after(allow);
   }
@@ -250,7 +418,7 @@
     const key = `${state.session?.id}:${post.id}`;
     const eligible = threadEnabled() && pageReady && state.settings.maskEnabled && post.id !== route()
       && post.handle !== viewer() && !white(post) && !state.session.excluded.includes(post.handle)
-      && Number.isFinite(decision?.support) && !["oppose", "neutral"].includes(decision.label)
+      && Number.isFinite(decision?.support) && (decision.customRule ? decision.matched : !["oppose", "neutral"].includes(decision.label))
       && decision.support >= state.settings.maskThreshold && decision.support < state.settings.high
       && !revealedMasks.has(key);
     const previous = maskState.get(article);
@@ -259,8 +427,8 @@
     let info = maskState.get(article);
     if (!info) {
       const cover = element("div", "blocksb-comment-mask");
-      cover.setAttribute("role", "group"); cover.setAttribute("aria-label", "评论已自动隐藏");
-      cover.append(element("span", "blocksb-mask-label"), button("查看原文", () => {
+      cover.setAttribute("role", "group"); cover.setAttribute("aria-label", t("ui_reply_automatically_hidden"));
+      cover.append(element("span", "blocksb-mask-label"), button(t("ui_show_reply"), () => {
         revealedMasks.add(key);
         while (revealedMasks.size > 2500) revealedMasks.delete(revealedMasks.values().next().value);
         clearMask(article);
@@ -272,7 +440,7 @@
       article.classList.add("blocksb-masked");
       article.append(cover);
     }
-    const label = `已自动隐藏 · 支持概率 ${Math.round(decision.support * 100)}%`;
+    const label = t("ui_auto_hidden", decision.customRule ? t("match_probability") : t("support_probability"), Math.round(decision.support * 100));
     if (info.cover.firstElementChild.textContent !== label) info.cover.firstElementChild.textContent = label;
     // X may replace child nodes while the card remains mounted. Protect new children too.
     for (const child of article.children) if (child !== info.cover && !info.children.has(child)) {
@@ -289,16 +457,16 @@
     if (tools?.dataset.postId !== post.id) { tools?.remove(); tools = null; }
     if (!tools) {
       tools = element("span", "blocksb-comment-tools"); tools.dataset.postId = post.id;
-      tools.append(element("span", "blocksb-probability"), button("加入屏蔽", async () => {
+      tools.append(probabilityBadge(), button(t("ui_block"), async () => {
         const current = readPost(article), account = viewer(), selectedId = route();
-        if (!threadEnabled() || !current || current.id !== post.id || !selectedId || !account) { toast("任务已结束、页面已切换或无法确认登录账号，请重新从帖子菜单启动。"); return; }
+        if (!threadEnabled() || !current || current.id !== post.id || !selectedId || !account) { toast(t("ui_task_ended_page_changed_or_account_unavailable_start_again_from")); return; }
         const token = `${account}:${current.handle}`;
         if (manualPending.has(token)) return;
         const root = metadata.get(selectedId) || articles().map(readPost).find(p => p?.id === selectedId) || { id: selectedId, handle: location.pathname.split("/")[1], text: "" };
         manualPending.add(token); schedule();
         try {
           const result = await send("MANUAL_BLOCK", { account, root, reply: current });
-          if (["failed", "uncertain", "undo_failed"].includes(result.status)) { toast("该账号的操作需要核对，请在垃圾桶中处理。"); openDrawer("history"); }
+          if (["failed", "uncertain", "undo_failed"].includes(result.status)) { toast(t("ui_this_account_needs_review_open_the_trash_to_check_its")); openDrawer("history"); }
           await refresh();
         } catch (e) { toast(e.message); }
         finally { manualPending.delete(token); schedule(); }
@@ -306,27 +474,34 @@
       date.after(tools);
     } else if (date.nextElementSibling !== tools) date.after(tools);
     const protectedUser = white(post), self = post.handle === viewer();
-    const score = !protectedUser && decision?.error ? "分析结果异常" : !protectedUser && Number.isFinite(decision?.support) ? `附和概率 ${Math.round(decision.support * 100)}%` : "附和概率 —";
+    const scoreName = state.settings.customRule ? t("match_probability") : t("agreement_probability");
+    const score = !protectedUser && decision?.error ? t("ui_invalid_analysis_result") : !protectedUser && Number.isFinite(decision?.support) ? `${scoreName} ${Math.round(decision.support * 100)}%` : `${scoreName} —`;
     const badge = tools.firstElementChild, control = tools.lastElementChild;
     if (badge.textContent !== score) badge.textContent = score;
     const s = state.session;
-    badge.title = protectedUser ? "白名单用户，不发送给 Jev 分析" : self ? "自己的评论，不分析"
-      : decision?.error ? `${decision.error}；已保留原文，本次任务不自动重试`
-      : decision ? `模型估计值 · 置信度 ${Math.round(decision.confidence * 100)}%${decision.blockReasons?.length ? ` · 未自动屏蔽：${decision.blockReasons.join("；")}` : ""}${history?.status === "failed" ? " · 屏蔽提交失败，请在垃圾桶查看记录" : ""}`
-      : post.handle === s.root.handle ? "原作者，按所选任务直接屏蔽"
-      : s.excluded.includes(post.handle) ? "该用户已从本次自动任务中排除"
-      : state.modelError ? `分析服务需处理：${state.modelError}`
-      : state.settings.paused || s.paused ? "分析已暂停"
-      : busy.has(`${s.id}:${post.id}`) ? "正在分析这条评论"
-      : !post.conversationId || !ancestors(post, s.root) ? "缺少父评论上下文，暂不分析；加载对应回复后会继续"
-      : !post.text.trim() ? "没有可分析的文字"
-      : "等待分析这条评论";
+    const categoryName = decision && !decision.customRule && ["support", "oppose", "neutral", "uncertain"].includes(decision.label)
+      ? t(`category_${decision.label}`) : decision?.labelName || decision?.label;
+    const explanation = protectedUser ? t("ui_allowlisted_not_sent_to_jev") : self ? t("ui_your_own_reply_not_analyzed")
+      : decision?.error ? t("ui_reply_kept_no_automatic_retry_in_this_task", String(decision.error))
+      : decision ? t("ui_confidence_2", categoryName, Math.round(decision.confidence * 100), decision.blockReasons?.length ? t("ui_not_auto_blocked", decision.blockReasons.join(locale.startsWith("zh") ? "；" : "; ")) : "", history?.status === "failed" ? t("ui_block_submission_failed_check_the_trash") : "")
+      : post.handle === s.root.handle ? t("ui_original_author_blocked_by_this_task")
+      : s.excluded.includes(post.handle) ? t("ui_excluded_from_this_automatic_task")
+      : state.modelError ? t("ui_analysis_needs_attention", String(state.modelError))
+      : state.settings.paused || s.paused ? t("ui_analysis_paused")
+      : busy.has(`${s.id}:${post.id}`) ? t("ui_analyzing_this_reply")
+      : !post.conversationId || !ancestors(post, s.root) ? t("ui_missing_parent_context_in_this_page_and_local_records_load")
+      : !post.text.trim() ? t("ui_no_text_to_analyze")
+      : t("ui_waiting_to_analyze_this_reply");
+    badge.removeAttribute("title");
+    badge.setAttribute("aria-label", t("ui_view_probabilities_by_option", score, explanation));
+    probabilityDetails.set(badge, { postId: post.id, sessionId: s.id, revision: state.settings.analysisRevision, decision: protectedUser || self ? null : decision, explanation });
+    if (probabilityAnchor === badge) refreshProbabilityPanel();
     const pending = manualPending.has(`${viewer()}:${post.handle}`) || ["pending", "running", "undo_pending", "undo_running"].includes(history?.status);
-    const label = pending ? "处理中" : "加入屏蔽";
+    const label = pending ? t("ui_processing") : t("ui_block");
     if (control.textContent !== label) control.textContent = label;
     control.disabled = !!(pending || protectedUser || self || isBlocked(history));
-    control.title = protectedUser ? "该用户在白名单中" : self ? "不能屏蔽自己" : `屏蔽 @${post.handle}，同时移除其其他回复`;
-    control.setAttribute("aria-label", `加入屏蔽 @${post.handle}`);
+    control.title = protectedUser ? t("ui_this_user_is_allowlisted") : self ? t("ui_you_cannot_block_yourself") : t("ui_block_and_remove_their_other_replies", post.handle);
+    control.setAttribute("aria-label", t("ui_block_2", post.handle));
   }
   /** Suspend scroll anchoring only while heights change, restoring the exact previous inline value. */
   function holdScrollAnchor() {
@@ -453,13 +628,14 @@
     status.hidden = !featureEnabled();
     if (!status.hidden) {
       const paused = state.settings.paused || s.paused;
-      statusText.textContent = state.modelError || state.queueError || state.queueNotice ? "任务需处理 · 打开垃圾桶查看" : paused ? "已暂停"
-        : !threadEnabled() ? "已离开评论区 · 已入队账号继续后台提交"
-        : !pageReady ? loadNote || "等待最近排序的首批评论加载"
-        : !s.active ? locationError || "评论已就绪 · 正在同步任务状态"
-        : loadNote || `已检查 ${s.count} 条${Object.values(s.results).some(r => r.error) ? ` · ${Object.values(s.results).filter(r => r.error).length} 条结果异常` : ""}${s.autoLoad ? " · 自动加载中" : ""}${failure ? " · 部分评论缺少上下文" : ""}`;
-      pause.textContent = state.settings.paused ? "继续" : "暂停";
-      autoLoad.textContent = s.autoLoad ? "自动加载：开" : "自动加载：关";
+      statusText.textContent = state.modelError || state.queueError || state.queueNotice ? t("ui_needs_attention_open_trash") : paused ? t("ui_paused")
+        : !threadEnabled() ? t("ui_left_thread_queued_blocks_continue_in_background")
+        : contextError ? contextError
+        : !pageReady ? loadNote || t("ui_waiting_for_the_first_page_of_recent_replies")
+        : !s.active ? locationError || t("ui_replies_ready_syncing_task_status")
+        : loadNote || t("ui_checked", s.count, Object.values(s.results).some(r => r.error) ? t("ui_invalid_results", Object.values(s.results).filter(r => r.error).length) : "", s.autoLoad ? t("ui_auto_loading") : "", failure ? t("ui_some_replies_lack_context") : "");
+      pause.textContent = state.settings.paused ? t("resume") : t("pause");
+      autoLoad.textContent = s.autoLoad ? t("auto_load_on") : t("auto_load_off");
       autoLoad.setAttribute("aria-pressed", String(!!s.autoLoad));
       autoLoad.hidden = !threadEnabled();
     }
@@ -473,7 +649,7 @@
     const candidates = [...document.querySelectorAll('button[aria-label="Grok"],[role="button"][aria-label="Grok"]')];
     const grok = candidates.map(e => ({ e, r: e.getBoundingClientRect() })).find(({ r }) => r.width > 25 && r.width < 100 && r.left > innerWidth * .65 && r.top > innerHeight * .4);
     if (!grok) return;
-    const chat = [...document.querySelectorAll('button[aria-label="聊天"],button[aria-label="Chat"],[role="button"][aria-label="聊天"],[role="button"][aria-label="Chat"]')]
+    const chat = [...document.querySelectorAll('button[aria-label="聊天"],button[aria-label="Chat"],button[aria-label="チャット"],button[aria-label="채팅"],[role="button"][aria-label="聊天"],[role="button"][aria-label="Chat"],[role="button"][aria-label="チャット"],[role="button"][aria-label="채팅"]')]
       .map(e => e.getBoundingClientRect()).find(r => r.top > grok.r.bottom && Math.abs(r.left - grok.r.left) < 10);
     const gap = chat ? Math.max(6, Math.min(28, chat.top - grok.r.bottom)) : 12;
     const rect = grok.r, top = rect.top - rect.height - gap;
@@ -487,15 +663,20 @@
       const previousState = state;
       state = await send("SNAPSHOT", { account: viewer() });
       indexSnapshot();
+      if (previousState && JSON.stringify(previousState.whitelist) !== JSON.stringify(state.whitelist)) {
+        syncedContextRevision = -1; requestedContext.clear();
+        for (const [id, p] of contextPosts) if (white(p)) { contextPosts.delete(id); savedContext.delete(id); }
+      }
       if (previousState && (previousState.modelError && !state.modelError || previousState.settings.paused && !state.settings.paused || previousState.settings.analysisRevision !== state.settings.analysisRevision)) skipped.clear();
       if (sessionId !== (state.session?.id || "")) {
+        contextPosts.clear(); savedContext.clear(); requestedContext.clear(); contextFlight = null; contextRetryAt = 0; contextError = ""; syncedContextRevision = -1;
         sessionId = state.session?.id || ""; skipped.clear(); failure = ""; lastLocation = ""; locationRetryAt = 0; locationError = "";
         pageReady = false; sortFlow = null; loadWait = null; loadNote = ""; autoAt = 0;
         // Starting a task must discover existing cards without waiting for a scroll or request.
         if (sessionId) window.postMessage({ channel: "blocksb:replay:v1" }, location.origin);
       }
       updateOverlay(); schedule();
-    } catch (e) { statusText.textContent = e.message; }
+    } catch (e) { statusText.textContent = String(e.message); }
     finally { refreshing = false; if (refreshAgain) { refreshAgain = false; void refresh(); } }
   }
   function schedule() { if (!timer) timer = setTimeout(() => { timer = null; scan(); }, 160); }
@@ -508,8 +689,8 @@
     if (!sortFlow) sortFlow = { started: now, clicked: 0, attempted: false, opened: false, confirmed: false, signature: "", stableSince: now, before: "", scrolled: false };
     const flow = sortFlow;
     const visible = node => node?.isConnected && node.getBoundingClientRect().height > 0;
-    const recentLabel = /^(最近|最新|Most recent|Recent|Latest)$/i;
-    const sortLabel = /^(相关|相關|最近|最新|喜欢|喜歡|Relevant|Most relevant|Most recent|Recent|Latest|Likes|Most liked)$/i;
+    const recentLabel = /^(最近|最新|最新順|新しい順|최신|최신순|Most recent|Recent|Latest)$/i;
+    const sortLabel = /^(相关|相關|最近|最新|喜欢|喜歡|関連性の高い順|関連性|最新順|新しい順|いいね|いいねの多い順|관련성|관련성 높은 순|최신|최신순|마음에 들어요|Relevant|Most relevant|Most recent|Recent|Latest|Likes|Most liked)$/i;
     const focal = rows.find(a => readPost(a)?.id === root.id);
     const control = focal && [...focal.querySelectorAll('button,[role="button"]')].find(b => visible(b) && sortLabel.test(b.textContent.trim()));
     const recent = control && recentLabel.test(control.textContent.trim());
@@ -523,7 +704,7 @@
       flow.confirmed = false; pageReady = false;
     }
     if (!flow.confirmed) {
-      pageReady = false; loadNote = "正在通过页面菜单切换为最近排序";
+      pageReady = false; loadNote = lastSortNote = t("ui_switching_to_most_recent_using_the_page_menu");
       if (document.hidden || drawerOpen || state.settings.paused || state.session.paused) return;
       const menu = document.querySelector('[role="menu"]');
       if (flow.opened && menu) {
@@ -538,17 +719,18 @@
       if (!control && !flow.scrolled && scrollY > 0 && now - flow.started > 1500) {
         flow.scrolled = true; window.scrollTo({ top: 0, behavior: "instant" });
       }
-      if (now - flow.started > 12000) loadNote = "未能自动选择排序，请在 X 菜单中选择最近，任务会自动继续";
+      if (now - flow.started > 12000) loadNote = lastSortNote = t("ui_could_not_switch_automatically_choose_most_recent_on_x_to");
       return;
     }
     // Errors and stale first-page signals never authorize work, including after a manual sort change.
-    if (fresh && event?.recent && !event.ok) { pageReady = false; loadNote = `评论加载失败${event.status ? `（HTTP ${event.status}）` : ""}，请在 X 页面重试`; return; }
+    if (fresh && event?.recent && !event.ok) { pageReady = false; loadNote = lastSortNote = t("ui_replies_failed_to_load_retry_on_x", event.status ? ` (HTTP ${event.status})` : ""); return; }
     const loading = !!document.querySelector('[data-testid="primaryColumn"] [role="progressbar"]');
     const settledDOM = recent && signature && !loading && now - flow.stableSince >= 800 && (!flow.clicked || signature !== flow.before);
     if (fresh && event?.recent && event.firstReady || settledDOM) {
       pageReady = true;
-      if (/^(正在通过|未能自动|等待最近|评论加载失败)/.test(loadNote)) loadNote = "";
-    } else if (!pageReady) loadNote = now - flow.started > 25000 ? "等待最近评论加载，请检查 X 页面是否需要重试" : "等待最近排序的首批评论加载";
+      // Readiness is state, not a prefix in a translated status message.
+      if (loadNote === lastSortNote) loadNote = "";
+    } else if (!pageReady) loadNote = lastSortNote = now - flow.started > 25000 ? t("ui_waiting_for_recent_replies_check_if_x_needs_a_retry") : t("ui_waiting_for_the_first_page_of_recent_replies");
   }
   /** Stop only scrolling; analysis and already-approved background block jobs retain their state. */
   async function stopAuto(note) {
@@ -569,9 +751,9 @@
     if (!active || !pageReady || !s?.autoLoad || drawerOpen || document.hidden || autoStopping) { loadWait = null; return; }
     const event = timelineState.get(route());
     if (state.modelError || state.queueError || state.queueNotice || event && !event.ok) {
-      void stopAuto("自动加载已停止：服务或评论加载异常，请处理后重新开启"); return;
+      void stopAuto(t("ui_auto_load_stopped_due_to_a_service_or_loading_error")); return;
     }
-    if (s.count >= 2000) { void stopAuto("自动加载已停止：本次任务达到 2000 条分析上限"); return; }
+    if (s.count >= 2000) { void stopAuto(t("ui_auto_load_stopped_this_task_reached_the_2_000_reply")); return; }
     // Drain already discovered, eligible replies before moving the viewport and triggering more pages.
     const account = viewer();
     const pending = busy.size || [...metadata.values()].some(p => {
@@ -588,14 +770,15 @@
     const atBottom = scrollY + innerHeight >= document.documentElement.scrollHeight - 100;
     if (!atBottom) { loadWait = null; window.scrollBy({ top: Math.max(240, innerHeight * .8), behavior: "instant" }); return; }
     const spam = [...document.querySelectorAll('[data-testid="primaryColumn"] button,[data-testid="primaryColumn"] [role="button"]')]
-      .find(b => /^(显示可能的垃圾信息|显示可能的垃圾消息|Show probable spam)$/i.test(b.textContent.trim()) && b.getBoundingClientRect().height > 0 && !openedSpam.has(b));
+      .find(b => /^(显示可能的垃圾信息|显示可能的垃圾消息|顯示可能的垃圾訊息|顯示可能的垃圾回覆|スパムの可能性がある返信を表示|スパムと思われる返信を表示|스팸일 수 있는 답글 보기|Show probable spam)$/i.test(b.textContent.trim()) && b.getBoundingClientRect().height > 0 && !openedSpam.has(b));
     if (spam) { openedSpam.add(spam); spam.click(); loadWait = null; return; }
-    if (event?.ok && event.ended) { void stopAuto("已到 X 返回的列表末尾 · 已入队屏蔽继续处理"); return; }
+    if (event?.ok && event.ended) { void stopAuto(t("ui_end_of_x_s_results_queued_blocks_will_continue")); return; }
     if (!loadWait) loadWait = { since: now, size: metadata.size, responseAt: event?.observedAt || 0 };
-    else if (now - loadWait.since > 30000) { void stopAuto("30 秒没有新评论，自动加载已停止；可手动检查后重新开启"); return; }
+    else if (now - loadWait.since > 30000) { void stopAuto(t("ui_no_new_replies_for_30_seconds_auto_load_stopped_check")); return; }
     window.scrollBy({ top: Math.max(240, innerHeight * .8), behavior: "instant" });
   }
   function scan() {
+    if (probabilityAnchor) refreshProbabilityPanel();
     injectMenu();
     if (debugRoute !== route()) { debugRows.clear(); debugRoute = route(); }
     for (const article of movingRows) {
@@ -619,6 +802,8 @@
     if (state.account !== account) { void refresh(); return; }
     const candidateRoot = rows.map(readPost).find(p => p?.id === s?.root.id) || metadata.get(s?.root.id);
     const focal = candidateRoot?.handle === s?.root.handle ? candidateRoot : null;
+    // Save even replies by already-blocked authors: another comment may refer to them later.
+    if (threadEnabled() && s.root.conversationId && syncContext(s, account)) { updateOverlay(); return; }
     const locationKey = `${location.href}|${account}|${sessionId}|${focal?.conversationId || ""}|${state.settings.paused}|${pageReady}`;
     if (s && locationKey !== lastLocation && !locationSending && Date.now() >= locationRetryAt) {
       locationSending = true;
@@ -636,7 +821,7 @@
           } else { lastLocation = ""; locationRetryAt = Date.now() + 1500; }
           return refresh();
         }).catch(e => {
-          if (state.session?.id === s.id) { lastLocation = ""; locationRetryAt = Date.now() + 2500; locationError = `任务状态同步失败：${e.message}`; }
+          if (state.session?.id === s.id) { lastLocation = ""; locationRetryAt = Date.now() + 2500; locationError = t("ui_could_not_sync_task_status", String(e.message)); }
         }).finally(() => { locationSending = false; schedule(); });
     }
     const active = pageReady && s && !s.stopped && !s.paused && !state.settings.paused && s.active && s.account === account && rootId === s.root.id;
@@ -650,7 +835,7 @@
       const queued = ["pending", "running"].includes(h?.status);
       const hide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && p.handle !== account;
       if (old && !hide && ["failed", "uncertain"].includes(h?.status) && !reportedFailures.has(h.id)) {
-        reportedFailures.add(h.id); toast(`@${p.handle} 屏蔽未完成，已恢复评论；请在垃圾桶中查看记录。`);
+        reportedFailures.add(h.id); toast(t("ui_block_for_did_not_complete_replies_restored_check_the_trash", p.handle));
       }
       if (old && (old.id !== p.id || !hide || old.mode !== "removed")) restore(article);
       if (hide) { removeCard(article, p, queued || ["blocked", "submitted"].includes(h.status) && Date.now() - h.updated < 6000); continue; }
@@ -659,7 +844,9 @@
     }
     // Existing candidates come from DOM scans. New responses may add candidates after activation;
     // replayed old network data supplies context only. Both paths share deduplication and ancestry checks.
-    if (active && !state.modelError && state.settings.configured) for (const p of metadata.values()) {
+    failure = "";
+    if (active && !state.modelError && state.settings.configured) for (const raw of metadata.values()) {
+      const p = mergeContext(contextPosts.get(raw.id), raw);
       if (busy.size >= 2) break;
       if (!p.domSeen && !(p.networkAt > 0 && p.networkAt >= s.created)) continue;
       if (hasDecision(p) || busy.has(`${s.id}:${p.id}`) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account))) continue;
@@ -695,8 +882,8 @@
     })) schedule();
   });
   observer.observe(document.body, { childList: true, subtree: true });
-  document.addEventListener("scroll", schedule, { passive: true, capture: true });
-  window.addEventListener("resize", schedule, { passive: true });
+  document.addEventListener("scroll", e => { if (e.target !== host && !host.contains(e.target)) hideProbabilityPanel(); schedule(); }, { passive: true, capture: true });
+  window.addEventListener("resize", () => { hideProbabilityPanel(); schedule(); }, { passive: true });
   let previous = "";
   // Restore rows immediately on route/account changes, even while a background snapshot is pending.
   setInterval(() => { alignTrash(); const key = `${location.href}|${viewer()}`; if (key !== previous) { previous = key; schedule(); void refresh(); } else if (featureEnabled()) schedule(); }, 900);

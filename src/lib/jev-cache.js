@@ -1,5 +1,7 @@
+import "./i18n.js";
+const { t } = globalThis.BlockSBI18n;
 import { askJev } from "./jev.js";
-import { JEV_CACHE_TTL, DEFAULT_ENDPOINT, LABELS, normalizeEndpoint } from "./core.js";
+import { JEV_CACHE_TTL, DEFAULT_ENDPOINT, normalizeEndpoint } from "./core.js";
 
 export const CACHE_TTL = JEV_CACHE_TTL;
 const flights = new Map();
@@ -13,8 +15,8 @@ function openDatabase() {
     let abandoned = false;
     const fail = error => { abandoned = true; clearTimeout(timer); reject(error); };
     // A blocked upgrade/open must not hold every model request indefinitely.
-    const timer = setTimeout(() => fail(new Error("缓存打开超时")), 3000);
-    request.onblocked = () => fail(new Error("缓存正在被其他窗口占用"));
+    const timer = setTimeout(() => fail(new Error(t("ui_cache_open_timed_out"))), 3000);
+    request.onblocked = () => fail(new Error(t("ui_cache_is_in_use_by_another_window")));
     request.onupgradeneeded = () => {
       const store = request.result.createObjectStore("answers", { keyPath: "key" });
       store.createIndex("expiresAt", "expiresAt");
@@ -38,7 +40,7 @@ async function transaction(work) {
     const tx = db.transaction("answers", "readwrite");
     let result;
     tx.oncomplete = () => resolve(result);
-    tx.onabort = tx.onerror = () => reject(tx.error || new Error("缓存事务失败"));
+    tx.onabort = tx.onerror = () => reject(tx.error || new Error(t("ui_cache_transaction_failed")));
     try { work(tx.objectStore("answers"), value => { result = value; }); }
     catch (error) { tx.abort(); reject(error); }
   });
@@ -94,7 +96,7 @@ async function lookup(key) {
   });
 }
 
-const cancelled = () => new Error("分析已取消。");
+const cancelled = () => new Error(t("ui_analysis_canceled"));
 
 /** Return a validated answer, reusing persistent results and concurrent identical requests.
  * validate(payload) must throw on malformed output. Actions/thresholds are never cached.
@@ -110,7 +112,7 @@ export async function askJevCached(request, apiKey, signal, validate, limit = 10
     const current = flight;
     current.promise = Promise.resolve().then(async () => {
       let cached;
-      try { cached = await lookup(key); } catch { console.warn("block s.b.: Jev 缓存读取失败，本次使用在线分析。"); }
+      try { cached = await lookup(key); } catch { console.warn(t("ui_block_s_b_cache_read_failed_using_online_analysis")); }
       if (current.controller.signal.aborted) throw cancelled();
       if (cached) {
         try { validate(cached); return cached; }
@@ -128,14 +130,14 @@ export async function askJevCached(request, apiKey, signal, validate, limit = 10
       const stance = response.answers.stance;
       const payload = { model: String(response.model || request.model).slice(0, 100), answers: { stance: {
         type: "choice", choice: stance.choice, confidence: stance.confidence,
-        probabilities: Object.fromEntries(LABELS.map(label => [label, stance.probabilities[label]]))
+        probabilities: Object.fromEntries(Object.keys(request.questions.stance.criteria).map(label => [label, stance.probabilities[label]]))
       } }, cacheCreatedAt: now };
       try {
         await transaction(store => {
           store.put({ key, payload, createdAt: now, expiresAt: now + CACHE_TTL, usedAt: now });
           prune(store, limit, now);
         });
-      } catch { console.warn("block s.b.: Jev 缓存写入失败，本次分析结果仍可使用。"); }
+      } catch { console.warn(t("ui_block_s_b_cache_write_failed_this_result_is_still")); }
       return payload;
     }).finally(() => {
       current.settled = true;

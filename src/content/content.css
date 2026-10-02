@@ -1,7 +1,7 @@
 .blocksb-menu-item{display:flex;align-items:center;width:100%;border:0;background:transparent;color:inherit;text-align:left;font:700 14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;padding:15px 16px;cursor:pointer;white-space:normal;max-width:360px}.blocksb-menu-item:hover{background:rgba(29,155,240,.09)}.blocksb-menu-item:focus-visible{outline:2px solid #1d9bf0;outline-offset:-2px}.blocksb-allow-item{font-weight:500;color:#008577}
 /* Keep the date, probability and action on one line without changing the comment body. */
 .blocksb-comment-tools{display:inline-flex!important;flex:0 0 auto;align-items:center;gap:8px;margin-inline-start:8px;white-space:nowrap;vertical-align:baseline;font:12px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
-.blocksb-probability{display:inline-block;color:#536471;font-variant-numeric:tabular-nums;min-width:87px}
+.blocksb-probability{display:inline-block;appearance:none;border:0;padding:0;background:transparent;text-align:left;color:#536471;font:inherit;line-height:inherit;font-variant-numeric:tabular-nums;min-width:87px;cursor:help;border-radius:3px}.blocksb-probability:hover{color:#1d9bf0}.blocksb-probability:focus-visible{outline:2px solid #1d9bf0;outline-offset:3px}
 .blocksb-block-button{appearance:none;border:0;border-radius:4px;background:transparent;color:#1d9bf0;padding:0;cursor:pointer;white-space:nowrap;font:inherit;line-height:inherit}
 .blocksb-block-button:hover{color:#0084d6;text-decoration:underline}.blocksb-block-button:disabled{color:#8899a6;cursor:default;text-decoration:none}.blocksb-block-button:focus-visible{outline:2px solid #1d9bf0;outline-offset:3px}
 @media(prefers-color-scheme:dark){.blocksb-probability{color:#8b98a5}}

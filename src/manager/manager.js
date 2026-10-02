@@ -1,4 +1,7 @@
-import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPermission, updateSettings } from "../lib/core.js";
+import "../lib/i18n.js";
+const { t, locale, localizeDocument } = globalThis.BlockSBI18n;
+import { DEFAULT_ENDPOINT, normalizeEndpoint, endpointPermission, updateSettings, getAnalysisRule, customRuleEnabled } from "../lib/core.js";
+localizeDocument(document);
 
 /* Extension-owned manager: never expose the key in snapshots, exports, or page messages. */
 (() => {
@@ -11,15 +14,15 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
   const expandedTasks = new Set(), taskLimits = new Map();
   let filter = "all", limit = 20, settingsDirty = false, settingsLoaded = false, modelDirty = false, modelLoaded = false, loading = false, reloadAgain = false, toastTimer, refreshTimer;
   let account = params.get("account") || "";
-  const statuses = { pending: "待提交", running: "正在提交", submitted: "已提交", blocked: "已屏蔽", preexisting: "原本已屏蔽", failed: "提交失败", uncertain: "结果待核对", undo_pending: "等待取消", undo_running: "正在取消", undo_failed: "取消失败", unblocked: "已取消屏蔽", cancelled: "任务已取消" };
+  const statuses = { pending: t("ui_pending"), running: t("ui_submitting"), submitted: t("ui_submitted"), blocked: t("ui_blocked"), preexisting: t("ui_already_blocked"), failed: t("ui_submission_failed"), uncertain: t("ui_needs_verification"), undo_pending: t("ui_unblock_pending"), undo_running: t("ui_unblocking"), undo_failed: t("ui_unblock_failed"), unblocked: t("ui_unblocked"), cancelled: t("ui_task_canceled") };
   const pending = h => ["pending", "running", "undo_pending", "undo_running"].includes(h.status);
   const failed = h => ["failed", "undo_failed", "uncertain"].includes(h.status);
   const el = (tag, className, text) => { const n = document.createElement(tag); if (className) n.className = className; if (text !== undefined) n.textContent = text; return n; };
   const actionButton = (text, action, className = "subtle") => { const b = el("button", className, text); b.type = "button"; b.onclick = () => run(b, action); return b; };
-  const dateFormatter = new Intl.DateTimeFormat("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const dateFormatter = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   const date = value => dateFormatter.format(value);
-  async function send(type, payload = {}) { const r = await chrome.runtime.sendMessage({ type, ...payload }); if (!r?.ok) throw new Error(r?.error || "无法连接扩展后台。"); return r.data; }
-  function toast(text) { $("toast").textContent = text; $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 5500); }
+  async function send(type, payload = {}) { const r = await chrome.runtime.sendMessage({ type, ...payload }); if (!r?.ok) throw new Error(r?.error || t("ui_cannot_connect_to_the_extension")); return r.data; }
+  function toast(text) { $("toast").textContent = String(text); $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 5500); }
   async function run(button, fn) { button.disabled = true; try { await fn(); } catch (e) { toast(e.message); } finally { button.disabled = false; } }
   function tab(value) {
     currentTab = value;
@@ -43,7 +46,7 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
   $("account-filter").onchange = e => { account = e.target.value; limit = 20; renderHistory(); };
   $("show-more").onclick = () => { limit += 20; renderHistory(); };
   $("global-pause").onclick = () => run($("global-pause"), async () => { await send("TOGGLE_PAUSE"); await refresh(); });
-  $("resume-services").onclick = () => run($("resume-services"), async () => { await send("RESUME_SERVICES"); await refresh(); toast("已恢复任务。失败记录可以单独重试。"); });
+  $("resume-services").onclick = () => run($("resume-services"), async () => { await send("RESUME_SERVICES"); await refresh(); toast(t("ui_tasks_resumed_failed_items_can_be_retried_individually")); });
 
   function empty(parent, title, text) { const n = el("div", "empty"); n.append(el("strong", "", title)); if (text) n.append(el("p", "", text)); parent.append(n); }
   function profileHead(target, status) {
@@ -72,32 +75,32 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
   }
   function recordCard(h) {
     const record = el("article", "record"); record.append(profileHead(h.target, h.status));
-    record.append(el("div", "quote", h.reply?.text || h.root.text || "原帖含有图片或其他媒体"));
-    const explanation = h.reason === "author" ? "原帖作者" : h.reason === "manual" ? "手动加入屏蔽" : `支持概率 ${Math.round((h.decision?.support || 0) * 100)}%`;
+    record.append(el("div", "quote", h.reply?.text || h.root.text || t("ui_the_original_post_contains_media")));
+    const explanation = h.reason === "author" ? t("ui_original_author") : h.reason === "manual" ? t("ui_blocked_manually") : `${h.decision?.customRule ? t("match_probability") : t("support_probability")} ${Math.round((h.decision?.support || 0) * 100)}%`;
     record.append(el("div", "record-meta", `${explanation} · ${date(h.created)}`));
-    if (h.error) record.append(el("p", "record-error", h.error));
-    const actions = el("div", "record-actions"); actions.append(actionButton("查看原因", () => detail(h), "text-button"));
-    if (["submitted", "blocked", "undo_failed"].includes(h.status) && h.owned) actions.append(actionButton("取消屏蔽", () => undo(h)));
-    if (h.status === "uncertain") actions.append(actionButton("核对状态", async () => { await send("RECONCILE", { id: h.id }); await refresh(); toast("已核对当前 X 屏蔽状态。"); }));
-    if (h.status === "failed" && !h.taskWithdrawn) actions.append(actionButton("重试", async () => { await send("RETRY_JOB", { id: h.id }); await refresh(); }));
-    if (["pending", "undo_pending"].includes(h.status)) actions.append(actionButton("取消任务", async () => { await send("CANCEL_JOB", { id: h.id }); await refresh(); }));
+    if (h.error) record.append(el("p", "record-error", String(h.error)));
+    const actions = el("div", "record-actions"); actions.append(actionButton(t("ui_view_reason"), () => detail(h), "text-button"));
+    if (["submitted", "blocked", "undo_failed"].includes(h.status) && h.owned) actions.append(actionButton(t("ui_unblock"), () => undo(h)));
+    if (h.status === "uncertain") actions.append(actionButton(t("ui_verify_status"), async () => { await send("RECONCILE", { id: h.id }); await refresh(); toast(t("ui_current_block_status_on_x_verified")); }));
+    if (h.status === "failed" && !h.taskWithdrawn) actions.append(actionButton(t("ui_retry"), async () => { await send("RETRY_JOB", { id: h.id }); await refresh(); }));
+    if (["pending", "undo_pending"].includes(h.status)) actions.append(actionButton(t("ui_cancel_task"), async () => { await send("CANCEL_JOB", { id: h.id }); await refresh(); }));
     record.append(actions); return record;
   }
   async function undoTask(group) {
     const plan = await send("TASK_UNDO_PREVIEW", { account: group.account, rootId: group.root.id });
     const body = el("div");
-    body.append(el("p", "modal-copy", `撤回 @${group.root.handle} 这条推文的整个任务（由 @${group.account} 操作），包括原帖作者和本任务中的评论账号，不受当前搜索或筛选限制。`));
+    body.append(el("p", "modal-copy", t("ui_undo_this_entire_task_for_s_post_using_includes_the", group.root.handle, group.account)));
     const numbers = el("div", "task-undo-counts");
-    for (const [label, count] of [["加入取消屏蔽队列", plan.ready], ["取消尚未提交请求", plan.cancel], ["请求完成后安排撤回", plan.inFlight], ["已在撤回队列", plan.existing]]) numbers.append(el("p", "", `${label}：${count} 位`));
-    body.append(numbers, el("p", "modal-copy", "同时停止这个原帖在所有标签页中的分析。取消屏蔽需要保持同一账号的任意 X 页面打开，无需停留在原帖。"));
-    if (plan.review) body.append(el("p", "hint", `${plan.review} 条失败或结果未知的记录需单独处理，不会宣称它们已撤回。`));
-    if (plan.protected) body.append(el("p", "hint", `${plan.protected} 条原有屏蔽或由后续记录管理的账号将保留。`));
-    body.append(el("p", "hint", "此前只记录 HTTP 成功的屏蔽没有核对原有关系，取消屏蔽会解除账号当前的屏蔽关系。"));
-    modal("撤回本任务的屏蔽？", body, async () => {
+    for (const [label, count] of [[t("ui_queue_for_unblocking"), plan.ready], [t("ui_cancel_unsent_requests"), plan.cancel], [t("ui_undo_after_request_completes"), plan.inFlight], [t("ui_already_queued_for_undo"), plan.existing]]) numbers.append(el("p", "", t("ui_accounts", label, count)));
+    body.append(numbers, el("p", "modal-copy", t("ui_also_stops_analysis_of_this_post_in_all_tabs_to")));
+    if (plan.review) body.append(el("p", "hint", t("ui_failed_or_unconfirmed_items_need_separate_review_they_will_not", plan.review)));
+    if (plan.protected) body.append(el("p", "hint", t("ui_existing_blocks_or_accounts_managed_by_later_records_will_be", plan.protected)));
+    body.append(el("p", "hint", t("ui_for_http_only_records_the_previous_block_status_was_not")));
+    modal(t("ui_undo_this_task_s_blocks"), body, async () => {
       const result = await send("UNDO_TASK", { account: group.account, rootId: group.root.id });
       expandedTasks.add(group.key); await refresh();
-      toast(`已停止任务：${result.ready} 位加入撤回队列，${result.cancel} 条取消提交，${result.inFlight} 条等待请求返回。`);
-    }, "确认撤回本任务");
+      toast(t("ui_task_stopped_accounts_queued_for_undo_unsent_requests_canceled_requests", result.ready, result.cancel, result.inFlight));
+    }, t("ui_undo_task"));
   }
   function renderHistory() {
     if (!state) return;
@@ -116,37 +119,37 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
     for (const group of selected.slice(0, limit)) {
       const card = el("section", "task-card");
       const head = el("div", "task-heading");
-      head.append(el("h3", "", `@${group.root.handle} 的推文`));
+      head.append(el("h3", "", t("ui_post_by", group.root.handle)));
       const undoing = group.rows.some(h => ["undo_pending", "undo_running"].includes(h.status) || h.undoRequested && h.status === "running");
       const withdrawn = group.rows.length && group.rows.every(h => h.taskWithdrawn);
-      const label = undoing ? "撤回中" : withdrawn ? group.rows.some(failed) ? "撤回需处理" : group.rows.every(h => ["unblocked", "cancelled"].includes(h.status)) ? "已撤回" : "已停止任务" : group.sessions.some(s => !s.stopped) ? "任务进行中" : "任务记录";
+      const label = undoing ? t("ui_undoing") : withdrawn ? group.rows.some(failed) ? t("ui_undo_needs_attention") : group.rows.every(h => ["unblocked", "cancelled"].includes(h.status)) ? t("ui_undone") : t("ui_task_stopped") : group.sessions.some(s => !s.stopped) ? t("ui_task_running") : t("ui_task_history");
       head.append(el("span", "status", label)); card.append(head);
-      card.append(el("p", "task-root", group.root.text || "原帖包含图片或其他媒体"));
-      card.append(el("p", "task-meta", `由 @${group.account} 操作 · ${date(group.created)} · ${group.rows.length} 条记录`));
+      card.append(el("p", "task-root", group.root.text || t("ui_the_original_post_contains_media_2")));
+      card.append(el("p", "task-meta", t("ui_via_records", group.account, date(group.created), group.rows.length)));
       const summary = el("div", "task-counts");
-      for (const [name, count] of [["已提交 / 屏蔽", group.rows.filter(h => ["submitted", "blocked", "preexisting"].includes(h.status)).length], ["队列中", group.rows.filter(pending).length], ["已撤回 / 取消", group.rows.filter(h => ["unblocked", "cancelled"].includes(h.status)).length], ["需处理", group.rows.filter(failed).length]]) summary.append(el("span", "", `${name} ${count}`));
+      for (const [name, count] of [[t("ui_submitted_blocked"), group.rows.filter(h => ["submitted", "blocked", "preexisting"].includes(h.status)).length], [t("ui_queued"), group.rows.filter(pending).length], [t("ui_undone_canceled"), group.rows.filter(h => ["unblocked", "cancelled"].includes(h.status)).length], [t("ui_needs_attention"), group.rows.filter(failed).length]]) summary.append(el("span", "", `${name} ${count}`));
       card.append(summary);
       const actions = el("div", "task-actions");
-      const link = el("a", "text-button", "查看原帖 ↗"); link.href = group.root.url; link.target = "_blank"; link.rel = "noreferrer"; actions.append(link);
-      if (group.sessions.some(s => !s.stopped)) actions.append(actionButton("停止任务", async () => {
+      const link = el("a", "text-button", t("ui_view_original")); link.href = group.root.url; link.target = "_blank"; link.rel = "noreferrer"; actions.append(link);
+      if (group.sessions.some(s => !s.stopped)) actions.append(actionButton(t("ui_stop_task"), async () => {
         await Promise.all(group.sessions.filter(s => !s.stopped).map(s => send("STOP_SESSION", { tabId: s.tabId })));
-        await refresh(); toast("任务已停止；已提交的屏蔽保留，可另行整组撤回。");
+        await refresh(); toast(t("ui_task_stopped_submitted_blocks_remain_use_undo_all_blocks_to"));
       }, "text-button"));
-      actions.append(actionButton("一键撤回屏蔽", () => undoTask(group), "subtle task-undo"));
+      actions.append(actionButton(t("ui_undo_all_blocks"), () => undoTask(group), "subtle task-undo"));
       const expanded = expandedTasks.has(group.key);
-      const toggle = actionButton(expanded ? "收起明细" : `展开明细 (${group.matching.length})`, () => { if (expandedTasks.has(group.key)) expandedTasks.delete(group.key); else expandedTasks.add(group.key); renderHistory(); }, "text-button");
+      const toggle = actionButton(expanded ? t("ui_hide_details") : t("ui_show_details", group.matching.length), () => { if (expandedTasks.has(group.key)) expandedTasks.delete(group.key); else expandedTasks.add(group.key); renderHistory(); }, "text-button");
       toggle.setAttribute("aria-expanded", String(expanded)); actions.append(toggle); card.append(actions);
       if (expanded) {
         const details = el("div", "task-records"), count = taskLimits.get(group.key) || 20;
-        if (group.matching.length !== group.rows.length) details.append(el("p", "hint", `当前筛选显示 ${group.matching.length} / ${group.rows.length} 条；一键撤回仍作用于整个任务。`));
+        if (group.matching.length !== group.rows.length) details.append(el("p", "hint", t("ui_showing_of_records_undo_still_applies_to_the_entire_task", group.matching.length, group.rows.length)));
         for (const h of group.matching.slice(0, count)) details.append(recordCard(h));
-        if (!group.matching.length) details.append(el("p", "hint", "任务尚未产生屏蔽记录。"));
-        if (group.matching.length > count) details.append(actionButton("显示更多账号", () => { taskLimits.set(group.key, count + 20); renderHistory(); }, "text-button wide"));
+        if (!group.matching.length) details.append(el("p", "hint", t("ui_no_blocks_recorded_for_this_task_yet")));
+        if (group.matching.length > count) details.append(actionButton(t("ui_show_more_accounts"), () => { taskLimits.set(group.key, count + 20); renderHistory(); }, "text-button wide"));
         card.append(details);
       }
       list.append(card);
     }
-    if (!selected.length) empty(list, query || filter !== "all" ? "没有匹配的任务" : "暂无屏蔽记录", query || filter !== "all" ? "" : "从 X 帖子菜单启动。");
+    if (!selected.length) empty(list, query || filter !== "all" ? t("ui_no_matching_tasks") : t("ui_no_block_history_yet"), query || filter !== "all" ? "" : t("ui_start_from_a_post_s_menu_on_x"));
     $("show-more").hidden = selected.length <= limit;
   }
   function renderWhitelist() {
@@ -156,82 +159,85 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
     const records = state.whitelist.filter(w => [w.handle, w.name, w.note].join(" ").toLowerCase().includes(query));
     for (const w of records) {
       const row = el("article", "record"); row.append(profileHead(w));
-      row.append(el("p", "record-meta", w.note || "不分析 · 不自动屏蔽"));
+      row.append(el("p", "record-meta", w.note || t("ui_no_analysis_no_automatic_blocking")));
       const actions = el("div", "record-actions");
-      actions.append(actionButton("编辑备注", () => editWhite(w), "text-button"), actionButton("移出白名单", () => {
-        modal("移出白名单？", `@${w.handle} 的后续评论将重新按当前策略判断，已有的屏蔽不会因此改变。`, async () => { await send("WHITELIST_REMOVE", { handle: w.handle }); await refresh(); }, "移出");
+      actions.append(actionButton(t("ui_edit_note"), () => editWhite(w), "text-button"), actionButton(t("ui_remove_from_allowlist"), () => {
+        modal(t("ui_remove_from_allowlist_2"), t("ui_future_replies_by_will_follow_the_current_rules_existing_blocks", w.handle), async () => { await send("WHITELIST_REMOVE", { handle: w.handle }); await refresh(); }, t("ui_remove"));
       })); row.append(actions); list.append(row);
     }
-    if (!records.length) empty(list, query ? "没有匹配的用户" : "暂无白名单");
+    if (!records.length) empty(list, query ? t("ui_no_matching_users") : t("ui_allowlist_is_empty"));
   }
-  function modal(title, copy, confirm, confirmLabel = "确认") {
+  function modal(title, copy, confirm, confirmLabel = t("ui_confirm")) {
     $("modal-title").textContent = title; $("modal-body").replaceChildren(); $("modal-actions").replaceChildren();
     if (typeof copy === "string") $("modal-body").append(el("p", "modal-copy", copy)); else if (copy) $("modal-body").append(copy);
-    $("modal-actions").append(actionButton("返回", () => $("modal").close(), "subtle"));
+    $("modal-actions").append(actionButton(t("ui_back"), () => $("modal").close(), "subtle"));
     if (confirm) $("modal-actions").append(actionButton(confirmLabel, async () => { await confirm(); $("modal").close(); }, "primary"));
     if (!$("modal").open) $("modal").showModal();
   }
   $("modal-close").onclick = () => $("modal").close();
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("modal").open && params.has("embedded")) parent.postMessage({ type: "blocksb:close" }, "*"); });
   function undo(h) {
-    const body = el("div"); body.append(el("p", "modal-copy", `将使用 @${h.account} 的 X 登录状态取消对 @${h.target.handle} 的屏蔽。请保持该账号的 X 页面打开。该用户不会在当前任务中再次被自动屏蔽。`));
-    if (h.verification === "http-only") body.append(el("p", "hint", "这条记录只确认了屏蔽请求的 HTTP 成功响应，未查询此前是否已经屏蔽。取消屏蔽会解除该账号当前的屏蔽关系。"));
-    const label = el("label", "modal-check"), input = el("input"); input.type = "checkbox"; label.append(input, document.createTextNode("同时加入白名单，以后也不再分析")); body.append(label);
-    modal("取消屏蔽", body, async () => { await send("UNDO", { id: h.id, whitelist: input.checked }); await refresh(); toast("取消屏蔽已加入队列。"); }, "取消屏蔽");
+    const body = el("div"); body.append(el("p", "modal-copy", t("ui_use_s_x_session_to_unblock_keep_an_x_page", h.account, h.target.handle)));
+    if (h.verification === "http-only") body.append(el("p", "hint", t("ui_only_http_success_was_recorded_the_prior_block_status_was")));
+    const label = el("label", "modal-check"), input = el("input"); input.type = "checkbox"; label.append(input, document.createTextNode(t("ui_also_allowlist_this_user_to_skip_future_analysis"))); body.append(label);
+    modal(t("ui_unblock"), body, async () => { await send("UNDO", { id: h.id, whitelist: input.checked }); await refresh(); toast(t("ui_unblock_request_queued")); }, t("ui_unblock"));
   }
   function detail(h) {
     const body = el("div"); body.append(profileHead(h.target, h.status));
-    if (h.verification === "http-only") body.append(el("p", "hint", "屏蔽请求已收到 HTTP 成功响应；未进行屏蔽关系查询。"));
-    body.append(el("p", "detail-label", "选中的原帖"), el("p", "detail-text", h.root.text || "无可读取文本"));
-    if (h.reply) body.append(el("p", "detail-label", "触发判断的评论"), el("p", "detail-text", h.reply.text));
+    if (h.verification === "http-only") body.append(el("p", "hint", t("ui_block_request_received_an_http_success_response_the_relationship_was")));
+    body.append(el("p", "detail-label", t("ui_selected_original_post")), el("p", "detail-text", h.root.text || t("ui_no_readable_text")));
+    if (h.reply) body.append(el("p", "detail-label", t("ui_reply_that_triggered_the_decision")), el("p", "detail-text", h.reply.text));
     if (h.decision) {
       const grid = el("div", "detail-grid");
-      for (const [label, value] of [["支持概率", `${Math.round(h.decision.support * 100)}%`], ["模型置信度", `${Math.round(h.decision.confidence * 100)}%`], ["模型", h.decision.model], ["分类", h.decision.label]]) { const item = el("div"); item.append(el("span", "", label), el("p", "", value)); grid.append(item); }
-      body.append(el("p", "detail-label", "判断依据"), grid);
-    } else body.append(el("p", "modal-copy", h.reason === "manual" ? "你通过评论旁的按钮主动加入屏蔽，未经过模型判断。" : "此账号是你主动选择屏蔽的原作者，未经过模型判断。"));
-    if (h.error) body.append(el("p", "record-error", h.error));
-    const link = el("a", "text-button", "查看 X 原帖 ↗"); link.href = h.root.url; link.target = "_blank"; link.rel = "noreferrer"; body.append(el("p", "detail-label", `记录时间 ${date(h.created)}`), link);
-    modal("为什么处理这位用户", body);
-    $("modal-actions").prepend(actionButton("加入白名单", async () => { await send("WHITELIST_ADD", h.target); await refresh(); toast("已加入白名单。已有屏蔽可在记录中取消。"); $("modal").close(); }, "text-button"));
+      const labelName = !h.decision.customRule && ["support", "oppose", "neutral", "uncertain"].includes(h.decision.label)
+        ? t(`category_${h.decision.label}`) : h.decision.labelName || h.decision.label;
+      for (const [label, value] of [[h.decision.customRule ? t("match_probability") : t("support_probability"), `${Math.round(h.decision.support * 100)}%`], [t("model_confidence"), `${Math.round(h.decision.confidence * 100)}%`], [t("ui_model"), h.decision.model], [t("ui_category"), labelName]]) { const item = el("div"); item.append(el("span", "", label), el("p", "", value)); grid.append(item); }
+      body.append(el("p", "detail-label", t("ui_decision_details")), grid);
+      if (h.decision.labelDescription) body.append(el("p", "detail-text", h.decision.labelDescription));
+    } else body.append(el("p", "modal-copy", h.reason === "manual" ? t("ui_you_manually_blocked_this_user_using_the_reply_button_no") : t("ui_you_chose_to_block_the_original_author_no_model_decision")));
+    if (h.error) body.append(el("p", "record-error", String(h.error)));
+    const link = el("a", "text-button", t("ui_view_post_on_x")); link.href = h.root.url; link.target = "_blank"; link.rel = "noreferrer"; body.append(el("p", "detail-label", t("ui_recorded", date(h.created))), link);
+    modal(t("ui_why_this_user_was_processed"), body);
+    $("modal-actions").prepend(actionButton(t("ui_add_to_allowlist"), async () => { await send("WHITELIST_ADD", h.target); await refresh(); toast(t("ui_added_to_allowlist_existing_blocks_can_be_undone_in_history")); $("modal").close(); }, "text-button"));
   }
   function editWhite(w) {
-    const input = el("input"); input.value = w.note || ""; input.maxLength = 100; input.setAttribute("aria-label", "备注");
-    modal(`@${w.handle} 的备注`, input, async () => { await send("WHITELIST_ADD", { ...w, note: input.value }); await refresh(); }, "保存");
+    const input = el("input"); input.value = w.note || ""; input.maxLength = 100; input.setAttribute("aria-label", t("ui_note"));
+    modal(t("ui_note_for", w.handle), input, async () => { await send("WHITELIST_ADD", { ...w, note: input.value }); await refresh(); }, t("ui_save"));
   }
-  $("whitelist-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => { await send("WHITELIST_ADD", { handle: $("white-handle").value, note: $("white-note").value }); e.target.reset(); await refresh(); toast("已加入白名单。"); }); };
+  $("whitelist-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => { await send("WHITELIST_ADD", { handle: $("white-handle").value, note: $("white-note").value }); e.target.reset(); await refresh(); toast(t("ui_added_to_allowlist")); }); };
   function updateKeyRequirement() {
     let changedOrigin = false;
     try { changedOrigin = new URL(normalizeEndpoint($("api-endpoint").value)).origin !== new URL(state.settings.endpoint || DEFAULT_ENDPOINT).origin; } catch { /* Form/backend validation reports invalid endpoints. */ }
     $("api-key").required = !state?.settings.configured || changedOrigin;
-    $("api-key").placeholder = changedOrigin ? "输入该服务的 API Key" : state?.settings.configured ? "留空沿用已保存的 Key" : "输入 API Key";
+    $("api-key").placeholder = changedOrigin ? t("ui_enter_this_service_s_api_key") : state?.settings.configured ? t("ui_leave_blank_to_keep_the_saved_key") : t("ui_enter_api_key");
   }
-  $("key-form").oninput = () => { modelDirty = true; $("model-feedback").textContent = "有未保存的更改"; updateKeyRequirement(); };
-  $("reset-prompt").onclick = () => { $("custom-prompt").value = DEFAULT_STANCE_PROMPT; modelDirty = true; $("model-feedback").textContent = "已恢复默认，保存后生效"; };
+  $("key-form").oninput = () => { modelDirty = true; $("model-feedback").textContent = t("ui_unsaved_changes"); updateKeyRequirement(); };
+  $("edit-rules").onclick = () => run($("edit-rules"), () => send("OPEN_RULE_EDITOR"));
   $("key-form").onsubmit = e => { e.preventDefault(); run($("save-key"), async () => {
-    const next = updateSettings(state.settings, { endpoint: $("api-endpoint").value, model: $("model").value, customPrompt: $("custom-prompt").value });
-    const config = { endpoint: next.endpoint, model: next.model, customPrompt: next.customPrompt };
+    const next = updateSettings(state.settings, { endpoint: $("api-endpoint").value, model: $("model").value });
+    const config = { endpoint: next.endpoint, model: next.model };
     const secret = $("api-key").value;
     // Request only the chosen host, directly within this user gesture (before any await).
     const permission = chrome.permissions.request({ origins: [endpointPermission(config.endpoint)] });
-    $("save-key").textContent = "连接中…";
+    $("save-key").textContent = t("ui_connecting");
     const fields = [...$("key-form").querySelectorAll("input, textarea, button")].filter(n => n.id !== "save-key");
     fields.forEach(n => { n.disabled = true; });
     try {
-      if (!await permission) throw new Error("未授权访问该 API 端点，配置未保存。");
+      if (!await permission) throw new Error(t("ui_access_to_this_api_endpoint_was_not_granted_settings_were"));
       await send("SAVE_MODEL_CONFIG", { value: secret, config });
-      $("api-key").value = ""; $("api-key").type = "password"; $("reveal-key").textContent = "显示";
-      modelDirty = false; modelLoaded = false; await refresh(); $("model-feedback").textContent = "已保存并连接";
-    } finally { fields.forEach(n => { n.disabled = false; }); $("save-key").textContent = "保存并连接"; }
+      $("api-key").value = ""; $("api-key").type = "password"; $("reveal-key").textContent = t("ui_show");
+      modelDirty = false; modelLoaded = false; await refresh(); $("model-feedback").textContent = t("ui_saved_and_connected");
+    } finally { fields.forEach(n => { n.disabled = false; }); $("save-key").textContent = t("ui_save_and_connect"); }
   }); };
-  $("reveal-key").onclick = () => { const reveal = $("api-key").type === "password"; $("api-key").type = reveal ? "text" : "password"; $("reveal-key").textContent = reveal ? "隐藏" : "显示"; };
-  $("remove-key").onclick = () => modal("移除 Jev 密钥？", "新的评论分析将停止，屏蔽记录和白名单仍会保留。", async () => { await send("REMOVE_KEY"); await refresh(); }, "移除密钥");
-  $("settings-form").oninput = () => { settingsDirty = true; $("settings-feedback").textContent = "有未保存的更改"; };
+  $("reveal-key").onclick = () => { const reveal = $("api-key").type === "password"; $("api-key").type = reveal ? "text" : "password"; $("reveal-key").textContent = reveal ? t("ui_hide") : t("ui_show"); };
+  $("remove-key").onclick = () => modal(t("ui_remove_jev_api_key"), t("ui_new_analysis_will_stop_block_history_and_the_allowlist_will"), async () => { await send("REMOVE_KEY"); await refresh(); }, t("ui_remove_key"));
+  $("settings-form").oninput = () => { settingsDirty = true; $("settings-feedback").textContent = t("ui_unsaved_changes"); };
   function updateMaskRange() {
     $("maskThreshold").max = Number($("high").value) - 1;
     $("maskThreshold").value = Math.min(Number($("maskThreshold").value), Number($("maskThreshold").max));
     $("maskThreshold-out").textContent = `${$("maskThreshold").value}%`;
     $("maskThreshold").disabled = !$("mask-enabled").checked;
-    $("mask-range").textContent = $("mask-enabled").checked ? `隐藏区间：${$("maskThreshold").value}% ≤ 支持概率 < ${$("high").value}%` : "";
+    $("mask-range").textContent = $("mask-enabled").checked ? t("ui_hide_range", $("maskThreshold").value, customRuleEnabled(state.settings) ? t("match_probability") : t("support_probability"), $("high").value) : "";
   }
   $("mask-enabled").onchange = updateMaskRange;
   const updateAnimationOptions = () => { $("animation-effects").disabled = !$("animation").checked; };
@@ -240,10 +246,10 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
   document.querySelectorAll('[name="preset"]').forEach(input => { input.onchange = () => { const p = state.presets[input.value]; if (p) for (const key of ["high", "confidence"]) { $(key).value = Math.round(p[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; } updateMaskRange(); }; });
   $("settings-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     await send("SAVE_SETTINGS", { value: { preset: document.querySelector('[name="preset"]:checked').value, high: Number($("high").value) / 100, confidence: Number($("confidence").value) / 100, maskEnabled: $("mask-enabled").checked, maskThreshold: Number($("maskThreshold").value) / 100, cacheLimit: Number($("cache-limit").value), animation: $("animation").checked, animationEffect: document.querySelector('[name="animation-effect"]:checked').value, reducedMotion: $("reduced-motion").checked } });
-    settingsDirty = false; settingsLoaded = false; await refresh(); $("settings-feedback").textContent = "已保存";
+    settingsDirty = false; settingsLoaded = false; await refresh(); $("settings-feedback").textContent = t("ui_saved");
   }); };
   $("export").onclick = () => run($("export"), async () => { const data = await send("EXPORT"); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const link = el("a"); link.href = url; link.download = `block-sb-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 2000); });
-  $("clear-finished").onclick = () => modal("清理已取消的记录？", "仅清理已取消屏蔽和已取消任务的本地记录。当前已屏蔽的账号及其撤销入口会保留。此操作不会改变 X 上的屏蔽关系。", async () => { await send("CLEAR_FINISHED"); await refresh(); }, "清理记录");
+  $("clear-finished").onclick = () => modal(t("ui_clear_canceled_records"), t("ui_only_unblocked_or_canceled_local_records_will_be_deleted_active"), async () => { await send("CLEAR_FINISHED"); await refresh(); }, t("ui_clear_records"));
 
   async function refresh() {
     if (loading) { reloadAgain = true; return; }
@@ -252,22 +258,25 @@ import { DEFAULT_ENDPOINT, DEFAULT_STANCE_PROMPT, normalizeEndpoint, endpointPer
       const previousRevision = state?.settings.analysisRevision;
       state = await send("SNAPSHOT");
       if (previousRevision !== state.settings.analysisRevision) modelLoaded = false;
-      $("global-pause").textContent = state.settings.paused ? "继续" : "暂停";
+      $("global-pause").textContent = state.settings.paused ? t("resume") : t("pause");
       $("onboarding").hidden = state.settings.configured || currentTab === "settings";
       $("service-error").hidden = !(state.queueError || state.queueNotice || state.modelError);
-      $("service-error-text").textContent = [state.modelError, state.queueError, state.queueNotice].filter(Boolean).join(" ");
-      $("key-status").textContent = state.settings.configured ? "已配置" : "未连接";
+      $("service-error-text").textContent = [state.modelError, state.queueError, state.queueNotice].filter(Boolean).map(value => String(value)).join(" ");
+      $("key-status").textContent = state.settings.configured ? t("ui_configured") : t("ui_not_connected");
       $("key-status").className = `status ${state.settings.configured ? "connected" : ""}`;
       $("remove-key").hidden = !state.settings.configured;
       if (!modelLoaded && !modelDirty) {
         $("api-endpoint").value = state.settings.endpoint || DEFAULT_ENDPOINT;
         $("model").value = state.settings.model;
-        $("custom-prompt").value = state.settings.customPrompt || DEFAULT_STANCE_PROMPT;
         modelLoaded = true;
       }
+      const rule = getAnalysisRule(state.settings), probabilityLabel = customRuleEnabled(state.settings) ? t("match_probability") : t("support_probability");
+      $("rule-summary").textContent = t("ui_options_blocking_options", rule.options.length, rule.options.filter(o => o.block).length);
+      document.querySelectorAll(".probability-label").forEach(n => { n.textContent = probabilityLabel; });
+      updateMaskRange();
       updateKeyRequirement();
       const accounts = [...new Set([...state.history.map(h => h.account), ...state.sessions.map(s => s.account), ...(account ? [account] : [])])].sort();
-      const options = $("account-filter"); options.replaceChildren(new Option("全部账号", ""), ...accounts.map(a => new Option(`@${a}`, a))); options.value = account;
+      const options = $("account-filter"); options.replaceChildren(new Option(t("ui_all_accounts"), ""), ...accounts.map(a => new Option(`@${a}`, a))); options.value = account;
       if (!settingsLoaded && !settingsDirty) {
         $("maskThreshold").max = 100;
         for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; }

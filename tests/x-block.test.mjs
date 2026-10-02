@@ -1,3 +1,4 @@
+import "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { xSession, postBlock } from "../src/lib/x-block.js";
