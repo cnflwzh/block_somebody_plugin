@@ -33,7 +33,7 @@ Block somebody 简称 block s.b. 是一款面向Chrome浏览器打造的针对�
   <img src="docs/images/model-settings.jpg" width="560" alt="模型设置界面，包含 API Key、API 端点、模型和高级选项">
 </p>
 
-*本文截图使用示例数据，不含真实账号、密钥或屏蔽记录。模型设置截图为旧版布局，自定义 Prompt 现已改为独立编辑页。*
+*模型设置截图为旧版布局，自定义 Prompt 现已改为独立编辑页。*
 
 使用官方 Jev 服务时，填写自己的 API Key，保留默认端点 `https://api.typesafe.ai/v1/systemone` 和模型 `jev-1.13.0`，然后点击「保存并连接」。插件会用固定的示例文本检查连接，成功后才保存配置。这一步和后续评论分析都会调用模型服务，可能产生用量费用。
 
