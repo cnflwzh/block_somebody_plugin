@@ -40,7 +40,13 @@ async function snapshot(sender, accountValue) {
   const settings = { ...db.settings, configured: !!(await key()), debugDryRun: !!db.debugDryRun };
   // Waiting is a presentation flag, not a terminal job status: undo/cancel and restart
   // recovery must continue to treat legacy jobs without relationship evidence as pending.
-  const waitingHistory = new Set(db.jobs.filter(j => j.status === "pending" && waitingFollowingJob(db, j)).map(j => j.historyId));
+  // Build this index once per snapshot instead of scanning all history for each job.
+  // Keep it local to this immutable read; queue mutations must use their current records.
+  const historyById = new Map(db.history.map(h => [h.id, h]));
+  const waitingHistory = new Set();
+  for (const job of db.jobs) {
+    if (job.status === "pending" && waitingFollowingJob(db, job, historyById)) waitingHistory.add(job.historyId);
+  }
   const history = db.history.map(h => ({ ...h, waitingFollowing: h.status === "pending" && waitingHistory.has(h.id) }));
   if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), sessions: Object.values(db.sessions), queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
   const s = db.sessions[sender.tab.id];
@@ -82,14 +88,16 @@ function followingObservation(db, account, target) {
 }
 function followingStatus(db, account, target) { return followingObservation(db, account, target)?.following ?? null; }
 function skipFollowing(db, account, target) { return db.settings.skipFollowing && followingStatus(db, account, target) !== false; }
-/** Existing comment jobs need three states; missing evidence must never cancel a job. */
-function jobFollowingStatus(db, job) {
-  const history = db.history.find(h => h.id === job.historyId);
-  return job.kind === "block" && history?.reason !== "author" && db.settings.skipFollowing
-    ? followingStatus(db, job.account, job.target) : false;
+/** Return true/false/null for followed/not protected/unknown. Batch readers may pass
+ * a historyById Map from the same db snapshot to avoid repeated history scans.
+ */
+function jobFollowingStatus(db, job, historyById) {
+  if (job.kind !== "block" || !db.settings.skipFollowing) return false;
+  const history = historyById ? historyById.get(job.historyId) : db.history.find(h => h.id === job.historyId);
+  return history?.reason !== "author" ? followingStatus(db, job.account, job.target) : false;
 }
 function protectedFollowingJob(db, job) { return jobFollowingStatus(db, job) === true; }
-function waitingFollowingJob(db, job) { return jobFollowingStatus(db, job) === null; }
+function waitingFollowingJob(db, job, historyById) { return jobFollowingStatus(db, job, historyById) === null; }
 // Whitelisted jobs can be cancelled immediately even when their relationship is unknown.
 function runnableBlockJob(db, job) {
   return job.kind === "block" && !db.queueError && !db.settings.paused && !db.debugDryRun
