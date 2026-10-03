@@ -182,7 +182,7 @@
     "message": "この返信を分析中"
   },
   "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
-    "message": "アニメーションのプレビュー中は分析・新規ブロックを行いません。blockSBDebug.disable() で終了します。"
+    "message": "デバッグ操作中は分析・新規ブロックを一時停止します。設定の更新が完了してから、デバッグパネルで「アニメーションのプレビューのみ」をオフにしてください。"
   },
   "ui_animation_style": {
     "message": "アニメーションの種類"
@@ -1790,6 +1790,12 @@
   },
   "ui_debug_live": {
     "message": "実際のブロックが有効です"
+  },
+  "ui_waiting_following": {
+    "message": "フォロー状態を確認待ち"
+  },
+  "ui_waiting_following_hint": {
+    "message": "元のポストを開いてタスクを開始し、フォロー状態の取得をお待ちください。「フォロー中のアカウントをスキップ」をオフにして送信を再開することもできます。"
   },
   "ui_debug_hint": {
     "message": "Jev の分析は引き続き課金対象です。有効中は既存のブロック処理も待機し、無効にすると再開します。シミュレーションを終えるには投稿のタスクを開始し直してください。送信済みのリクエストは取り消せません。"

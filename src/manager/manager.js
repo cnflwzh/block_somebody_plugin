@@ -53,7 +53,7 @@ localizeDocument(document);
     const header = el("div", "record-head"), identity = el("div", "identity");
     identity.append(el("strong", "", target.name || target.handle), el("span", "", `@${target.handle}`));
     header.append(el("div", "avatar", (target.name || target.handle).slice(0, 1).toUpperCase()), identity);
-    if (status) header.append(el("span", `status ${status}`, statuses[status] || status));
+    if (status) header.append(el("span", `status ${status === "waiting_following" ? "pending" : status}`, status === "waiting_following" ? t("ui_waiting_following") : statuses[status] || status));
     return header;
   }
   /** Group repeated sessions by selected tweet and acting account, keeping legacy records intact. */
@@ -74,7 +74,7 @@ localizeDocument(document);
       || filter === "unblocked" && ["unblocked", "cancelled"].includes(h.status);
   }
   function recordCard(h) {
-    const record = el("article", "record"); record.append(profileHead(h.target, h.status));
+    const record = el("article", "record"); record.append(profileHead(h.target, h.waitingFollowing ? "waiting_following" : h.status));
     record.append(el("div", "quote", h.reply?.text || h.root.text || t("ui_the_original_post_contains_media")));
     const explanation = h.reason === "author" ? t("ui_original_author") : h.reason === "manual" ? t("ui_blocked_manually") : `${h.decision?.customRule ? t("match_probability") : t("support_probability")} ${Math.round((h.decision?.support || 0) * 100)}%`;
     record.append(el("div", "record-meta", `${explanation} · ${date(h.created)}`));
@@ -183,7 +183,8 @@ localizeDocument(document);
     modal(t("ui_unblock"), body, async () => { await send("UNDO", { id: h.id, whitelist: input.checked }); await refresh(); toast(t("ui_unblock_request_queued")); }, t("ui_unblock"));
   }
   function detail(h) {
-    const body = el("div"); body.append(profileHead(h.target, h.status));
+    const body = el("div"); body.append(profileHead(h.target, h.waitingFollowing ? "waiting_following" : h.status));
+    if (h.waitingFollowing) body.append(el("p", "hint", t("ui_waiting_following_hint")));
     if (h.verification === "http-only") body.append(el("p", "hint", t("ui_block_request_received_an_http_success_response_the_relationship_was")));
     body.append(el("p", "detail-label", t("ui_selected_original_post")), el("p", "detail-text", h.root.text || t("ui_no_readable_text")));
     if (h.reply) body.append(el("p", "detail-label", t("ui_reply_that_triggered_the_decision")), el("p", "detail-text", h.reply.text));

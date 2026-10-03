@@ -182,7 +182,7 @@
     "message": "正在分析此回覆"
   },
   "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
-    "message": "動畫預覽中：不分析、不新增封鎖工作。輸入 blockSBDebug.disable() 結束。"
+    "message": "偵錯控制生效中：暫停分析及新增封鎖任務。請等待設定更新完成，並在偵錯面板關閉「僅預覽動畫」。"
   },
   "ui_animation_style": {
     "message": "動畫效果"
@@ -1790,6 +1790,12 @@
   },
   "ui_debug_live": {
     "message": "目前允許實際封鎖"
+  },
+  "ui_waiting_following": {
+    "message": "等待追蹤狀態"
+  },
+  "ui_waiting_following_hint": {
+    "message": "開啟原始貼文並啟動任務，等待頁面提供追蹤狀態；也可關閉「略過已追蹤的帳號」繼續送出。"
   },
   "ui_debug_hint": {
     "message": "Jev 分析仍會計費。開啟後暫停既有封鎖佇列，關閉後繼續；模擬任務需重新啟動。已送出的請求無法撤回。"

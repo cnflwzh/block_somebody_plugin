@@ -182,7 +182,7 @@
     "message": "이 답글을 분석하는 중"
   },
   "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
-    "message": "애니메이션 미리보기 중에는 분석과 새 차단을 진행하지 않습니다. blockSBDebug.disable()로 종료하세요."
+    "message": "디버그 제어 중에는 분석과 새 차단이 일시 중지됩니다. 설정 업데이트가 끝난 뒤 디버그 패널에서 ‘애니메이션만 미리보기’를 꺼 주세요."
   },
   "ui_animation_style": {
     "message": "애니메이션 효과"
@@ -1790,6 +1790,12 @@
   },
   "ui_debug_live": {
     "message": "실제 차단이 활성화되어 있습니다"
+  },
+  "ui_waiting_following": {
+    "message": "팔로우 상태 확인 대기"
+  },
+  "ui_waiting_following_hint": {
+    "message": "원본 게시물을 열고 작업을 시작하여 팔로우 상태를 확인해 주세요. ‘팔로우 중인 계정 건너뛰기’를 끄면 제출을 재개할 수도 있습니다."
   },
   "ui_debug_hint": {
     "message": "Jev 분석 비용은 계속 발생합니다. 이 옵션을 켜면 기존 차단 작업도 대기하고, 끄면 재개됩니다. 시뮬레이션을 끝내려면 게시물 작업을 다시 시작하세요. 이미 보낸 요청은 취소할 수 없습니다."

@@ -182,7 +182,7 @@
     "message": "正在分析这条评论"
   },
   "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
-    "message": "动画调试中：不分析、不创建屏蔽任务。使用 blockSBDebug.disable() 退出。"
+    "message": "调试控制生效中：暂停分析和新增屏蔽任务。请等待设置更新完成，并在调试面板关闭「仅预览动画」。"
   },
   "ui_animation_style": {
     "message": "动画效果"
@@ -1790,6 +1790,12 @@
   },
   "ui_debug_live": {
     "message": "当前允许真实屏蔽"
+  },
+  "ui_waiting_following": {
+    "message": "等待关注状态"
+  },
+  "ui_waiting_following_hint": {
+    "message": "打开原帖并启动任务，等待页面提供关注状态；也可关闭「跳过已关注账号」恢复提交。"
   },
   "ui_debug_hint": {
     "message": "Jev 分析仍会计费。开启后历史屏蔽队列暂缓，关闭后恢复；模拟任务需重新启动。已发送的请求无法撤回。"

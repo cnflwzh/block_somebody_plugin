@@ -38,7 +38,11 @@ function notify() {
 async function snapshot(sender, accountValue) {
   const db = await read();
   const settings = { ...db.settings, configured: !!(await key()), debugDryRun: !!db.debugDryRun };
-  if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: db.history.slice().reverse(), sessions: Object.values(db.sessions), queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
+  // Waiting is a presentation flag, not a terminal job status: undo/cancel and restart
+  // recovery must continue to treat legacy jobs without relationship evidence as pending.
+  const waitingHistory = new Set(db.jobs.filter(j => j.status === "pending" && waitingFollowingJob(db, j)).map(j => j.historyId));
+  const history = db.history.map(h => ({ ...h, waitingFollowing: h.status === "pending" && waitingHistory.has(h.id) }));
+  if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), sessions: Object.values(db.sessions), queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
   const s = db.sessions[sender.tab.id];
   const account = accountValue ? normalizeHandle(accountValue) : "";
   const { endpoint, customPrompt, analysisRule, ...pageSettings } = settings;
@@ -46,7 +50,7 @@ async function snapshot(sender, accountValue) {
   // The page needs display names and action markers, not the private templates or rubric text.
   pageSettings.ruleOptions = getAnalysisRule(settings).options.map(({ id, name, block }) => ({ id, name, block }));
   return { settings: pageSettings, account, decisionVersion: DECISION_VERSION, whitelist: db.whitelist.map(w => ({ handle: w.handle, userId: w.userId })), session: s?.account === account ? s : null, queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError,
-    history: db.history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
+    history: history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, waitingFollowing: h.waitingFollowing, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
 }
 function sessionFor(db, tabId, sessionId, account) {
   const s = db.sessions[tabId];
@@ -78,9 +82,18 @@ function followingObservation(db, account, target) {
 }
 function followingStatus(db, account, target) { return followingObservation(db, account, target)?.following ?? null; }
 function skipFollowing(db, account, target) { return db.settings.skipFollowing && followingStatus(db, account, target) !== false; }
-function protectedFollowingJob(db, job) {
+/** Existing comment jobs need three states; missing evidence must never cancel a job. */
+function jobFollowingStatus(db, job) {
   const history = db.history.find(h => h.id === job.historyId);
-  return job.kind === "block" && history?.reason !== "author" && skipFollowing(db, job.account, job.target);
+  return job.kind === "block" && history?.reason !== "author" && db.settings.skipFollowing
+    ? followingStatus(db, job.account, job.target) : false;
+}
+function protectedFollowingJob(db, job) { return jobFollowingStatus(db, job) === true; }
+function waitingFollowingJob(db, job) { return jobFollowingStatus(db, job) === null; }
+// Whitelisted jobs can be cancelled immediately even when their relationship is unknown.
+function runnableBlockJob(db, job) {
+  return job.kind === "block" && !db.queueError && !db.settings.paused && !db.debugDryRun
+    && (!waitingFollowingJob(db, job) || isWhitelisted(db, job.target));
 }
 /** Cancel unsent comment blocks only. Already submitted requests cannot be recalled. */
 function cancelFollowingJobs(db) {
@@ -308,7 +321,7 @@ async function drain() {
     let db = await read();
     if (Date.now() < db.nextActionAt) return;
     const job = db.jobs.find(j => j.status === "pending" && j.kind === "unblock")
-      || db.jobs.find(j => j.status === "pending" && j.kind === "block" && !db.queueError && !db.settings.paused && !db.debugDryRun);
+      || db.jobs.find(j => j.status === "pending" && runnableBlockJob(db, j));
     if (!job) return;
     if (job.kind === "block" && (isWhitelisted(db, job.target) || protectedFollowingJob(db, job))) {
       await change(d => { const j = d.jobs.find(x => x.id === job.id); j.status = "cancelled"; const h = d.history.find(x => x.id === j.historyId); if (h) h.status = "cancelled"; });
@@ -351,7 +364,7 @@ async function drain() {
           j.status = "cancelled"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "cancelled";
           return false;
         }
-        if (d.settings.paused || d.queueError || d.debugDryRun) {
+        if (waitingFollowingJob(d, j) || d.settings.paused || d.queueError || d.debugDryRun) {
           j.status = "pending"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "pending";
           return false;
         }
@@ -396,7 +409,7 @@ async function drain() {
       // Hold the mutex through this read: another wakeup must not install a second timer.
       // Alarms recover after worker suspension; the timer only improves foreground latency.
       const db = await read();
-      if (db.jobs.some(j => j.status === "pending" && (j.kind === "unblock" || !db.settings.paused && !db.queueError && !db.debugDryRun))) {
+      if (db.jobs.some(j => j.status === "pending" && (j.kind === "unblock" || runnableBlockJob(db, j)))) {
         drainTimer = setTimeout(() => void drain(), db.queueNotice ? 30000 : Math.min(30000, Math.max(2500, db.nextActionAt - Date.now())));
         // Node's mocked worker should exit naturally; Chrome returns a numeric timer handle.
         drainTimer.unref?.();
@@ -436,6 +449,8 @@ async function handle(message, sender) {
       if (current?.id === s.id && current.account === account && !current.stopped) observeFollowing(d, current, posts);
     });
     notify();
+    // Fresh relationship evidence can release legacy jobs without a page restart.
+    void drain();
     const written = new Set(posts.map(p => p.id));
     const ids = [...new Set(message.missingIds.map(numericId).filter(id => id && !written.has(id)))];
     const result = await syncThreadContext(account, s.root.id, posts, ids);

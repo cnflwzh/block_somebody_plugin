@@ -186,6 +186,50 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       assert.equal((await rpc("CLASSIFY", { sessionId: session.id, account: "viewer", reply: target, ancestors: [] })).action, "skip");
       assert.equal(sentJev, beforeCalls);
     });
+    await t.test("legacy jobs wait for relationship evidence without blocking later jobs", async () => {
+      const { change } = await import("../src/lib/store.js");
+      const targets = ["legacyresume", "legacyfollow", "legacysetting", "legacycancel", "knownlater"].map((handle, i) => ({
+        ...reply, id: String(100090 + i), userId: String(900090 + i), handle
+      }));
+      // Model persisted pre-upgrade jobs: the first four have no relationship fields.
+      await change(d => {
+        targets.forEach((post, i) => {
+          const target = { handle: post.handle, userId: post.userId };
+          if (i === 4) Object.assign(target, { following: false, followingAccount: "viewer", followingAt: now });
+          const id = `legacy-${i}`;
+          d.history.push({ id, account: "viewer", sessionId: session.id, root, reply: post, target,
+            status: "pending", reason: "auto", created: now, updated: now });
+          d.jobs.push({ id, historyId: id, account: "viewer", sessionId: session.id, target,
+            actorId: cookieActor, origin: "https://x.com", kind: "block", status: "pending" });
+        });
+      });
+      const history = i => data.state.history.find(h => h.id === `legacy-${i}`);
+      const before = submitted;
+      now += 5000; alarm({ name: "blocksb-queue" });
+      await flush(() => history(4).status === "submitted");
+      assert.equal(submitted, before + 1, "unknown jobs must not block a later known account");
+      for (let i = 0; i < 4; i++) assert.equal(history(i).status, "pending");
+      const snapshot = await rpc("SNAPSHOT", {}, ui);
+      assert.equal(snapshot.history.find(h => h.id === "legacy-0").waitingFollowing, true);
+      await rpc("CANCEL_JOB", { id: "legacy-3" }, ui);
+      assert.equal(history(3).status, "cancelled", "waiting jobs remain cancellable");
+      now += 5000;
+      await rpc("THREAD_CONTEXT", { sessionId: session.id, account: "viewer", posts: [
+        { ...targets[0], following: false, followingAt: now },
+        { ...targets[1], following: true, followingAt: now }
+      ], missingIds: [] });
+      await flush(() => history(0).status === "submitted");
+      assert.equal(history(1).status, "cancelled", "confirmed followed accounts remain protected");
+      assert.equal(history(2).status, "pending");
+      assert.equal(submitted, before + 2);
+      // Drain may still be finishing its final read; use the normal wakeup after it settles.
+      await new Promise(r => setTimeout(r, 20));
+      now += 5000;
+      await rpc("SAVE_SETTINGS", { value: { skipFollowing: false } }, ui);
+      await flush(() => history(2).status === "submitted");
+      assert.equal(submitted, before + 3, "disabling protection resumes unknown jobs only");
+      await rpc("SAVE_SETTINGS", { value: { skipFollowing: true } }, ui);
+    });
     await t.test("dry run keeps classification but never queues simulated blocks, and holds older jobs", async () => {
       const held = { ...reply, id: "100082", handle: "heldjob", userId: "900082" };
       await rpc("MANUAL_BLOCK", { root, reply: held, account: "viewer" });
