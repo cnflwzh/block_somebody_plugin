@@ -1746,5 +1746,53 @@
   },
   "variable_unseen_media": {
     "message": "읽지 않은 미디어 포함 여부"
+  },
+  "ui_skip_following": {
+    "message": "팔로우 중인 계정 제외"
+  },
+  "ui_following_skipped": {
+    "message": "팔로우 중인 계정이므로 분석 및 차단에서 제외됩니다."
+  },
+  "ui_following_unknown": {
+    "message": "팔로우 여부를 확인할 수 없어 분석 및 차단을 건너뜁니다."
+  },
+  "ui_following_protected": {
+    "message": "팔로우 보호가 켜져 있습니다. 팔로우 중인 계정이거나 팔로우 여부를 확인할 수 없습니다."
+  },
+  "ui_debug_panel": {
+    "message": "디버그"
+  },
+  "ui_debug_exit": {
+    "message": "디버그 종료"
+  },
+  "ui_debug_no_block": {
+    "message": "X에 차단 요청 보내지 않기"
+  },
+  "ui_debug_preview_only": {
+    "message": "애니메이션만 미리 보기"
+  },
+  "ui_debug_play": {
+    "message": "미리 보기 실행"
+  },
+  "ui_debug_restore": {
+    "message": "미리 보기 복원"
+  },
+  "ui_debug_updating": {
+    "message": "백그라운드 설정 적용 중…"
+  },
+  "ui_debug_active": {
+    "message": "차단 비활성화 · 계정 $count$개 시뮬레이션",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_debug_live": {
+    "message": "실제 차단이 활성화되어 있습니다"
+  },
+  "ui_debug_hint": {
+    "message": "Jev 분석 비용은 계속 발생합니다. 이 옵션을 켜면 기존 차단 작업도 대기하고, 끄면 재개됩니다. 시뮬레이션을 끝내려면 게시물 작업을 다시 시작하세요. 이미 보낸 요청은 취소할 수 없습니다."
   }
+
 }

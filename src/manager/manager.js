@@ -245,7 +245,7 @@ localizeDocument(document);
   for (const key of ["high", "confidence", "maskThreshold"]) $(key).oninput = () => { $(key + "-out").textContent = `${$(key).value}%`; if (key !== "maskThreshold") document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange(); };
   document.querySelectorAll('[name="preset"]').forEach(input => { input.onchange = () => { const p = state.presets[input.value]; if (p) for (const key of ["high", "confidence"]) { $(key).value = Math.round(p[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; } updateMaskRange(); }; });
   $("settings-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
-    await send("SAVE_SETTINGS", { value: { preset: document.querySelector('[name="preset"]:checked').value, high: Number($("high").value) / 100, confidence: Number($("confidence").value) / 100, maskEnabled: $("mask-enabled").checked, maskThreshold: Number($("maskThreshold").value) / 100, cacheLimit: Number($("cache-limit").value), animation: $("animation").checked, animationEffect: document.querySelector('[name="animation-effect"]:checked').value, reducedMotion: $("reduced-motion").checked } });
+    await send("SAVE_SETTINGS", { value: { preset: document.querySelector('[name="preset"]:checked').value, high: Number($("high").value) / 100, confidence: Number($("confidence").value) / 100, skipFollowing: $("skip-following").checked, maskEnabled: $("mask-enabled").checked, maskThreshold: Number($("maskThreshold").value) / 100, cacheLimit: Number($("cache-limit").value), animation: $("animation").checked, animationEffect: document.querySelector('[name="animation-effect"]:checked').value, reducedMotion: $("reduced-motion").checked } });
     settingsDirty = false; settingsLoaded = false; await refresh(); $("settings-feedback").textContent = t("ui_saved");
   }); };
   $("export").onclick = () => run($("export"), async () => { const data = await send("EXPORT"); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const link = el("a"); link.href = url; link.download = `block-sb-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 2000); });
@@ -280,7 +280,7 @@ localizeDocument(document);
       if (!settingsLoaded && !settingsDirty) {
         $("maskThreshold").max = 100;
         for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; }
-        $("mask-enabled").checked = state.settings.maskEnabled; $("cache-limit").value = state.settings.cacheLimit; updateMaskRange();
+        $("skip-following").checked = state.settings.skipFollowing; $("mask-enabled").checked = state.settings.maskEnabled; $("cache-limit").value = state.settings.cacheLimit; updateMaskRange();
         document.querySelector(`[name="preset"][value="${state.settings.preset}"]`).checked = true;
         $("animation").checked = state.settings.animation; $("reduced-motion").checked = state.settings.reducedMotion; settingsLoaded = true;
         document.querySelector(`[name="animation-effect"][value="${state.settings.animationEffect === "particles" ? "particles" : "fly"}"]`).checked = true;

@@ -1,18 +1,31 @@
 /* Page-world bridge: scan existing DOM cards and observe subsequent X responses. No account actions. */
 (() => {
-  /** Console-only visual preview. The bridge accepts no account action or model request. */
-  const debugCommand = (command, postId, effect) => window.postMessage({ channel: "blocksb:animation-debug:v1", command, postId, effect }, location.origin);
+  /** Console opens the panel; only its trusted UI can remove the worker's no-block guard. */
+  const debugCommand = (command, postId, effect, preview) => window.postMessage({ channel: "blocksb:animation-debug:v1", command, postId, effect, preview }, location.origin);
   Object.defineProperty(window, "blockSBDebug", { configurable: true, value: Object.freeze({
-    enable(effect = "fly") {
-      if (!["fly", "particles"].includes(effect)) throw new Error('效果请使用 "fly" 或 "particles"。');
-      debugCommand("enable", "", effect);
-      console.info(`[block s.b.] ${effect === "particles" ? "粒子消散" : "飞入垃圾桶"}预览已开启；当前页面不再新增分析或屏蔽。已有后台队列不受影响。使用 blockSBDebug.play() 播放。`);
+    enable(effect) {
+      if (effect !== undefined && !["fly", "particles"].includes(effect)) throw new Error('效果请使用 "fly" 或 "particles"。');
+      debugCommand("enable", "", effect || "fly", effect !== undefined);
+      console.info("[block s.b.] 正在打开调试面板并启用禁止屏蔽；以面板显示的后台状态为准。指定动画名称时进入仅动画预览。");
     },
+    dryRun() { debugCommand("enable", "", "fly", false); },
     play(postId = "") { debugCommand("play", String(postId).match(/(?:status\/)?(\d{5,25})/)?.[1] || ""); },
     reset() { debugCommand("reset"); },
-    disable() { debugCommand("disable"); console.info("[block s.b.] 已退出动画预览，当前任务恢复正常处理。"); }
+    disable() { debugCommand("disable"); console.info("[block s.b.] 已退出动画预览。禁止屏蔽若已开启，请在调试面板内关闭。"); }
   }) });
   const records = new Map(), domSignatures = new Map();
+  // Relationship flags describe the signed-in viewer, never the author's followers.
+  const viewer = () => {
+    const text = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]')?.innerText || "";
+    const handles = [...new Set([...text.matchAll(/(?:^|\s)@([a-zA-Z0-9_]{1,15})(?=\s|$)/g)].map(m => m[1].toLowerCase()))];
+    return handles.length === 1 ? handles[0] : "";
+  };
+  const following = user => {
+    for (const value of [user?.relationship_perspectives?.following, user?.following, user?.legacy?.following]) {
+      if (typeof value === "boolean") return value;
+    }
+    return null; // An omitted relationship is not proof that the viewer does not follow.
+  };
   /** Sparse blocked cards must not overwrite the full post previously observed on this page. */
   function remember(post) {
     const previous = records.get(post.id);
@@ -55,7 +68,7 @@
   const publish = (posts, source) => window.postMessage({ channel, posts, source, observedAt: Date.now() }, location.origin);
   /** Read only tweet props attached to rendered cards; no global store, cookies or private profile data. */
   function captureRendered(force = false) {
-    const found = [];
+    const found = [], account = viewer();
     for (const article of document.querySelectorAll('[data-testid="primaryColumn"] article[data-testid="tweet"]')) {
       const date = article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time");
       const ownLink = date?.closest("a")?.getAttribute("href")?.match(/^\/(\w{1,15})\/status\/(\d+)/);
@@ -70,11 +83,12 @@
         const post = { id: String(tweet.id_str), handle: tweet.user.screen_name.toLowerCase(), userId: String(tweet.user.id_str || ""),
           name: String(tweet.user.name || tweet.user.screen_name), text: text.slice(0, 14000), conversationId: String(tweet.conversation_id_str || ""),
           parentId: String(tweet.in_reply_to_status_id_str || ""), hasMedia: !!(tweet.extended_entities?.media?.length || tweet.entities?.media?.length || tweet.quoted_status || tweet.card),
-          incomplete: !!tweet.truncated || text.length > 14000, blocking: typeof tweet.user.blocking === "boolean" ? tweet.user.blocking : null };
+          incomplete: !!tweet.truncated || text.length > 14000, following: following(tweet.user), followingAccount: account,
+          blocking: typeof tweet.user.blocking === "boolean" ? tweet.user.blocking : null };
         // Force a DOM inventory on activation, even if the same card was cached before the click.
         const signature = JSON.stringify(post);
         if (force || domSignatures.get(post.id) !== signature) {
-          domSignatures.set(post.id, signature); found.push(remember(post));
+          domSignatures.set(post.id, signature); found.push(remember({ ...post, followingAt: Date.now() }));
         }
         break;
       }
@@ -102,7 +116,7 @@
   });
   renderedObserver.observe(document.documentElement, { childList: true, characterData: true, subtree: true });
   scheduleRendered();
-  function ingest(data) {
+  function ingest(data, account, startedAt) {
     const pending = [data], seen = new Set(), found = [];
     let count = 0;
     while (pending.length && count++ < 45000) {
@@ -121,6 +135,7 @@
             conversationId: String(legacy.conversation_id_str), parentId: String(legacy.in_reply_to_status_id_str || ""),
             hasMedia: !!(legacy.extended_entities?.media?.length || legacy.entities?.media?.length || item.quoted_status_result || item.card),
             incomplete: !!legacy.truncated || !!item.is_translatable && !legacy.full_text || (note?.text || legacy.full_text || "").length > 14000,
+            following: following(user), followingAccount: account, followingAt: startedAt,
             blocking: typeof profile.blocking === "boolean" ? profile.blocking : null };
           found.push(remember(post));
         }
@@ -130,7 +145,7 @@
     while (records.size > 2500) records.delete(records.keys().next().value);
     for (let i = 0; i < found.length; i += 40) publish(found.slice(i, i + 40), "network");
   }
-  async function capture(response, url, startedAt) {
+  async function capture(response, url, startedAt, account) {
     let reader, complete = false;
     try {
       if (!response.ok) { timeline(url, null, response.status, startedAt); void response.body?.cancel().catch(() => {}); return; }
@@ -147,7 +162,8 @@
         body += decoder.decode(value, { stream: true });
       }
       const data = JSON.parse(body + decoder.decode());
-      ingest(data); timeline(url, data, response.status, startedAt);
+      ingest(data, account && viewer() === account ? account : "", startedAt);
+      timeline(url, data, response.status, startedAt);
     } catch { /* X responses and stream cancellation must not affect the page. */ }
     finally {
       // Do not await cancellation of a cloned response: its other branch belongs to X.
@@ -156,10 +172,10 @@
   }
   const originalFetch = window.fetch;
   window.fetch = function (...args) {
-    const startedAt = Date.now();
-    const result = Reflect.apply(originalFetch, this, args);
     const url = args[0] instanceof Request ? args[0].url : String(args[0]);
-    if (eligible(url)) result.then(response => capture(response.clone(), url, startedAt)).catch(() => timeline(url, null, 0, startedAt));
+    const observe = eligible(url), startedAt = Date.now(), account = observe ? viewer() : "";
+    const result = Reflect.apply(originalFetch, this, args);
+    if (observe) result.then(response => capture(response.clone(), url, startedAt, account)).catch(() => timeline(url, null, 0, startedAt));
     return result;
   };
   const originalOpen = XMLHttpRequest.prototype.open;
@@ -171,14 +187,14 @@
     return Reflect.apply(originalOpen, this, [method, url, ...rest]);
   };
   XMLHttpRequest.prototype.send = function (...args) {
-    const startedAt = Date.now(), url = xhrUrls.get(this);
+    const startedAt = Date.now(), url = xhrUrls.get(this), account = observed.has(this) ? viewer() : "";
     // loadend also runs on abort/error, so reused XHR objects cannot retain stale listeners.
     if (observed.has(this)) this.addEventListener("loadend", () => {
       try {
         if (this.status < 200 || this.status >= 300) { timeline(url, null, this.status, startedAt); return; }
         const data = this.responseType === "json" ? this.response
           : (!this.responseType || this.responseType === "text") && this.responseText.length <= 6_000_000 ? JSON.parse(this.responseText) : null;
-        if (data) { ingest(data); timeline(url, data, this.status, startedAt); }
+        if (data) { ingest(data, account && viewer() === account ? account : "", startedAt); timeline(url, data, this.status, startedAt); }
       } catch { /* Passive observation only. */ }
     }, { once: true });
     return Reflect.apply(originalSend, this, args);
