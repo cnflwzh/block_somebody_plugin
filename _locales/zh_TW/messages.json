@@ -1746,5 +1746,53 @@
   },
   "variable_unseen_media": {
     "message": "是否含未讀取的媒體"
+  },
+  "ui_skip_following": {
+    "message": "略過已跟隨的帳號"
+  },
+  "ui_following_skipped": {
+    "message": "你已跟隨這個帳號，已略過分析與封鎖。"
+  },
+  "ui_following_unknown": {
+    "message": "目前無法確認跟隨狀態，已略過分析與封鎖。"
+  },
+  "ui_following_protected": {
+    "message": "已開啟跟隨保護：你已跟隨這個帳號，或目前無法確認跟隨狀態。"
+  },
+  "ui_debug_panel": {
+    "message": "除錯"
+  },
+  "ui_debug_exit": {
+    "message": "結束除錯"
+  },
+  "ui_debug_no_block": {
+    "message": "不向 X 送出封鎖請求"
+  },
+  "ui_debug_preview_only": {
+    "message": "僅預覽動畫"
+  },
+  "ui_debug_play": {
+    "message": "播放預覽"
+  },
+  "ui_debug_restore": {
+    "message": "還原預覽"
+  },
+  "ui_debug_updating": {
+    "message": "正在同步背景開關…"
+  },
+  "ui_debug_active": {
+    "message": "已停用封鎖 · 已模擬 $count$ 個帳號",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_debug_live": {
+    "message": "目前允許實際封鎖"
+  },
+  "ui_debug_hint": {
+    "message": "Jev 分析仍會計費。開啟後暫停既有封鎖佇列，關閉後繼續；模擬任務需重新啟動。已送出的請求無法撤回。"
   }
+
 }

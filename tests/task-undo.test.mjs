@@ -10,7 +10,7 @@ test("task rollback cancels pending work, handles a sent request, and stays scop
   const root = { id: "100000", handle: "author", text: "原帖", url: "https://x.com/author/status/100000" };
   const otherRoot = { ...root, id: "200000" };
   let nextUserId = 900000;
-  const row = (id, status, extra = {}) => ({ id, account: "viewer", root, target: { handle: id, userId: String(++nextUserId) }, status, owned: true, created: Date.now(), ...extra });
+  const row = (id, status, extra = {}) => ({ id, account: "viewer", root, target: { following: false, followingAccount: "viewer", followingAt: Date.now(), handle: id, userId: String(++nextUserId) }, status, owned: true, created: Date.now(), ...extra });
   const histories = [row("ready", "submitted"), row("waiting", "pending", { owned: false }), row("sending", "pending", { owned: false }),
     row("preexisting", "preexisting", { owned: false }), row("failed", "failed", { owned: false }),
     row("oldshared", "blocked", { target: { handle: "shared", userId: "999999" } }),

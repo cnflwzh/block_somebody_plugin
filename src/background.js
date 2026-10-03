@@ -37,7 +37,7 @@ function notify() {
 }
 async function snapshot(sender, accountValue) {
   const db = await read();
-  const settings = { ...db.settings, configured: !!(await key()) };
+  const settings = { ...db.settings, configured: !!(await key()), debugDryRun: !!db.debugDryRun };
   if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: db.history.slice().reverse(), sessions: Object.values(db.sessions), queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
   const s = db.sessions[sender.tab.id];
   const account = accountValue ? normalizeHandle(accountValue) : "";
@@ -62,14 +62,74 @@ function cancelSession(db, sessionId) {
 }
 function abortFlights(predicate) { for (const f of flights.values()) if (predicate(f)) f.controller.abort(); }
 
+/** Resolve only observations made under this acting account. Unknown is not "not followed".
+ * Session observations override older post snapshots, including results still in flight.
+ */
+function followingObservation(db, account, target) {
+  let latest = target.followingAccount === account && typeof target.following === "boolean" ? target : null;
+  for (const s of Object.values(db.sessions)) if (s.account === account) {
+    for (const key of [target.userId && `id:${target.userId}`, `handle:${target.handle}`].filter(Boolean)) {
+      const observed = s.following?.[key];
+      if (observed && (!target.userId || !observed.userId || target.userId === observed.userId)
+        && (!latest || observed.followingAt >= latest.followingAt)) latest = observed;
+    }
+  }
+  return latest;
+}
+function followingStatus(db, account, target) { return followingObservation(db, account, target)?.following ?? null; }
+function skipFollowing(db, account, target) { return db.settings.skipFollowing && followingStatus(db, account, target) !== false; }
+function protectedFollowingJob(db, job) {
+  const history = db.history.find(h => h.id === job.historyId);
+  return job.kind === "block" && history?.reason !== "author" && skipFollowing(db, job.account, job.target);
+}
+/** Cancel unsent comment blocks only. Already submitted requests cannot be recalled. */
+function cancelFollowingJobs(db) {
+  for (const j of db.jobs) if ((j.status === "pending" || j.status === "running" && !j.submitted) && protectedFollowingJob(db, j)) {
+    j.status = "cancelled";
+    const h = db.history.find(h => h.id === j.historyId);
+    if (h) { h.status = "cancelled"; h.updated = Date.now(); }
+  }
+}
+/** Remember bounded, account-scoped relationship evidence before classification/queue work. */
+function observeFollowing(db, session, posts) {
+  session.following ||= {};
+  for (const p of posts) {
+    if (p.followingAccount !== session.account || typeof p.following !== "boolean" || !p.followingAt) continue;
+    const key = p.userId ? `id:${p.userId}` : `handle:${p.handle}`;
+    const old = session.following[key];
+    if (old && old.followingAt > p.followingAt) continue;
+    const entry = { handle: p.handle, userId: p.userId, following: p.following, followingAt: p.followingAt };
+    session.following[key] = entry;
+    session.following[`handle:${p.handle}`] = entry;
+    if (old && old.following !== p.following) {
+      for (const s of Object.values(db.sessions)) if (s.account === session.account) {
+        for (const [id, result] of Object.entries(s.results)) if (result.handle === p.handle) delete s.results[id];
+        s.count = Object.keys(s.results).length;
+      }
+    }
+    // Carry new evidence into durable jobs even if this tab later starts another task.
+    for (const j of db.jobs) if (j.account === session.account && sameTarget(j.target, p)
+      && (!j.target.userId || !p.userId || j.target.userId === p.userId) && !j.submitted) {
+      if ((j.target.followingAt || 0) <= p.followingAt) Object.assign(j.target, { following: p.following, followingAccount: session.account, followingAt: p.followingAt });
+    }
+  }
+  const entries = Object.entries(session.following);
+  if (entries.length > 5000) session.following = Object.fromEntries(entries.sort((a, b) => b[1].followingAt - a[1].followingAt).slice(0, 5000));
+  cancelFollowingJobs(db);
+}
+
 /** Enqueue an explicit user choice or validated model decision; deduplicate by account identity. */
 function enqueueBlock(db, s, target, reply, decision, reason) {
+  // Dry-run decisions never become jobs or real block history, even after debugging ends.
+  if (db.debugDryRun) return null;
   const manual = reason === "manual";
-  if (isWhitelisted(db, target) || target.handle === s.account || (!manual && s.excluded.includes(target.handle))) return null;
+  if (isWhitelisted(db, target) || target.handle === s.account || (reply && skipFollowing(db, s.account, target)) || (!manual && s.excluded.includes(target.handle))) return null;
   const existing = db.history.findLast(h => h.account === s.account && sameTarget(h.target, target));
   if (existing && !["unblocked", "cancelled"].includes(existing.status)) return existing.id;
   if (db.history.length >= 5000) throw new Error(t("ui_history_has_reached_5_000_records_export_and_clear_completed"));
-  const h = { id: id(), account: s.account, target: { handle: target.handle, userId: target.userId || "", name: target.name }, root: { ...s.root, text: s.root.text.slice(0, 1500) },
+  const relation = followingObservation(db, s.account, target);
+  const h = { id: id(), account: s.account, target: { handle: target.handle, userId: target.userId || "", name: target.name,
+    following: relation?.following ?? null, followingAccount: s.account, followingAt: relation?.followingAt || 0 }, root: { ...s.root, text: s.root.text.slice(0, 1500) },
     reply: reply ? { ...reply, text: reply.text.slice(0, 1500) } : null, decision, reason, sessionId: s.id, status: "pending", created: Date.now(), updated: Date.now(), error: "", owned: false };
   db.history.push(h);
   db.jobs.push({ id: id(), historyId: h.id, kind: "block", account: s.account, actorId: s.actorId || "", origin: s.origin || "https://x.com", target: h.target, tabId: s.tabId, sessionId: s.id, manual, rootId: s.root.id, status: "pending", created: Date.now(), submitted: false });
@@ -122,7 +182,7 @@ async function classify(message, sender) {
     let s = sessionFor(db, tabId, message.sessionId, account);
     if (await currentPostId(sender) !== s.root.id || reply.id === s.root.id || reply.conversationId !== s.root.conversationId) throw new Error(t("ui_reply_does_not_belong_to_the_selected_conversation"));
     if (s.sortRequired && !s.pageReady) return { action: "skip", why: "waiting-first-page" };
-    if (reply.handle === account || reply.handle === s.root.handle || isWhitelisted(db, reply) || s.excluded.includes(reply.handle)) return { action: "skip" };
+    if (reply.handle === account || reply.handle === s.root.handle || isWhitelisted(db, reply) || skipFollowing(db, account, reply) || s.excluded.includes(reply.handle)) return { action: "skip" };
     if (db.modelError) throw new Error(db.modelError);
     if (!s.results[reply.id] && Object.keys(s.results).length >= 2000) throw new Error(t("ui_this_task_has_analyzed_2_000_replies_stop_and_start"));
     const ancestry = Array.isArray(message.ancestors) && message.ancestors.length <= 30 ? message.ancestors.map(sanitizePost) : [];
@@ -142,9 +202,9 @@ async function classify(message, sender) {
       // Rechecking policy must neither charge Jev nor bypass current whitelist/undo guards.
       return change(d => {
         const current = sessionFor(d, tabId, message.sessionId, account);
-        if (isWhitelisted(d, current.root) || isWhitelisted(d, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
+        if (isWhitelisted(d, current.root) || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
         if ((d.settings.analysisRevision || 0) !== revision) return { action: "skip", why: "config-changed" };
-        const result = decideAction(cached, d.settings, current.root, reply, parent);
+        const result = { ...decideAction(cached, d.settings, current.root, reply, parent), dryRun: !!d.debugDryRun, simulatedAt: d.debugDryRun ? Date.now() : 0, handle: reply.handle };
         if (result.action === "block") result.historyId = enqueueBlock(d, current, reply, reply, result, "supporter");
         // Preserve rubric text in durable block history, not in every transient session score.
         const { labelDescription, ...score } = result;
@@ -157,7 +217,7 @@ async function classify(message, sender) {
     const apiKey = await key();
     // Recheck after every await immediately before external transmission.
     db = await read(); s = sessionFor(db, tabId, message.sessionId, account);
-    if (isWhitelisted(db, s.root) || isWhitelisted(db, reply) || ancestry.some(p => isWhitelisted(db, p)) || s.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
+    if (isWhitelisted(db, s.root) || isWhitelisted(db, reply) || skipFollowing(db, account, reply) || ancestry.some(p => isWhitelisted(db, p)) || s.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
     if ((db.settings.analysisRevision || 0) !== revision) return { action: "skip", why: "config-changed" };
     let result;
     let payload;
@@ -169,7 +229,7 @@ async function classify(message, sender) {
       if (e.code === "JEV_INVALID_ANSWER" && !controller.signal.aborted) {
         return change(d => {
           const current = sessionFor(d, tabId, message.sessionId, account);
-          if (controller.signal.aborted || (d.settings.analysisRevision || 0) !== revision || isWhitelisted(d, reply) || current.excluded.includes(reply.handle)) return { action: "skip", why: "config-changed" };
+          if (controller.signal.aborted || (d.settings.analysisRevision || 0) !== revision || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || current.excluded.includes(reply.handle)) return { action: "skip", why: "config-changed" };
           // No probability is invented, no action enqueued, and no bad answer enters the shared cache.
           // Persist a per-comment failure to prevent repeated charges on refresh in this task.
           const result = { action: "keep", label: "uncertain", support: null, confidence: null, error: e.message,
@@ -184,10 +244,10 @@ async function classify(message, sender) {
     }
     return await change(d => {
       const current = sessionFor(d, tabId, message.sessionId, account);
-      if (isWhitelisted(d, current.root) || isWhitelisted(d, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
+      if (isWhitelisted(d, current.root) || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
       // A cached model answer must still pass today's thresholds and account protections.
       if ((d.settings.analysisRevision || 0) !== revision) return { action: "skip", why: "config-changed" };
-      result = parseDecision(payload, d.settings, current.root, reply, parent);
+      result = { ...parseDecision(payload, d.settings, current.root, reply, parent), dryRun: !!d.debugDryRun, simulatedAt: d.debugDryRun ? Date.now() : 0 };
       if (result.action === "block") result.historyId = enqueueBlock(d, current, reply, reply, result, "supporter");
       if (!current.results[reply.id]) current.count++;
       const { labelDescription, ...score } = result;
@@ -248,9 +308,9 @@ async function drain() {
     let db = await read();
     if (Date.now() < db.nextActionAt) return;
     const job = db.jobs.find(j => j.status === "pending" && j.kind === "unblock")
-      || db.jobs.find(j => j.status === "pending" && j.kind === "block" && !db.queueError && !db.settings.paused);
+      || db.jobs.find(j => j.status === "pending" && j.kind === "block" && !db.queueError && !db.settings.paused && !db.debugDryRun);
     if (!job) return;
-    if (job.kind === "block" && isWhitelisted(db, job.target)) {
+    if (job.kind === "block" && (isWhitelisted(db, job.target) || protectedFollowingJob(db, job))) {
       await change(d => { const j = d.jobs.find(x => x.id === job.id); j.status = "cancelled"; const h = d.history.find(x => x.id === j.historyId); if (h) h.status = "cancelled"; });
       notify(); return;
     }
@@ -287,11 +347,11 @@ async function drain() {
       const allowed = await change(d => {
         const j = d.jobs.find(j => j.id === job.id);
         if (!j || j.status !== "running" || j.submitted) return false;
-        if (isWhitelisted(d, j.target)) {
+        if (isWhitelisted(d, j.target) || protectedFollowingJob(d, j)) {
           j.status = "cancelled"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "cancelled";
           return false;
         }
-        if (d.settings.paused || d.queueError) {
+        if (d.settings.paused || d.queueError || d.debugDryRun) {
           j.status = "pending"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "pending";
           return false;
         }
@@ -336,7 +396,7 @@ async function drain() {
       // Hold the mutex through this read: another wakeup must not install a second timer.
       // Alarms recover after worker suspension; the timer only improves foreground latency.
       const db = await read();
-      if (db.jobs.some(j => j.status === "pending" && (j.kind === "unblock" || !db.settings.paused && !db.queueError))) {
+      if (db.jobs.some(j => j.status === "pending" && (j.kind === "unblock" || !db.settings.paused && !db.queueError && !db.debugDryRun))) {
         drainTimer = setTimeout(() => void drain(), db.queueNotice ? 30000 : Math.min(30000, Math.max(2500, db.nextActionAt - Date.now())));
         // Node's mocked worker should exit naturally; Chrome returns a numeric timer handle.
         drainTimer.unref?.();
@@ -352,11 +412,30 @@ async function handle(message, sender) {
   if (sender.id !== chrome.runtime.id || (!ui && !web)) throw new Error(t("ui_invalid_request_source"));
   const type = message?.type;
   if (type === "SNAPSHOT") return snapshot(sender, message.account);
+  if (type === "DEBUG_DRY_RUN") {
+    if (!web || typeof message.enabled !== "boolean") throw new Error(t("ui_invalid_request_source"));
+    await change(d => {
+      if (!!d.debugDryRun === message.enabled) return;
+      d.debugDryRun = message.enabled;
+      for (const s of Object.values(d.sessions)) {
+        // Do not turn a simulated result into a real action when the guard is removed.
+        if (!message.enabled && s.dryRun) { s.active = false; s.stopped = true; }
+        s.dryRun = message.enabled; s.results = {}; s.count = 0;
+      }
+    });
+    abortFlights(() => true);
+    notify(); void drain(); return { enabled: !!(await read()).debugDryRun };
+  }
   if (type === "THREAD_CONTEXT") {
     if (!web || !Array.isArray(message.posts) || message.posts.length > 40 || !Array.isArray(message.missingIds) || message.missingIds.length > 40) throw new Error(t("ui_invalid_context_request"));
     const account = normalizeHandle(message.account), db = await read(), s = db.sessions[sender.tab.id];
     if (!s || s.id !== message.sessionId || s.account !== account || s.stopped || await currentPostId(sender) !== s.root.id) throw new Error(t("ui_thread_task_changed"));
     const posts = message.posts.map(sanitizePost).filter(p => p.conversationId === s.root.conversationId && !isWhitelisted(db, p));
+    await change(d => {
+      const current = d.sessions[sender.tab.id];
+      if (current?.id === s.id && current.account === account && !current.stopped) observeFollowing(d, current, posts);
+    });
+    notify();
     const written = new Set(posts.map(p => p.id));
     const ids = [...new Set(message.missingIds.map(numericId).filter(id => id && !written.has(id)))];
     const result = await syncThreadContext(account, s.root.id, posts, ids);
@@ -445,10 +524,11 @@ async function handle(message, sender) {
     await change(d => {
       const next = updateSettings(d.settings, message.value || {});
       if (["endpoint", "model", "customPrompt"].some(k => next[k] !== d.settings[k])) throw new Error(t("ui_save_connection_details_in_model_settings"));
-      if (["high", "confidence"].some(key => next[key] !== d.settings[key])) {
+      if (["high", "confidence", "skipFollowing"].some(key => next[key] !== d.settings[key])) {
         for (const s of Object.values(d.sessions)) { s.results = {}; s.count = 0; }
       }
       d.settings = next;
+      cancelFollowingJobs(d);
     });
     void cleanJevCache((await read()).settings.cacheLimit).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
     if (message.value?.paused) abortFlights(() => true);
@@ -487,7 +567,7 @@ async function handle(message, sender) {
       if (root.handle === account) throw new Error(t("ui_you_cannot_block_yourself_2"));
       if (isWhitelisted(d, root)) throw new Error(t("ui_the_original_author_is_allowlisted_remove_them_before_starting"));
       // Selecting a different post changes analysis scope, not previously queued block jobs.
-      const s = { id: id(), tabId: sender.tab.id, account, ...binding, root, active: false, paused: false, stopped: false, sortRequired: true, pageReady: false, autoLoad: false, authorQueued: false, results: {}, excluded: [], count: 0, created: Date.now() };
+      const s = { id: id(), tabId: sender.tab.id, account, ...binding, root, dryRun: !!d.debugDryRun, active: false, paused: false, stopped: false, sortRequired: true, pageReady: false, autoLoad: false, authorQueued: false, results: {}, excluded: [], count: 0, created: Date.now() };
       d.sessions[sender.tab.id] = s; return s;
     }); notify(); return session;
   }
@@ -507,6 +587,7 @@ async function handle(message, sender) {
       }
       if (s.active && !s.authorQueued && !s.paused && !d.settings.paused && !isWhitelisted(d, s.root)) {
         enqueueBlock(d, s, s.root, null, null, "author"); s.authorQueued = true;
+        if (d.debugDryRun) s.authorSimulatedAt = Date.now();
       }
       return { sessionId: s.id, onThread: s.onThread, pageReady: s.pageReady, active: s.active };
     });
@@ -539,10 +620,17 @@ async function handle(message, sender) {
     if (!isWhitelisted(before, reply) && reply.conversationId === root.conversationId) await syncThreadContext(account, root.id, [reply], []);
     const result = await change(d => {
       if (reply.handle === account) throw new Error(t("ui_you_cannot_block_yourself_2"));
+      if (skipFollowing(d, account, reply)) throw new Error(t("ui_following_protected"));
       if (isWhitelisted(d, reply)) throw new Error(t("ui_this_user_is_allowlisted_remove_them_first"));
       if (d.queueError) throw new Error(t("ui_block_queue_needs_attention_open_the_trash_to_review"));
       const current = d.sessions[sender.tab.id];
       const s = current?.account === account && current.root.id === root.id ? { ...current, ...binding } : { id: id(), account, ...binding, tabId: sender.tab.id, root, excluded: [], results: {} };
+      if (d.debugDryRun) {
+        if (!current || current.stopped || current.account !== account || current.root.id !== root.id) throw new Error(t("ui_thread_changed_try_again"));
+        current.dryRun = true;
+        current.results[reply.id] = { ...(current.results[reply.id] || {}), action: "block", dryRun: true, simulatedAt: Date.now(), handle: reply.handle, historyId: null };
+        return { id: null, status: "simulated" };
+      }
       const historyId = enqueueBlock(d, s, reply, reply, s.results[reply.id] || null, "manual");
       const h = d.history.find(h => h.id === historyId);
       return { id: historyId, status: h.status };
@@ -571,6 +659,7 @@ async function handle(message, sender) {
       const j = d.jobs.find(j => j.historyId === message.id && j.status === "failed"); if (!j) throw new Error(t("ui_verify_unknown_results_before_retrying"));
       const record = d.history.find(h => h.id === j.historyId);
       if (j.kind === "block" && record?.taskWithdrawn) throw new Error(t("ui_this_task_was_undone_start_again_from_the_original_post"));
+      if (protectedFollowingJob(d, j)) throw new Error(t("ui_following_protected"));
       if (j.kind === "block" && isWhitelisted(d, j.target)) throw new Error(t("ui_this_user_is_already_allowlisted"));
       j.status = "pending"; j.submitted = false;
       const h = d.history.find(h => h.id === j.historyId); h.status = j.kind === "block" ? "pending" : "undo_pending"; h.error = "";

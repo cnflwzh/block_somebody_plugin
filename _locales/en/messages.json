@@ -1746,5 +1746,53 @@
   },
   "variable_unseen_media": {
     "message": "Contains unread media?"
+  },
+  "ui_skip_following": {
+    "message": "Skip accounts you follow"
+  },
+  "ui_following_skipped": {
+    "message": "You follow this account. Analysis and blocking are skipped."
+  },
+  "ui_following_unknown": {
+    "message": "Follow status unavailable. Analysis and blocking are skipped for now."
+  },
+  "ui_following_protected": {
+    "message": "Followed-account protection is on. This account is followed or its follow status is unavailable."
+  },
+  "ui_debug_panel": {
+    "message": "Debug"
+  },
+  "ui_debug_exit": {
+    "message": "Exit debug"
+  },
+  "ui_debug_no_block": {
+    "message": "Do not send blocks to X"
+  },
+  "ui_debug_preview_only": {
+    "message": "Animation preview only"
+  },
+  "ui_debug_play": {
+    "message": "Play preview"
+  },
+  "ui_debug_restore": {
+    "message": "Restore previews"
+  },
+  "ui_debug_updating": {
+    "message": "Updating background guard…"
+  },
+  "ui_debug_active": {
+    "message": "Blocking disabled · $count$ simulated accounts",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_debug_live": {
+    "message": "Blocking is enabled"
+  },
+  "ui_debug_hint": {
+    "message": "Jev analysis still uses credits. Existing block jobs wait while this switch is on; turning it off resumes them. Restart the tweet task to leave simulation. Requests already sent cannot be recalled."
   }
+
 }

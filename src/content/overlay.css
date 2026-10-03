@@ -6,3 +6,7 @@
 :host(:lang(zh-TW)){font-family:system-ui,-apple-system,"Microsoft JhengHei",sans-serif}
 :host(:lang(ja)){font-family:system-ui,-apple-system,"Yu Gothic UI",Meiryo,sans-serif}
 :host(:lang(ko)){font-family:system-ui,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+
+/* Console-enabled controls live outside X's virtualized timeline and never change its height. */
+.debug-panel{position:fixed;left:20px;bottom:20px;z-index:2147483644;width:min(320px,calc(100vw - 40px));max-height:calc(100vh - 40px);overflow:auto;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--bg);color:var(--ink);box-shadow:0 8px 32px #0003;font-size:13px;line-height:1.5}
+.debug-heading,.debug-toggle,.debug-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.debug-heading{margin-bottom:12px}.debug-heading strong{font-size:15px}.debug-toggle{padding:8px 0}.debug-toggle input{width:18px;height:18px;accent-color:var(--blue)}.debug-panel button,.debug-panel select{border:1px solid var(--border);border-radius:8px;padding:5px 9px;background:var(--bg);color:var(--ink);font:inherit}.debug-panel button:hover{border-color:var(--blue)}.debug-panel button:disabled{opacity:.5;cursor:default}.debug-actions{justify-content:flex-start;margin-top:8px}.debug-status{margin:12px 0 0;color:var(--blue);font-weight:600}.debug-hint{margin:8px 0 0;font-size:11px;color:var(--muted)}

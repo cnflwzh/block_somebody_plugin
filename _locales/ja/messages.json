@@ -1746,5 +1746,53 @@
   },
   "variable_unseen_media": {
     "message": "未読のメディアを含むか"
+  },
+  "ui_skip_following": {
+    "message": "フォロー中のアカウントを除外"
+  },
+  "ui_following_skipped": {
+    "message": "フォロー中のため、分析・ブロックの対象から除外しています。"
+  },
+  "ui_following_unknown": {
+    "message": "フォロー状態を確認できないため、分析・ブロックを見送っています。"
+  },
+  "ui_following_protected": {
+    "message": "フォロー保護が有効です。このアカウントはフォロー中か、フォロー状態を確認できません。"
+  },
+  "ui_debug_panel": {
+    "message": "デバッグ"
+  },
+  "ui_debug_exit": {
+    "message": "デバッグ終了"
+  },
+  "ui_debug_no_block": {
+    "message": "X にブロックを送信しない"
+  },
+  "ui_debug_preview_only": {
+    "message": "アニメーションのみプレビュー"
+  },
+  "ui_debug_play": {
+    "message": "プレビュー再生"
+  },
+  "ui_debug_restore": {
+    "message": "表示を元に戻す"
+  },
+  "ui_debug_updating": {
+    "message": "バックグラウンド設定を更新中…"
+  },
+  "ui_debug_active": {
+    "message": "ブロック無効 · $count$ アカウントをシミュレーション",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_debug_live": {
+    "message": "実際のブロックが有効です"
+  },
+  "ui_debug_hint": {
+    "message": "Jev の分析は引き続き課金対象です。有効中は既存のブロック処理も待機し、無効にすると再開します。シミュレーションを終えるには投稿のタスクを開始し直してください。送信済みのリクエストは取り消せません。"
   }
+
 }

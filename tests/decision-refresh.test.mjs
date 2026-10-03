@@ -7,7 +7,7 @@ import { requestKey } from "../src/lib/jev-cache.js";
 // Core policy migration: an existing high score must enqueue without a second model call.
 test("saved media-vetoed score is re-evaluated once without Jev or duplicate jobs", async () => {
   const root = { id: "100000", handle: "author", text: "持续学习输出", conversationId: "100000", parentId: "", hasMedia: true, incomplete: false };
-  const reply = { id: "100001", handle: "reader", text: "坚持坚持再坚持", conversationId: root.id, parentId: root.id, hasMedia: false, incomplete: false };
+  const reply = { following: false, followingAccount: "viewer", followingAt: Date.now(), id: "100001", handle: "reader", text: "坚持坚持再坚持", conversationId: root.id, parentId: root.id, hasMedia: false, incomplete: false };
   const settings = { ...DEFAULTS, high: .87, confidence: .72 };
   const digest = await requestKey(buildRequest(root, reply, null, settings.model));
   const session = { id: "saved-task", tabId: 1, account: "viewer", root, active: true, pageReady: true, sortRequired: true, paused: false, excluded: [], count: 1, results: {

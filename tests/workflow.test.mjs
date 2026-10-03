@@ -56,7 +56,7 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
   try {
     await import("../src/background.js");
     const root = { id: "100000", conversationId: "100000", parentId: "", handle: "author", userId: "900000", text: "原帖观点" };
-    const reply = { id: "100001", conversationId: "100000", parentId: "100000", handle: "supporter", userId: "900001", text: "明确支持原帖" };
+    const reply = { following: false, followingAccount: "viewer", followingAt: Date.now(), id: "100001", conversationId: "100000", parentId: "100000", handle: "supporter", userId: "900001", text: "明确支持原帖" };
     let session;
     await t.test("explicit activation queues the author once", async () => {
       session = await rpc("ARM", { root, account: "viewer" });
@@ -115,6 +115,16 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       assert.equal((await rpc("CLASSIFY", { sessionId: session.id, account: "viewer", reply: invalidReply, ancestors: [] })).error, result.error);
       assert.equal(sentJev, beforeCalls + 1);
     });
+    await t.test("followed and unknown accounts are skipped before Jev or manual blocks", async () => {
+      const beforeCalls = sentJev, beforeJobs = data.state.jobs.length;
+      assert.equal(data.state.settings.skipFollowing, true);
+      for (const following of [true, null]) {
+        const protectedReply = { ...reply, id: "100080", handle: "following", userId: "900080", following };
+        assert.equal((await rpc("CLASSIFY", { sessionId: session.id, account: "viewer", reply: protectedReply, ancestors: [] })).action, "skip");
+        await assert.rejects(rpc("MANUAL_BLOCK", { root, reply: protectedReply, account: "viewer" }), /关注/);
+      }
+      assert.equal(sentJev, beforeCalls); assert.equal(data.state.jobs.length, beforeJobs);
+    });
     await t.test("whitelisted reply is never sent to Jev", async () => {
       const beforeCalls = sentJev;
       await rpc("WHITELIST_ADD", { handle: reply.handle });
@@ -165,6 +175,48 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       assert.equal(JSON.stringify(output).includes(data.jevKey), false);
       assert.equal("jobs" in output, false);
       assert.equal(JSON.stringify(output).includes("fixture-csrf"), false);
+    });
+    await t.test("new following evidence cancels unsent blocks and protects stale analysis inputs", async () => {
+      const target = { ...reply, id: "100081", handle: "newfollow", userId: "900081", followingAt: now };
+      await rpc("MANUAL_BLOCK", { root, reply: target, account: "viewer" });
+      const beforeCalls = sentJev;
+      now += 1;
+      await rpc("THREAD_CONTEXT", { sessionId: session.id, account: "viewer", posts: [{ ...target, following: true, followingAt: now }], missingIds: [] });
+      assert.equal(data.state.history.find(h => h.target.handle === target.handle).status, "cancelled");
+      assert.equal((await rpc("CLASSIFY", { sessionId: session.id, account: "viewer", reply: target, ancestors: [] })).action, "skip");
+      assert.equal(sentJev, beforeCalls);
+    });
+    await t.test("dry run keeps classification but never queues simulated blocks, and holds older jobs", async () => {
+      const held = { ...reply, id: "100082", handle: "heldjob", userId: "900082" };
+      await rpc("MANUAL_BLOCK", { root, reply: held, account: "viewer" });
+      const beforeSubmitted = submitted, beforeJobs = data.state.jobs.length, beforeHistory = data.state.history.length;
+      await rpc("DEBUG_DRY_RUN", { enabled: true });
+      now += 5000; alarm({ name: "blocksb-queue" });
+      await new Promise(r => setTimeout(r, 20));
+      assert.equal(submitted, beforeSubmitted);
+      assert.equal(data.state.history.find(h => h.target.handle === held.handle).status, "pending");
+      const simulated = { ...reply, id: "100083", handle: "simulation", userId: "900083", text: "模拟流程的明确支持样本", following: true };
+      const request = { sessionId: session.id, account: "viewer", reply: simulated, ancestors: [] };
+      assert.equal((await rpc("CLASSIFY", request)).action, "skip", "debug must preserve follow protection");
+      await rpc("SAVE_SETTINGS", { value: { skipFollowing: false } }, ui);
+      const calls = sentJev;
+      const result = await rpc("CLASSIFY", request);
+      assert.equal(result.action, "block"); assert.equal(result.dryRun, true); assert.equal(result.historyId, null);
+      assert.equal(sentJev, calls + 1, "dry run must still call Jev");
+      assert.equal((await rpc("MANUAL_BLOCK", { root, reply: simulated, account: "viewer" })).status, "simulated");
+      assert.equal(data.state.jobs.length, beforeJobs); assert.equal(data.state.history.length, beforeHistory);
+      assert.equal(submitted, beforeSubmitted);
+      await rpc("SAVE_SETTINGS", { value: { skipFollowing: true } }, ui);
+      await rpc("DEBUG_DRY_RUN", { enabled: false });
+      assert.equal(data.state.sessions[1].stopped, true);
+      assert.deepEqual(data.state.sessions[1].results, {});
+      await assert.rejects(rpc("CLASSIFY", request));
+      // A concurrent drain may finish after the toggle; the periodic alarm resumes durable jobs.
+      await new Promise(r => setTimeout(r, 20)); alarm({ name: "blocksb-queue" });
+      await flush(() => data.state.history.find(h => h.target.handle === held.handle).status === "submitted");
+      assert.equal(submitted, beforeSubmitted + 1, "only the older real job resumes");
+      session = await rpc("ARM", { root, account: "viewer" });
+      await rpc("LOCATION", { root, account: "viewer", postId: root.id, pageReady: true, sort: "recent" });
     });
     await t.test("queued blocks survive navigation and tab closure, retain spacing, and wait for the right account", async () => {
       const first = { ...reply, id: "100006", userId: "900006", handle: "queuedone" };

@@ -7,7 +7,11 @@
   const maskState = new WeakMap(), revealedMasks = new Set();
   const timelineState = new Map();
   const whiteHandles = new Set(), whiteIds = new Set(), historyHandles = new Map(), historyIds = new Map();
+  const followingUsers = new Map();
+  let followingAccount = "";
   const movingRows = new Set(), played = new Set(), reportedFailures = new Set(), debugRows = new Map();
+  const simulatedHandles = new Map();
+  let debugVisible = false, debugBusy = false;
   let animationDebug = false, debugEffect = "fly", debugRoute = "", anchorUsers = 0, anchorStyle;
   let pageReady = false, sortFlow = null, loadNote = "", lastSortNote = "", autoAt = 0, loadWait = null, autoStopping = false;
   const openedSpam = new WeakSet();
@@ -19,6 +23,16 @@
   const featureEnabled = () => !!(state?.session && !state.session.stopped && state.session.account === viewer());
   const threadEnabled = () => featureEnabled() && route() === state.session.root.id;
   const white = p => whiteHandles.has(p.handle) || !!(p.userId && whiteIds.has(p.userId));
+  function followingStatus(p) {
+    const account = viewer();
+    let latest = p.followingAccount === account && typeof p.following === "boolean" ? p : null;
+    const keys = [p.userId && `id:${p.userId}`, `handle:${p.handle}`].filter(Boolean);
+    for (const key of keys) for (const entry of [followingAccount === account && followingUsers.get(key), state?.session?.account === account && state.session.following?.[key]]) {
+      if (entry && (!p.userId || !entry.userId || p.userId === entry.userId) && (!latest || entry.followingAt >= latest.followingAt)) latest = entry;
+    }
+    return latest?.following ?? null;
+  }
+  const skipFollowing = p => state?.settings.skipFollowing && followingStatus(p) !== false;
   const hasDecision = p => {
     const result = state?.session?.results[p.id];
     return result && (result.error || !state.decisionVersion || result.decisionVersion === state.decisionVersion);
@@ -26,11 +40,19 @@
   // Read the latest account relationship (including undo), but scope DOM hiding separately to its task.
   const historyFor = (p, account = viewer()) => {
     if (!state || state.account !== account) return null;
+    if (state.settings.debugDryRun && threadEnabled() && simulatedHandles.has(p.handle)) return simulatedHandles.get(p.handle);
     const handle = historyHandles.get(p.handle), id = p.userId && historyIds.get(p.userId);
     return (id && (!handle || id.order > handle.order) ? id : handle)?.entry;
   };
   /** Rebuild once per snapshot, not once per comment. Preserve findLast ordering even after renames. */
   function indexSnapshot() {
+    simulatedHandles.clear();
+    if (state.session?.dryRun && state.session.authorSimulatedAt) simulatedHandles.set(state.session.root.handle,
+      { id: `debug:${state.session.id}:author`, status: "blocked", rootId: state.session.root.id, updated: state.session.authorSimulatedAt });
+    if (state.session?.dryRun) for (const [postId, result] of Object.entries(state.session.results)) {
+      if (result.dryRun && result.action === "block" && result.handle) simulatedHandles.set(result.handle,
+        { id: `debug:${state.session.id}:${postId}`, status: "blocked", rootId: state.session.root.id, updated: result.simulatedAt || Date.now() });
+    }
     whiteHandles.clear(); whiteIds.clear(); historyHandles.clear(); historyIds.clear();
     for (const w of state.whitelist) { whiteHandles.add(w.handle); if (w.userId) whiteIds.add(w.userId); }
     state.history.forEach((entry, order) => {
@@ -42,7 +64,7 @@
   const isBlocked = h => h && ["submitted", "blocked", "preexisting", "undo_pending", "undo_running", "undo_failed"].includes(h.status);
   const send = async (type, payload = {}) => {
     // Console preview is local only, including clicks on the normal controls while it is enabled.
-    if (animationDebug && ["ARM", "CLASSIFY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
+    if ((animationDebug || debugBusy) && ["ARM", "CLASSIFY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
     const r = await chrome.runtime.sendMessage({ type, ...payload });
     if (!r?.ok) throw new Error(r?.error || t("ui_extension_disconnected_refresh_this_page"));
     return r.data;
@@ -56,7 +78,7 @@
       parentId: post.parentId || previous.parentId, text: keepText ? previous.text : post.text,
       incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia };
   }
-  const sameContext = (a, b) => a && ["handle", "userId", "conversationId", "parentId", "text", "incomplete", "hasMedia"].every(key => a[key] === b[key]);
+  const sameContext = (a, b) => a && ["handle", "userId", "conversationId", "parentId", "text", "incomplete", "hasMedia", "following", "followingAccount", "followingAt"].every(key => a[key] === b[key]);
   const contextFor = id => {
     const live = metadata.get(id), cached = contextPosts.get(id);
     return live ? mergeContext(cached, live) : cached;
@@ -150,6 +172,74 @@
   const probabilityDetails = new WeakMap();
   let probabilityAnchor = null, probabilityHideTimer, probabilitySignature = "";
   shadow.append(trash, status, backdrop, drawer, toastEl, probabilityPanel); document.body.append(host);
+  const debugPanel = element("section", "debug-panel"); debugPanel.hidden = true;
+  debugPanel.setAttribute("aria-label", t("ui_debug_panel"));
+  const debugHeading = element("div", "debug-heading");
+  const debugExit = button(t("ui_debug_exit"), async event => {
+    if (!event.isTrusted || debugBusy) return;
+    if (state?.settings.debugDryRun && !await setDebugDryRun(false)) return;
+    resetDebugPreview(); animationDebug = false; debugVisible = false; updateOverlay(); schedule();
+  });
+  debugHeading.append(element("strong", "", t("ui_debug_panel")), debugExit);
+  const debugToggle = (key, change) => {
+    const label = element("label", "debug-toggle"), input = element("input"); input.type = "checkbox"; input.setAttribute("role", "switch");
+    label.append(element("span", "", t(key)), input);
+    input.addEventListener("change", event => { if (event.isTrusted) change(input.checked); else renderDebugPanel(); });
+    return { label, input };
+  };
+  const dryToggle = debugToggle("ui_debug_no_block", value => void setDebugDryRun(value));
+  const previewToggle = debugToggle("ui_debug_preview_only", value => {
+    resetDebugPreview(); animationDebug = value; debugRoute = route(); renderDebugPanel(); schedule();
+  });
+  const effectLabel = element("label", "debug-toggle", t("ui_animation_style")), debugSelect = element("select");
+  for (const [value, key] of [["fly", "ui_fly_to_trash"], ["particles", "ui_particle_dissolve"]]) {
+    const option = element("option", "", t(key)); option.value = value; debugSelect.append(option);
+  }
+  debugSelect.onchange = () => { debugEffect = debugSelect.value; };
+  effectLabel.append(debugSelect);
+  const debugActions = element("div", "debug-actions");
+  const debugPlay = button(t("ui_debug_play"), () => playDebugPreview());
+  const debugReset = button(t("ui_debug_restore"), () => { resetDebugPreview(); updateOverlay(); schedule(); });
+  debugActions.append(debugPlay, debugReset);
+  const debugStatus = element("p", "debug-status"); debugStatus.setAttribute("role", "status");
+  debugPanel.append(debugHeading, dryToggle.label, previewToggle.label, effectLabel, debugActions, debugStatus, element("p", "debug-hint", t("ui_debug_hint")));
+  shadow.append(debugPanel);
+  function renderDebugPanel() {
+    // A persisted guard stays visible after refresh or in another X tab; hiding it must not
+    // silently resume real block jobs. Console/page messages can enable, never remove it.
+    debugPanel.hidden = !debugVisible && !state?.settings.debugDryRun;
+    dryToggle.input.checked = !!state?.settings.debugDryRun;
+    previewToggle.input.checked = animationDebug;
+    debugSelect.value = debugEffect;
+    debugExit.disabled = dryToggle.input.disabled = previewToggle.input.disabled = debugBusy;
+    debugPlay.disabled = debugReset.disabled = !animationDebug || debugBusy;
+    debugStatus.textContent = debugBusy ? t("ui_debug_updating") : state?.settings.debugDryRun ? t("ui_debug_active", simulatedHandles.size) : t("ui_debug_live");
+  }
+  async function setDebugDryRun(enabled) {
+    if (debugBusy) return false;
+    debugBusy = true; renderDebugPanel();
+    try {
+      const ack = await send("DEBUG_DRY_RUN", { enabled });
+      if (state) state.settings.debugDryRun = ack.enabled;
+      skipped.clear(); await refresh(); return true;
+    } catch (error) { toast(error.message); return false; }
+    finally { debugBusy = false; renderDebugPanel(); schedule(); }
+  }
+  function resetDebugPreview() {
+    debugRows.clear();
+    for (const article of movingRows) if (rowState.get(article)?.debug) restore(article);
+  }
+  function playDebugPreview(postId = "") {
+    if (!animationDebug || !route() || debugBusy) return;
+    const article = articles().find(article => {
+      const p = readPost(article), r = article.getBoundingClientRect();
+      return p && p.id !== route() && !white(p) && p.handle !== viewer() && !rowState.has(article)
+        && (postId ? p.id === postId : r.bottom > 0 && r.top < innerHeight);
+    });
+    const post = article && readPost(article);
+    if (post) { debugRows.set(post.id, post.handle); updateOverlay(); removeCard(article, post, true, true); }
+    else toast(t("ui_block_s_b_no_reply_to_preview_scroll_to_the"));
+  }
   const probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const probabilityPercent = value => `${probabilityFormat.format(value * 100)}%`;
   function hideProbabilityPanel() {
@@ -256,21 +346,14 @@
   window.addEventListener("message", e => {
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:animation-debug:v1") {
       const { command, postId } = e.data;
-      if (command === "enable") { animationDebug = true; debugEffect = e.data.effect === "particles" ? "particles" : "fly"; debugRoute = route(); }
-      else if (command === "reset" || command === "disable") {
-        debugRows.clear();
-        for (const article of movingRows) if (rowState.get(article)?.debug) restore(article);
-        if (command === "disable") animationDebug = false;
-      } else if (command === "play" && animationDebug && route()) {
-        const candidates = articles().filter(article => {
-          const p = readPost(article), r = article.getBoundingClientRect();
-          return p && p.id !== route() && !white(p) && p.handle !== viewer() && !rowState.has(article)
-            && (postId ? p.id === postId : r.bottom > 0 && r.top < innerHeight);
-        });
-        const article = candidates[0], post = article && readPost(article);
-        if (post) { debugRows.set(post.id, post.handle); updateOverlay(); removeCard(article, post, true, true); }
-        else console.info(t("ui_block_s_b_no_reply_to_preview_scroll_to_the"));
-      }
+      if (command === "enable") {
+        debugVisible = true; animationDebug = e.data.preview === true;
+        debugEffect = e.data.effect === "particles" ? "particles" : "fly"; debugRoute = route();
+        void setDebugDryRun(true);
+      } else if (command === "reset" || command === "disable") {
+        resetDebugPreview();
+        if (command === "disable") { animationDebug = false; debugVisible = false; }
+      } else if (command === "play") playDebugPreview(postId);
       updateOverlay(); schedule(); return;
     }
     if (e.source === iframe.contentWindow && e.origin === new URL(chrome.runtime.getURL("/")).origin && e.data?.type === "blocksb:close") closeDrawer();
@@ -283,16 +366,28 @@
       schedule(); return;
     }
     if (e.source !== window || e.origin !== location.origin || e.data?.channel !== "blocksb:metadata:v1" || !Array.isArray(e.data.posts)) return;
+    if (followingAccount !== viewer()) { followingUsers.clear(); followingAccount = viewer(); }
     for (const p of e.data.posts.slice(0, 40)) {
       if (!p || !/^\d{5,25}$/.test(p.id) || !/^[a-z0-9_]{1,15}$/.test(p.handle)) continue;
       const previous = metadata.get(p.id);
       const observedAt = Number.isFinite(e.data.observedAt) ? Math.min(Date.now(), e.data.observedAt) : 0;
+      const relation = { following: typeof p.following === "boolean" ? p.following : null,
+        followingAccount: p.followingAccount === followingAccount ? followingAccount : "",
+        followingAt: Number.isFinite(p.followingAt) ? Math.max(0, Math.min(Date.now(), p.followingAt)) : 0 };
+      if (relation.followingAccount && typeof relation.following === "boolean" && relation.followingAt) {
+        for (const key of [p.userId && `id:${p.userId}`, `handle:${p.handle}`].filter(Boolean)) {
+          if ((followingUsers.get(key)?.followingAt || 0) <= relation.followingAt) followingUsers.set(key, { ...relation, userId: p.userId });
+        }
+        skipped.delete(`${state?.session?.id}:${p.id}`);
+      }
       metadata.set(p.id, mergeContext(previous, { id: p.id, handle: p.handle, userId: /^\d{5,25}$/.test(p.userId) ? p.userId : "", name: String(p.name || p.handle).slice(0, 80),
+        ...relation,
         text: String(p.text || "").slice(0, 14000), conversationId: String(p.conversationId || ""), parentId: String(p.parentId || ""), hasMedia: !!p.hasMedia, incomplete: !!p.incomplete,
         domSeen: e.data.source === "dom" || !!previous?.domSeen,
         networkAt: e.data.source === "network" ? Math.max(previous?.networkAt || 0, observedAt) : previous?.networkAt || 0 }));
     }
     while (metadata.size > 2500) metadata.delete(metadata.keys().next().value);
+    while (followingUsers.size > 5000) followingUsers.delete(followingUsers.keys().next().value);
     contextRevision++;
     schedule();
   });
@@ -417,7 +512,7 @@
   function maskCard(article, post, decision) {
     const key = `${state.session?.id}:${post.id}`;
     const eligible = threadEnabled() && pageReady && state.settings.maskEnabled && post.id !== route()
-      && post.handle !== viewer() && !white(post) && !state.session.excluded.includes(post.handle)
+      && post.handle !== viewer() && !white(post) && !skipFollowing(post) && !state.session.excluded.includes(post.handle)
       && Number.isFinite(decision?.support) && (decision.customRule ? decision.matched : !["oppose", "neutral"].includes(decision.label))
       && decision.support >= state.settings.maskThreshold && decision.support < state.settings.high
       && !revealedMasks.has(key);
@@ -473,7 +568,8 @@
       }, "blocksb-block-button"));
       date.after(tools);
     } else if (date.nextElementSibling !== tools) date.after(tools);
-    const protectedUser = white(post), self = post.handle === viewer();
+    const followingProtected = skipFollowing(post);
+    const protectedUser = white(post) || followingProtected, self = post.handle === viewer();
     const scoreName = state.settings.customRule ? t("match_probability") : t("agreement_probability");
     const score = !protectedUser && decision?.error ? t("ui_invalid_analysis_result") : !protectedUser && Number.isFinite(decision?.support) ? `${scoreName} ${Math.round(decision.support * 100)}%` : `${scoreName} —`;
     const badge = tools.firstElementChild, control = tools.lastElementChild;
@@ -481,7 +577,7 @@
     const s = state.session;
     const categoryName = decision && !decision.customRule && ["support", "oppose", "neutral", "uncertain"].includes(decision.label)
       ? t(`category_${decision.label}`) : decision?.labelName || decision?.label;
-    const explanation = protectedUser ? t("ui_allowlisted_not_sent_to_jev") : self ? t("ui_your_own_reply_not_analyzed")
+    const explanation = white(post) ? t("ui_allowlisted_not_sent_to_jev") : followingProtected ? t(followingStatus(post) === true ? "ui_following_skipped" : "ui_following_unknown") : self ? t("ui_your_own_reply_not_analyzed")
       : decision?.error ? t("ui_reply_kept_no_automatic_retry_in_this_task", String(decision.error))
       : decision ? t("ui_confidence_2", categoryName, Math.round(decision.confidence * 100), decision.blockReasons?.length ? t("ui_not_auto_blocked", decision.blockReasons.join(locale.startsWith("zh") ? "；" : "; ")) : "", history?.status === "failed" ? t("ui_block_submission_failed_check_the_trash") : "")
       : post.handle === s.root.handle ? t("ui_original_author_blocked_by_this_task")
@@ -499,6 +595,7 @@
     const pending = manualPending.has(`${viewer()}:${post.handle}`) || ["pending", "running", "undo_pending", "undo_running"].includes(history?.status);
     const label = pending ? t("ui_processing") : t("ui_block");
     if (control.textContent !== label) control.textContent = label;
+    control.hidden = followingProtected;
     control.disabled = !!(pending || protectedUser || self || isBlocked(history));
     control.title = protectedUser ? t("ui_this_user_is_allowlisted") : self ? t("ui_you_cannot_block_yourself") : t("ui_block_and_remove_their_other_replies", post.handle);
     control.setAttribute("aria-label", t("ui_block_2", post.handle));
@@ -590,7 +687,7 @@
       article.style.setProperty("opacity", "0", "important");
       article.classList.add("blocksb-exiting"); article.inert = true;
       let effectFinished;
-      const effect = debug ? debugEffect : state.settings.animationEffect;
+      const effect = debug || debugVisible && state.settings.debugDryRun ? debugEffect : state.settings.animationEffect;
       if (effect === "particles") effectFinished = scatterCard(clone, rect, info);
       else {
         const flight = clone.animate([{ transform: "translate(0,0) scale(1)", opacity: .95 }, { transform: `translate(${dest.left + dest.width / 2 - rect.left - rect.width / 2}px,${dest.top + dest.height / 2 - rect.top - Math.min(rect.height, 500) / 2}px) scale(.04) rotate(8deg)`, opacity: 0 }], { duration: 700, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" });
@@ -620,6 +717,7 @@
     finish();
   }
   function updateOverlay() {
+    renderDebugPanel();
     trash.hidden = !featureEnabled() && !(animationDebug && debugRows.size);
     alignTrash();
     const s = state?.session;
@@ -667,7 +765,7 @@
         syncedContextRevision = -1; requestedContext.clear();
         for (const [id, p] of contextPosts) if (white(p)) { contextPosts.delete(id); savedContext.delete(id); }
       }
-      if (previousState && (previousState.modelError && !state.modelError || previousState.settings.paused && !state.settings.paused || previousState.settings.analysisRevision !== state.settings.analysisRevision)) skipped.clear();
+      if (previousState && (previousState.modelError && !state.modelError || previousState.settings.paused && !state.settings.paused || previousState.settings.analysisRevision !== state.settings.analysisRevision || previousState.settings.skipFollowing !== state.settings.skipFollowing)) skipped.clear();
       if (sessionId !== (state.session?.id || "")) {
         contextPosts.clear(); savedContext.clear(); requestedContext.clear(); contextFlight = null; contextRetryAt = 0; contextError = ""; syncedContextRevision = -1;
         sessionId = state.session?.id || ""; skipped.clear(); failure = ""; lastLocation = ""; locationRetryAt = 0; locationError = "";
@@ -759,7 +857,7 @@
     const pending = busy.size || [...metadata.values()].some(p => {
       const token = `${s.id}:${p.id}`;
       if (!p.domSeen && !(p.networkAt > 0 && p.networkAt >= s.created)) return false;
-      if (hasDecision(p) || skipped.has(token) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account)) || !p.text.trim()) return false;
+      if (hasDecision(p) || skipped.has(token) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || skipFollowing(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account)) || !p.text.trim()) return false;
       return p.conversationId === s.root.conversationId && ancestors(p, s.root) !== null;
     });
     if (pending) { loadWait = null; return; }
@@ -795,7 +893,7 @@
     updateOverlay();
     if (!state) return;
     // Preview does not activate a task or send any model/account requests.
-    if (animationDebug) return;
+    if (animationDebug || debugBusy) return;
     const s = state.session, account = viewer(), rootId = route();
     const rows = articles();
     prepareThread(rows);
@@ -833,7 +931,7 @@
       // The classification response already confirms durable enqueue, before the X request completes.
       const h = historyFor(p, account) || (decision?.historyId ? { id: decision.historyId, rootId, status: "pending", updated: Date.now() } : null);
       const queued = ["pending", "running"].includes(h?.status);
-      const hide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && p.handle !== account;
+      const hide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
       if (old && !hide && ["failed", "uncertain"].includes(h?.status) && !reportedFailures.has(h.id)) {
         reportedFailures.add(h.id); toast(t("ui_block_for_did_not_complete_replies_restored_check_the_trash", p.handle));
       }
@@ -849,7 +947,7 @@
       const p = mergeContext(contextPosts.get(raw.id), raw);
       if (busy.size >= 2) break;
       if (!p.domSeen && !(p.networkAt > 0 && p.networkAt >= s.created)) continue;
-      if (hasDecision(p) || busy.has(`${s.id}:${p.id}`) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account))) continue;
+      if (hasDecision(p) || busy.has(`${s.id}:${p.id}`) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || skipFollowing(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account))) continue;
       if (!p.conversationId || p.conversationId !== s.root.conversationId) continue;
       const chain = ancestors(p, s.root);
       if (!chain) { failure = "context"; continue; }
@@ -859,7 +957,7 @@
       const analysisRevision = state.settings.analysisRevision;
       send("CLASSIFY", { sessionId: s.id, account, reply: p, parent: chain[0] || null, ancestors: chain }).then(result => {
         if (state.settings.analysisRevision !== analysisRevision) return;
-        if (state.session?.id === s.id && result.action !== "skip") state.session.results[p.id] = result;
+        if (state.session?.id === s.id && result.action !== "skip") { state.session.results[p.id] = result; indexSnapshot(); }
         schedule();
         if (result.action === "skip" && result.why !== "config-changed") skipped.set(token, fingerprint);
       }).catch(e => {
