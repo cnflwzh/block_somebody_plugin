@@ -63,7 +63,7 @@
   }
   const isBlocked = h => h && ["submitted", "blocked", "preexisting", "undo_pending", "undo_running", "undo_failed"].includes(h.status);
   const send = async (type, payload = {}) => {
-    // Console preview is local only, including clicks on the normal controls while it is enabled.
+    // Animation preview is local only, including clicks on normal controls while enabled.
     if ((animationDebug || debugBusy) && ["ARM", "CLASSIFY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
     const r = await chrome.runtime.sendMessage({ type, ...payload });
     if (!r?.ok) throw new Error(r?.error || t("ui_extension_disconnected_refresh_this_page"));
@@ -177,17 +177,17 @@
   const debugHeading = element("div", "debug-heading");
   const debugExit = button(t("ui_debug_exit"), async event => {
     if (!event.isTrusted || debugBusy) return;
-    if (state?.settings.debugDryRun && !await setDebugDryRun(false)) return;
+    if (state?.settings.debugDryRun && !await setDebugDryRun(false, event)) return;
     resetDebugPreview(); animationDebug = false; debugVisible = false; updateOverlay(); schedule();
   });
   debugHeading.append(element("strong", "", t("ui_debug_panel")), debugExit);
   const debugToggle = (key, change) => {
     const label = element("label", "debug-toggle"), input = element("input"); input.type = "checkbox"; input.setAttribute("role", "switch");
     label.append(element("span", "", t(key)), input);
-    input.addEventListener("change", event => { if (event.isTrusted) change(input.checked); else renderDebugPanel(); });
+    input.addEventListener("change", event => { if (event.isTrusted) change(input.checked, event); else renderDebugPanel(); });
     return { label, input };
   };
-  const dryToggle = debugToggle("ui_debug_no_block", value => void setDebugDryRun(value));
+  const dryToggle = debugToggle("ui_debug_no_block", (value, event) => void setDebugDryRun(value, event));
   const previewToggle = debugToggle("ui_debug_preview_only", value => {
     resetDebugPreview(); animationDebug = value; debugRoute = route(); renderDebugPanel(); schedule();
   });
@@ -195,18 +195,18 @@
   for (const [value, key] of [["fly", "ui_fly_to_trash"], ["particles", "ui_particle_dissolve"]]) {
     const option = element("option", "", t(key)); option.value = value; debugSelect.append(option);
   }
-  debugSelect.onchange = () => { debugEffect = debugSelect.value; };
+  debugSelect.onchange = event => { if (event.isTrusted) debugEffect = debugSelect.value; else renderDebugPanel(); };
   effectLabel.append(debugSelect);
   const debugActions = element("div", "debug-actions");
-  const debugPlay = button(t("ui_debug_play"), () => playDebugPreview());
-  const debugReset = button(t("ui_debug_restore"), () => { resetDebugPreview(); updateOverlay(); schedule(); });
+  const debugPlay = button(t("ui_debug_play"), event => { if (event.isTrusted) playDebugPreview(); });
+  const debugReset = button(t("ui_debug_restore"), event => { if (!event.isTrusted) return; resetDebugPreview(); updateOverlay(); schedule(); });
   debugActions.append(debugPlay, debugReset);
   const debugStatus = element("p", "debug-status"); debugStatus.setAttribute("role", "status");
   debugPanel.append(debugHeading, dryToggle.label, previewToggle.label, effectLabel, debugActions, debugStatus, element("p", "debug-hint", t("ui_debug_hint")));
   shadow.append(debugPanel);
   function renderDebugPanel() {
     // A persisted guard stays visible after refresh or in another X tab; hiding it must not
-    // silently resume real block jobs. Console/page messages can enable, never remove it.
+    // silently resume real block jobs. Page messages can only reveal this panel.
     debugPanel.hidden = !debugVisible && !state?.settings.debugDryRun;
     dryToggle.input.checked = !!state?.settings.debugDryRun;
     previewToggle.input.checked = animationDebug;
@@ -215,8 +215,9 @@
     debugPlay.disabled = debugReset.disabled = !animationDebug || debugBusy;
     debugStatus.textContent = debugBusy ? t("ui_debug_updating") : state?.settings.debugDryRun ? t("ui_debug_active", simulatedHandles.size) : t("ui_debug_live");
   }
-  async function setDebugDryRun(enabled) {
-    if (debugBusy) return false;
+  /** Change the global guard only from a real interaction in our closed-shadow UI. */
+  async function setDebugDryRun(enabled, event) {
+    if (!event?.isTrusted || debugBusy) return false;
     debugBusy = true; renderDebugPanel();
     try {
       const ack = await send("DEBUG_DRY_RUN", { enabled });
@@ -345,16 +346,13 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && drawerOpen) { e.stopPropagation(); closeDrawer(); } }, true);
   window.addEventListener("message", e => {
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:animation-debug:v1") {
-      const { command, postId } = e.data;
-      if (command === "enable") {
-        debugVisible = true; animationDebug = e.data.preview === true;
-        debugEffect = e.data.effect === "particles" ? "particles" : "fly"; debugRoute = route();
-        void setDebugDryRun(true);
-      } else if (command === "reset" || command === "disable") {
-        resetDebugPreview();
-        if (command === "disable") { animationDebug = false; debugVisible = false; }
-      } else if (command === "play") playDebugPreview(postId);
-      updateOverlay(); schedule(); return;
+      // Console code and site scripts share MAIN world. Neither source/origin nor a
+      // trusted MessageEvent authenticates the user. Legacy commands only open UI;
+      // do not apply their effect/preview payload or touch any task/backend state.
+      if (["enable", "reset", "disable", "play"].includes(e.data.command)) {
+        debugVisible = true; renderDebugPanel();
+      }
+      return;
     }
     if (e.source === iframe.contentWindow && e.origin === new URL(chrome.runtime.getURL("/")).origin && e.data?.type === "blocksb:close") closeDrawer();
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:timeline:v1") {
@@ -930,7 +928,7 @@
       const decision = s?.root.id === rootId ? s.results[p.id] : null;
       // The classification response already confirms durable enqueue, before the X request completes.
       const h = historyFor(p, account) || (decision?.historyId ? { id: decision.historyId, rootId, status: "pending", updated: Date.now() } : null);
-      const queued = ["pending", "running"].includes(h?.status);
+      const queued = ["pending", "running"].includes(h?.status) && !h?.waitingFollowing;
       const hide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
       if (old && !hide && ["failed", "uncertain"].includes(h?.status) && !reportedFailures.has(h.id)) {
         reportedFailures.add(h.id); toast(t("ui_block_for_did_not_complete_replies_restored_check_the_trash", p.handle));

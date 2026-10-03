@@ -182,7 +182,7 @@
     "message": "Analyzing this reply"
   },
   "ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with": {
-    "message": "Animation preview: analysis and new blocks are disabled. Exit with blockSBDebug.disable()."
+    "message": "Debug controls are active. To resume analysis and new blocks, wait for any update to finish and turn off “Animation preview only” in the debug panel."
   },
   "ui_animation_style": {
     "message": "Animation style"
@@ -1790,6 +1790,12 @@
   },
   "ui_debug_live": {
     "message": "Blocking is enabled"
+  },
+  "ui_waiting_following": {
+    "message": "Waiting for follow status"
+  },
+  "ui_waiting_following_hint": {
+    "message": "Open the original thread and start its task to obtain follow status. You can also turn off “Skip accounts you follow” to resume this job."
   },
   "ui_debug_hint": {
     "message": "Jev analysis still uses credits. Existing block jobs wait while this switch is on; turning it off resumes them. Restart the tweet task to leave simulation. Requests already sent cannot be recalled."

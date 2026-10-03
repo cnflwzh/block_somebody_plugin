@@ -1,17 +1,14 @@
 /* Page-world bridge: scan existing DOM cards and observe subsequent X responses. No account actions. */
 (() => {
-  /** Console opens the panel; only its trusted UI can remove the worker's no-block guard. */
-  const debugCommand = (command, postId, effect, preview) => window.postMessage({ channel: "blocksb:animation-debug:v1", command, postId, effect, preview }, location.origin);
+  /** MAIN-world code cannot authorize debug actions; console helpers only open the panel. */
+  const debugCommand = () => {
+    window.postMessage({ channel: "blocksb:animation-debug:v1", command: "enable" }, location.origin);
+    console.info("[block s.b.] 已请求打开调试面板。请在面板中点击开关、选择动画或退出调试；控制台命令不会改变任务或屏蔽状态。");
+  };
   Object.defineProperty(window, "blockSBDebug", { configurable: true, value: Object.freeze({
-    enable(effect) {
-      if (effect !== undefined && !["fly", "particles"].includes(effect)) throw new Error('效果请使用 "fly" 或 "particles"。');
-      debugCommand("enable", "", effect || "fly", effect !== undefined);
-      console.info("[block s.b.] 正在打开调试面板并启用禁止屏蔽；以面板显示的后台状态为准。指定动画名称时进入仅动画预览。");
-    },
-    dryRun() { debugCommand("enable", "", "fly", false); },
-    play(postId = "") { debugCommand("play", String(postId).match(/(?:status\/)?(\d{5,25})/)?.[1] || ""); },
-    reset() { debugCommand("reset"); },
-    disable() { debugCommand("disable"); console.info("[block s.b.] 已退出动画预览。禁止屏蔽若已开启，请在调试面板内关闭。"); }
+    enable: debugCommand,
+    // Keep legacy names as panel-opening aliases, without their former side effects.
+    dryRun: debugCommand, play: debugCommand, reset: debugCommand, disable: debugCommand
   }) });
   const records = new Map(), domSignatures = new Map();
   // Relationship flags describe the signed-in viewer, never the author's followers.
