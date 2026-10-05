@@ -114,13 +114,75 @@ test("passive observer persists distinct evidence, queues independently, and hon
       assert.equal(job(second).status, "cancelled", "the remaining stance root still owns a reversible task");
     });
 
-    await t.test("stopping a manual session transfers a shared job to its observer owner", async () => {
+    await t.test("stopping an automatic stance session transfers a shared job to its observer owner", async () => {
       const fixture = await seedObserverJob("3"); await attachStanceOwner(fixture);
+      await change(db => { db.jobs.find(j => j.id === fixture.jobId).manual = false; });
       await rpc("STOP_SESSION", {});
       assert.equal(history(fixture).stanceOwner, false); assert.equal(history(fixture).observerOwner, true);
       assert.equal(job(fixture).module, "observer"); assert.equal(job(fixture).status, "pending");
       await rpc("UNDO", { id: fixture.historyId, module: "observer" }, ui);
       assert.equal(job(fixture).status, "cancelled");
+    });
+
+    await t.test("a manual click retains its authorization after stopping the session and disabling observation", async () => {
+      const fixture = await seedObserverJob("5"), { root } = await attachStanceOwner(fixture);
+      assert.equal(job(fixture).manual, true);
+      await rpc("STOP_SESSION", {});
+      assert.equal(history(fixture).stanceOwner, true);
+      await rpc("SAVE_SETTINGS", { value: { observer: { enabled: false } } }, ui);
+      assert.equal(job(fixture).module, "stance"); assert.equal(job(fixture).status, "pending");
+      assert.equal(history(fixture).observerOwner, false);
+      await rpc("UNDO_TASK", { account: "viewer", rootId: root.id }, ui);
+      assert.equal(job(fixture).status, "cancelled");
+      await rpc("SAVE_SETTINGS", { value: { observer: { enabled: true } } }, ui);
+    });
+
+    await t.test("policy changes revoke obsolete observer jobs but preserve shared and submitted operations", async () => {
+      const baseline = structuredClone(data.state.settings.observer);
+      let index = 10;
+      for (const policy of [{ scope: "all" }, { threshold: .99 }, { confidence: .99 }, { minHits: 4 }, { minThreads: 3 }, { hitRate: 1 }, { retentionDays: 7 }, { skipFollowing: false }]) {
+        await rpc("SAVE_SETTINGS", { value: { observer: baseline } }, ui);
+        const fixture = await seedObserverJob(String(index++));
+        await rpc("SAVE_SETTINGS", { value: { observer: policy } }, ui);
+        assert.equal(job(fixture).status, "cancelled", JSON.stringify(policy));
+      }
+      await rpc("SAVE_SETTINGS", { value: { observer: baseline } }, ui);
+      const unsent = await seedObserverJob("30"), sent = await seedObserverJob("31"), shared = await seedObserverJob("32");
+      await attachStanceOwner(shared);
+      await change(db => {
+        db.jobs.find(j => j.id === unsent.jobId).status = "running";
+        Object.assign(db.jobs.find(j => j.id === sent.jobId), { status: "running", submitted: true });
+      });
+      await rpc("SAVE_SETTINGS", { value: { observer: { showMarkers: true, dailyLimit: 250 } } }, ui);
+      assert.equal(job(unsent).status, "running", "display and budget settings preserve existing authorization");
+      const editor = await rpc("RULE_CONFIG", { module: "observer" }, ui);
+      editor.rule.prompt += " 新的判定标准。";
+      await rpc("SAVE_RULE_CONFIG", { module: "observer", rule: editor.rule, revision: editor.revision }, ui);
+      assert.equal(job(unsent).status, "cancelled");
+      assert.equal(job(sent).status, "running", "sent requests cannot be recalled");
+      assert.equal(job(shared).status, "pending"); assert.equal(history(shared).observerOwner, false);
+      await change(db => { db.jobs.find(j => j.id === sent.jobId).status = "done"; });
+      await rpc("SAVE_SETTINGS", { value: { observer: baseline } }, ui);
+    });
+
+    await t.test("observer history exposes ownership and failures, and failed blocks can be retried explicitly", async () => {
+      const failed = await seedObserverJob("40"), preexisting = await seedObserverJob("41");
+      await change(db => {
+        Object.assign(db.jobs.find(j => j.id === failed.jobId), { status: "failed", submitted: true });
+        Object.assign(db.history.find(h => h.id === failed.historyId), { status: "failed", error: "fixture HTTP failure" });
+        Object.assign(db.jobs.find(j => j.id === preexisting.jobId), { status: "done" });
+        Object.assign(db.history.find(h => h.id === preexisting.historyId), { status: "preexisting", owned: false });
+      });
+      const snapshot = await rpc("SNAPSHOT", {}, ui);
+      assert.equal(snapshot.observer.accounts.find(row => row.historyId === failed.historyId).error, "fixture HTTP failure");
+      assert.equal(snapshot.observer.accounts.find(row => row.historyId === preexisting.historyId).owned, false);
+      await rpc("RETRY_JOB", { id: failed.historyId }, ui);
+      assert.equal(job(failed).status, "pending"); assert.equal(job(failed).submitted, false);
+      assert.equal(history(failed).status, "pending");
+      await rpc("SAVE_SETTINGS", { value: { observer: { threshold: .99 } } }, ui);
+      assert.equal(job(failed).status, "cancelled");
+      await assert.rejects(rpc("RETRY_JOB", { id: failed.historyId }, ui));
+      await rpc("SAVE_SETTINGS", { value: { observer: { preset: "careful" } } }, ui);
     });
 
     await t.test("an author record transferred to observer ownership loses the author following exemption", async () => {

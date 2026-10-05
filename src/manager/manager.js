@@ -8,6 +8,7 @@ localizeDocument(document);
 /* Extension-owned manager: never expose the key in snapshots, exports, or page messages. */
 (() => {
   const $ = id => document.getElementById(id);
+  $("extension-version").textContent = `v${chrome.runtime.getManifest().version}`;
   const params = new URLSearchParams(location.search);
   if (params.has("embedded")) document.body.classList.add("embedded");
   // Reuse the manager in Chrome's toolbar popup without changing the in-page drawer or options page.
@@ -249,10 +250,19 @@ localizeDocument(document);
         card.append(evidence);
         const footer = el("div", "observer-card-footer");
         const owner = el("span", "hint", t("ui_observer_actor", row.account)); owner.title = `ID ${row.userId}`; footer.append(owner);
-        if (row.historyId && (done(row) || queued(row) || row.status === "undo_failed")) footer.append(actionButton(done(row) ? t("ui_unblock") : t("ui_cancel_task"), async () => {
+        if (row.error) card.append(el("p", "record-error", row.error));
+        const canUndo = row.owned && ["submitted", "blocked", "undo_failed"].includes(row.status);
+        const canCancel = ["pending", "running"].includes(row.status);
+        if (row.historyId && (canUndo || canCancel)) footer.append(actionButton(canUndo ? t("ui_unblock") : t("ui_cancel_task"), async () => {
           await send("UNDO", { id: row.historyId, module: "observer", account: row.account, userId: row.userId }); await refresh();
         }));
-        else footer.append(actionButton(t("ui_observer_forget"), () => modal(t("ui_observer_forget"), t("ui_observer_forget_copy", row.handle), async () => {
+        else if (row.historyId && row.status === "failed") footer.append(actionButton(t("ui_retry"), async () => {
+          await send("RETRY_JOB", { id: row.historyId }); await refresh();
+        }));
+        else if (row.historyId && row.status === "uncertain") footer.append(actionButton(t("ui_verify_status"), async () => {
+          await send("RECONCILE", { id: row.historyId }); await refresh();
+        }));
+        else if (!queued(row)) footer.append(actionButton(t("ui_observer_forget"), () => modal(t("ui_observer_forget"), t("ui_observer_forget_copy", row.handle), async () => {
           await send("OBSERVER_FORGET", { account: row.account, userId: row.userId }); await refresh();
         }), "text-button"));
         footer.append(actionButton(t("ui_add_to_allowlist"), async () => { await send("WHITELIST_ADD", { handle: row.handle, userId: row.userId, name: row.name }); await refresh(); toast(t("ui_added_to_allowlist")); }, "text-button"));

@@ -176,7 +176,7 @@ function enqueueBlock(db, s, target, reply, decision, reason) {
         existing.module = "stance"; existing.root = { ...s.root, text: s.root.text.slice(0, 1500) }; existing.sessionId = s.id;
         existing.reply = reply ? { ...reply, text: reply.text.slice(0, 1500) } : null; existing.reason = reason; existing.decision = decision;
       }
-      for (const job of db.jobs) if (job.historyId === existing.id && !job.submitted && job.kind === "block") { job.module = "stance"; job.sessionId = existing.sessionId; job.rootId = existing.root.id; }
+      for (const job of db.jobs) if (job.historyId === existing.id && !job.submitted && job.kind === "block") { job.module = "stance"; job.manual ||= manual; job.sessionId = existing.sessionId; job.rootId = existing.root.id; }
     }
     return existing.id;
   }
@@ -225,6 +225,25 @@ function taskUndoSummary(plan) {
   return { account: plan.account, rootId: plan.rootId, root: plan.root, ready: plan.ready.length, cancel: plan.cancel.length, inFlight: plan.inFlight.length, existing: plan.existing, review: plan.review, protected: plan.protected, active: plan.active };
 }
 
+/** Revoke obsolete observer authorization in the same transaction as a policy change.
+ * Preserve independently authorized stance/manual jobs and already-sent requests.
+ * Failed observer blocks also lose retry eligibility until new evidence authorizes them.
+ */
+function invalidateObserverJobs(db) {
+  const history = new Map(db.history.map(h => [h.id, h]));
+  for (const j of db.jobs) {
+    if (j.kind !== "block" || !["pending", "running", "failed"].includes(j.status) || j.status !== "failed" && j.submitted) continue;
+    const h = history.get(j.historyId);
+    if (j.module !== "observer" && !h?.observerOwner) continue;
+    if (h) h.observerOwner = false;
+    if (h?.stanceOwner) { j.module = "stance"; if (h) h.module = "stance"; continue; }
+    j.status = "cancelled";
+    if (h) { h.status = "cancelled"; h.updated = Date.now(); }
+  }
+}
+// Appearance/budget changes do not revoke an already-authorized block.
+const observerPolicyKeys = ["enabled", "scope", "threshold", "confidence", "minHits", "minThreads", "hitRate", "retentionDays", "skipFollowing", "prompt", "analysisRule"];
+
 const observerConfig = db => normalizeObserverSettings(db.settings.observer || {});
 async function observerFingerprint(db) {
   const config = observerConfig(db);
@@ -256,12 +275,12 @@ async function observerSnapshot(db) {
     rows.sort((a, b) => b.observedAt - a.observedAt);
     const e = rows[0], summary = summarizeObserverEvidence(rows, { ...config, includeDryRun: !!db.debugDryRun }, fingerprint), h = history.get(e.userKey);
     if (db.debugDryRun) { if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey); }
-    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, ...summary,
+    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, owned: !!h?.owned, error: h?.error || "", ...summary,
       evidence: rows.filter(e => !e.error).slice(0, 30).map(({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt }) => ({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt })) });
   }
   // Evidence can expire independently of an actual submitted block. Keep its undo entry.
   for (const [userKey, h] of history) if (!groups.has(userKey) && h.observerOwner && !["unblocked", "cancelled"].includes(h.status)) {
-    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
+    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, owned: !!h.owned, error: h.error || "", hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
   }
   return { accounts: accounts.sort((a, b) => (b.evidence[0]?.observedAt || 0) - (a.evidence[0]?.observedAt || 0)), dailyUsed };
 }
@@ -341,7 +360,8 @@ async function observeReply(message, sender) {
       let simulated = false;
       if (dryRun && !summary.eligible) observerSimulations.delete(entry.userKey);
       if (summary.eligible) await change(d => {
-        if (!observerAllowed(d, account, root, reply, ancestors) || controller.signal.aborted || !!d.debugDryRun !== dryRun) return;
+        if (!observerAllowed(d, account, root, reply, ancestors) || controller.signal.aborted || !!d.debugDryRun !== dryRun
+          || (d.observerPolicyRevision || 0) !== policyRevision || (d.settings.analysisRevision || 0) !== (db.settings.analysisRevision || 0)) return;
         if (d.debugDryRun) { simulated = true; observerSimulations.add(entry.userKey); return; }
         enqueueBlock(d, { account, ...binding, tabId: sender.tab.id, id: `observer:${account}:${reply.userId}`, root, excluded: [] }, reply, reply, { ...decision, action: "block", module: "observer", fingerprint }, "observer");
       });
@@ -707,6 +727,7 @@ async function handle(message, sender) {
         const current = observerConfig(d);
         if (JSON.stringify(getObserverRule(current)) === JSON.stringify(rule)) return d.observerPolicyRevision || 0;
         d.settings.observer = normalizeObserverSettings({ analysisRule: rule, prompt: "" }, current);
+        invalidateObserverJobs(d);
         return d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
       });
       if (revision !== message.revision) {
@@ -771,6 +792,7 @@ async function handle(message, sender) {
     const changed = await change(d => {
       if ((d.settings.analysisRevision || 0) !== (previous.analysisRevision || 0)) throw new Error(t("ui_model_settings_changed_in_another_window_save_again"));
       const changed = ["endpoint", "model", "customPrompt"].some(k => next[k] !== d.settings[k]) || secret !== previousKey;
+      if (["endpoint", "model"].some(k => next[k] !== d.settings[k])) invalidateObserverJobs(d);
       if (changed) {
         d.settings.analysisRevision = (d.settings.analysisRevision || 0) + 1;
         for (const session of Object.values(d.sessions)) { session.results = {}; session.count = 0; }
@@ -795,11 +817,8 @@ async function handle(message, sender) {
         for (const s of Object.values(d.sessions)) { s.results = {}; s.count = 0; }
       }
       if (JSON.stringify(next.observer) !== JSON.stringify(d.settings.observer)) d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
+      if (observerPolicyKeys.some(k => JSON.stringify(next.observer?.[k]) !== JSON.stringify(d.settings.observer?.[k]))) invalidateObserverJobs(d);
       d.settings = next;
-      if (!next.observer?.enabled) for (const j of d.jobs) if (j.module === "observer" && j.kind === "block" && !j.submitted && ["pending", "running"].includes(j.status)) {
-        const h = d.history.find(h => h.id === j.historyId); if (h?.stanceOwner) continue;
-        j.status = "cancelled"; if (h) { h.status = "cancelled"; h.updated = Date.now(); }
-      }
       cancelFollowingJobs(d);
     });
     if (message.value?.observer) for (const flight of observerFlights.values()) flight.controller.abort();
