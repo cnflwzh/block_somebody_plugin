@@ -168,7 +168,7 @@ test("passive observer persists distinct evidence, queues independently, and hon
     await t.test("observer history exposes ownership and failures, and failed blocks can be retried explicitly", async () => {
       const failed = await seedObserverJob("40"), preexisting = await seedObserverJob("41");
       await change(db => {
-        Object.assign(db.jobs.find(j => j.id === failed.jobId), { status: "failed", submitted: true });
+        Object.assign(db.jobs.find(j => j.id === failed.jobId), { status: "failed", submitted: true, transport: "worker", resultKnown: true });
         Object.assign(db.history.find(h => h.id === failed.historyId), { status: "failed", error: "fixture HTTP failure" });
         Object.assign(db.jobs.find(j => j.id === preexisting.jobId), { status: "done" });
         Object.assign(db.history.find(h => h.id === preexisting.historyId), { status: "preexisting", owned: false });

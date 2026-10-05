@@ -22,26 +22,23 @@ export const ready = (async () => {
     session.count = Object.keys(session.results).length;
   }
   // A worker may have stopped after a request was submitted. Do not blindly replay it.
-  for (const job of cache.jobs) if (job.status === "running") {
+  for (const job of cache.jobs) {
+    // Older workers stored both lost responses and definite HTTP failures as failed.
+    // Without a persisted outcome, require reconciliation instead of guessing from error text.
+    const legacyUnknown = job.kind === "block" && job.transport === "worker" && job.status === "failed" && job.submitted && !job.resultKnown;
+    if (job.status !== "running" && !legacyUnknown) continue;
     if (job.kind === "block" && !job.submitted) {
       job.status = "pending";
       const h = cache.history.find(h => h.id === job.historyId);
       if (h) h.status = "pending";
       continue;
     }
-    if (job.kind === "block" && job.transport === "worker") {
-      // The request may have reached X; never automatically send it a second time.
-      job.status = "failed";
-      job.error = t("ui_background_interrupted_before_the_final_http_response_no_automatic_retry");
-      const h = cache.history.find(h => h.id === job.historyId);
-      if (h) { h.status = "failed"; h.error = job.error; }
-      continue;
-    }
     job.status = job.submitted ? "uncertain" : "failed";
+    job.resultKnown = !job.submitted;
     job.error = job.submitted ? t("ui_background_interrupted_result_unknown_verify_the_status_before_retrying") : t("ui_background_interrupted_before_submission_you_can_retry");
     const h = cache.history.find(h => h.id === job.historyId);
     if (h) { h.status = job.submitted ? "uncertain" : job.kind === "unblock" ? "undo_failed" : "failed"; h.error = job.error; }
-    cache.queueError = job.error;
+    if (job.kind !== "block" || job.transport !== "worker") cache.queueError = job.error;
   }
   await chrome.storage.local.set({ state: cache });
 })();

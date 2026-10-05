@@ -17,7 +17,7 @@ test("background block submits once and accepts HTTP success without relationshi
   } finally { globalThis.fetch = original; }
 });
 
-test("HTTP errors and timeouts fail once; only auth/rate errors pause the queue", async () => {
+test("HTTP failures remain distinct from unknown POST outcomes; neither is automatically retried", async () => {
   const original = globalThis.fetch;
   try {
     for (const status of [404, 500, 401, 403, 429]) {
@@ -25,11 +25,13 @@ test("HTTP errors and timeouts fail once; only auth/rate errors pause the queue"
       globalThis.fetch = async () => { calls++; return { ok: false, status, headers: new Headers({ "Retry-After": "90" }), json: async () => { throw Error("non-JSON error"); } }; };
       const result = await postBlock({ handle: "target" }, { origin: "https://x.com", actorId: "990000", csrf: "fixture" });
       assert.equal(result.ok, false); assert.equal(calls, 1); assert.equal(result.status, status);
+      assert.notEqual(result.uncertain, true, "an HTTP error has a definite response");
       assert.equal(result.pauseQueue, [401, 403, 429].includes(status)); assert.match(result.error, new RegExp(String(status)));
       assert.equal(result.retryAfterMs, 90000);
     }
     let calls = 0; globalThis.fetch = async () => { calls++; throw Error("timeout"); };
-    assert.equal((await postBlock({ handle: "target" }, { origin: "https://x.com", actorId: "990000", csrf: "fixture" })).ok, false);
+    const result = await postBlock({ handle: "target" }, { origin: "https://x.com", actorId: "990000", csrf: "fixture" });
+    assert.equal(result.ok, false); assert.equal(result.uncertain, true);
     assert.equal(calls, 1);
   } finally { globalThis.fetch = original; }
 });

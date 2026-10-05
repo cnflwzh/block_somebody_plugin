@@ -232,7 +232,8 @@ function taskUndoSummary(plan) {
 function invalidateObserverJobs(db) {
   const history = new Map(db.history.map(h => [h.id, h]));
   for (const j of db.jobs) {
-    if (j.kind !== "block" || !["pending", "running", "failed"].includes(j.status) || j.status !== "failed" && j.submitted) continue;
+    if (j.kind !== "block" || !["pending", "running", "failed"].includes(j.status)
+      || j.submitted && (j.status !== "failed" || !j.resultKnown)) continue;
     const h = history.get(j.historyId);
     if (j.module !== "observer" && !h?.observerOwner) continue;
     if (h) h.observerOwner = false;
@@ -564,7 +565,7 @@ async function drain() {
           j.status = "pending"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "pending";
           return false;
         }
-        j.submitted = true; j.transport = "worker";
+        j.submitted = true; j.transport = "worker"; j.resultKnown = false;
         return true;
       });
       if (!allowed) { notify(); return; }
@@ -580,7 +581,7 @@ async function drain() {
       h.updated = Date.now();
       d.nextActionAt = Date.now() + Math.max(2500, Number(result?.retryAfterMs) || 0);
       if (result?.ok) {
-        j.status = "done"; h.error = "";
+        j.status = "done"; j.resultKnown = true; h.error = "";
         if (result.target?.userId) h.target.userId = result.target.userId;
         if (job.kind === "unblock") h.status = "unblocked";
         else if (result.preexisting) { h.status = "preexisting"; h.owned = false; }
@@ -588,6 +589,7 @@ async function drain() {
       } else if (result?.cancelled) { j.status = "cancelled"; h.status = job.kind === "unblock" ? "blocked" : "cancelled"; }
       else {
         const uncertain = result?.uncertain && j.submitted;
+        j.resultKnown = !uncertain;
         j.status = uncertain ? "uncertain" : "failed";
         h.status = uncertain ? "uncertain" : job.kind === "unblock" ? "undo_failed" : "failed";
         h.error = String(result?.error || t("ui_no_verifiable_result_received")).slice(0, 300); j.error = h.error;
@@ -982,11 +984,12 @@ async function handle(message, sender) {
   if (type === "RETRY_JOB") {
     await change(d => {
       const j = d.jobs.find(j => j.historyId === message.id && j.status === "failed"); if (!j) throw new Error(t("ui_verify_unknown_results_before_retrying"));
+      if (j.kind === "block" && j.transport === "worker" && j.submitted && !j.resultKnown) throw new Error(t("ui_verify_unknown_results_before_retrying"));
       const record = d.history.find(h => h.id === j.historyId);
       if (j.kind === "block" && record?.taskWithdrawn) throw new Error(t("ui_this_task_was_undone_start_again_from_the_original_post"));
       if (protectedFollowingJob(d, j)) throw new Error(t("ui_following_protected"));
       if (j.kind === "block" && isWhitelisted(d, j.target)) throw new Error(t("ui_this_user_is_already_allowlisted"));
-      j.status = "pending"; j.submitted = false;
+      j.status = "pending"; j.submitted = false; j.resultKnown = false;
       const h = d.history.find(h => h.id === j.historyId); h.status = j.kind === "block" ? "pending" : "undo_pending"; h.error = "";
       d.queueError = "";
     }); notify(); void drain(); return true;
@@ -1005,6 +1008,7 @@ async function handle(message, sender) {
       if (r.target.blocking) { entry.status = j.kind === "unblock" ? "undo_failed" : "blocked"; entry.owned = entry.owned || j.wasBlocked === false; if (j.kind === "block") markTrashUnread(entry); }
       else entry.status = j.kind === "unblock" ? "unblocked" : "failed";
       job.status = ["failed", "undo_failed"].includes(entry.status) ? "failed" : "done";
+      job.resultKnown = true;
       entry.error = ""; entry.updated = Date.now(); d.queueError = "";
     }); notify(); return true;
   }

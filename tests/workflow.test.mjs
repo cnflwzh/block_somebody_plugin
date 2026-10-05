@@ -45,6 +45,7 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       submitted++;
       if (actionMode === "404") return { ok: false, status: 404, headers: new Headers(), json: async () => ({ errors: [{ code: 34 }] }) };
       remoteBlocked = true;
+      if (actionMode === "timeout") throw new Error("fixture lost POST response");
       return { ok: true, status: 200, headers: new Headers(), json: async () => ({}) };
     }
     assert.equal(url, "https://api.typesafe.ai/v1/systemone"); sentJev++;
@@ -163,6 +164,28 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       await rpc("RETRY_JOB", { id: h.id }, ui);
       await flush(() => data.state.history.find(x => x.id === h.id).status === "submitted");
       assert.equal(data.state.history.find(x => x.id === h.id).owned, true);
+    });
+    await t.test("a lost block response requires reconciliation before any explicit retry", async () => {
+      now += 5000; actionMode = "timeout";
+      const target = { ...reply, id: "100003", handle: "timeout", userId: "900003" };
+      await rpc("CLASSIFY", { sessionId: session.id, account: "viewer", reply: target, ancestors: [] });
+      await flush(() => data.state.history.find(h => h.target.handle === target.handle)?.status === "uncertain");
+      const h = data.state.history.find(h => h.target.handle === target.handle), before = submitted;
+      const job = () => data.state.jobs.find(j => j.historyId === h.id);
+      assert.equal(job().submitted, true); assert.equal(job().resultKnown, false);
+      await assert.rejects(rpc("RETRY_JOB", { id: h.id }, ui), /核对/);
+      now += 5000; alarm({ name: "blocksb-queue" });
+      await new Promise(resolve => setTimeout(resolve, 10));
+      assert.equal(submitted, before, "neither a retry click nor an alarm may repeat an unknown POST");
+      // Only a successful, explicit read showing no block makes another POST retryable.
+      remoteBlocked = false;
+      await rpc("RECONCILE", { id: h.id }, ui);
+      assert.equal(job().status, "failed"); assert.equal(job().resultKnown, true);
+      assert.equal(submitted, before, "reconciliation only reads the relationship");
+      actionMode = "normal";
+      await rpc("RETRY_JOB", { id: h.id }, ui);
+      await flush(() => data.state.history.find(entry => entry.id === h.id)?.status === "submitted");
+      assert.equal(submitted, before + 1);
     });
     await t.test("account mismatch and sibling replies never reach Jev", async () => {
       const before = sentJev;
