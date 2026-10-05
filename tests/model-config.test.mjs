@@ -56,6 +56,22 @@ test("model configuration saves atomically and never restores stale keys/setting
       waiting.pop()(); await newer; waiting.shift()(); await rejected;
       assert.equal(data.state.settings.model, "custom/newer");
     });
+    await t.test("model changes invalidate queued observer authorization without cancelling shared manual work", async () => {
+      holding = false;
+      const { change } = await import("../src/lib/store.js");
+      await change(db => {
+        for (const [id, shared] of [["observer-only", false], ["shared-manual", true]]) {
+          db.history.push({ id, module: shared ? "stance" : "observer", observerOwner: true, stanceOwner: shared, status: "pending" });
+          db.jobs.push({ id, historyId: id, kind: "block", module: shared ? "stance" : "observer", manual: shared, status: "pending", submitted: false });
+        }
+      });
+      await rpc("SAVE_MODEL_CONFIG", { config: { model: "updated/jev" } });
+      assert.equal(data.state.jobs.find(j => j.id === "observer-only").status, "cancelled");
+      assert.equal(data.state.jobs.find(j => j.id === "shared-manual").status, "pending");
+      assert.equal(data.state.history.find(h => h.id === "shared-manual").observerOwner, false);
+      await change(db => { db.jobs = []; db.history = []; });
+      holding = true;
+    });
     await t.test("removing the key during a connection check cannot resurrect it", async () => {
       const pending = rpc("SAVE_MODEL_CONFIG", { config });
       const rejected = assert.rejects(pending, /其他窗口更改/);

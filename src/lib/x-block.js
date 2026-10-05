@@ -18,7 +18,8 @@ export async function xSession(origin = "https://x.com") {
 }
 
 /** Submit exactly one block POST; HTTP success is acceptance, not relationship verification.
- * Returns an accepted result or a failure with status/retry delay. Never retries or reads relationships.
+ * Returns acceptance, a definite failure, or an uncertain result if no HTTP response arrives.
+ * Never retries or reads relationships.
  */
 export async function postBlock(target, session) {
   const userId = numericId(target.userId), handle = normalizeHandle(target.handle);
@@ -30,7 +31,7 @@ export async function postBlock(target, session) {
       headers: { authorization: bearer, "x-csrf-token": session.csrf, "x-twitter-auth-type": "OAuth2Session", "x-twitter-active-user": "yes", "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(userId ? { user_id: userId } : { screen_name: handle }).toString()
     });
-  } catch { return { ok: false, error: t("ui_block_request_timed_out_or_disconnected_without_http_success_not") }; }
+  } catch { return { ok: false, uncertain: true, error: t("ui_block_request_timed_out_or_disconnected_without_http_success_not") }; }
   const retry = response.headers.get("retry-after");
   const retryAfterMs = retry ? Math.max(0, /^\d+$/.test(retry) ? Number(retry) * 1000 : Date.parse(retry) - Date.now()) || 0 : response.status === 429 ? 60000 : 0;
   // Empty/non-JSON 2xx bodies are accepted. An explicit API error is still a failure.

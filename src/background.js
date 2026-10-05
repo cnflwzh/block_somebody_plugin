@@ -169,14 +169,17 @@ function enqueueBlock(db, s, target, reply, decision, reason) {
   if (isWhitelisted(db, target) || target.handle === s.account || (reply && protectedFollowing) || (!manual && s.excluded.includes(target.handle))) return null;
   const existing = db.history.findLast(h => h.account === s.account && sameTarget(h.target, target));
   if (existing && !["unblocked", "cancelled"].includes(existing.status)) {
-    if (observer) existing.observerOwner = true;
+    if (observer) {
+      existing.observerOwner = true;
+      for (const job of db.jobs) if (job.historyId === existing.id && job.kind === "block") job.observerAuthorizationRevoked = false;
+    }
     else {
       existing.stanceOwner = true;
       if (existing.module === "observer") {
         existing.module = "stance"; existing.root = { ...s.root, text: s.root.text.slice(0, 1500) }; existing.sessionId = s.id;
         existing.reply = reply ? { ...reply, text: reply.text.slice(0, 1500) } : null; existing.reason = reason; existing.decision = decision;
       }
-      for (const job of db.jobs) if (job.historyId === existing.id && !job.submitted && job.kind === "block") { job.module = "stance"; job.sessionId = existing.sessionId; job.rootId = existing.root.id; }
+      for (const job of db.jobs) if (job.historyId === existing.id && !job.submitted && job.kind === "block") { job.module = "stance"; job.manual ||= manual; job.sessionId = existing.sessionId; job.rootId = existing.root.id; }
     }
     return existing.id;
   }
@@ -225,6 +228,37 @@ function taskUndoSummary(plan) {
   return { account: plan.account, rootId: plan.rootId, root: plan.root, ready: plan.ready.length, cancel: plan.cancel.length, inFlight: plan.inFlight.length, existing: plan.existing, review: plan.review, protected: plan.protected, active: plan.active };
 }
 
+/** Revoke obsolete observer authorization in the same transaction as a policy change.
+ * Preserve independently authorized stance/manual jobs and already-sent requests.
+ * Failed observer blocks also lose retry eligibility until new evidence authorizes them.
+ */
+function finishObserverRevocation(job, history) {
+  if (!job.observerAuthorizationRevoked) return;
+  if (history) history.observerOwner = false;
+  if (history?.stanceOwner || job.manual) {
+    job.module = "stance";
+    if (history) history.module = "stance";
+    return;
+  }
+  job.status = "cancelled";
+  if (history) { history.status = "cancelled"; history.updated = Date.now(); }
+}
+function invalidateObserverJobs(db) {
+  const history = new Map(db.history.map(h => [h.id, h]));
+  for (const j of db.jobs) {
+    if (j.kind !== "block" || !["pending", "running", "uncertain", "failed"].includes(j.status)) continue;
+    const h = history.get(j.historyId);
+    if (j.module !== "observer" && !h?.observerOwner) continue;
+    // Keep sent/unknown records visible for reconciliation, but remember that their
+    // old observer policy can no longer authorize a future POST after that read.
+    j.observerAuthorizationRevoked = true;
+    if (j.submitted && (j.status !== "failed" || !j.resultKnown)) continue;
+    finishObserverRevocation(j, h);
+  }
+}
+// Appearance/budget changes do not revoke an already-authorized block.
+const observerPolicyKeys = ["enabled", "scope", "threshold", "confidence", "minHits", "minThreads", "hitRate", "retentionDays", "skipFollowing", "prompt", "analysisRule"];
+
 const observerConfig = db => normalizeObserverSettings(db.settings.observer || {});
 async function observerFingerprint(db) {
   const config = observerConfig(db);
@@ -256,12 +290,12 @@ async function observerSnapshot(db) {
     rows.sort((a, b) => b.observedAt - a.observedAt);
     const e = rows[0], summary = summarizeObserverEvidence(rows, { ...config, includeDryRun: !!db.debugDryRun }, fingerprint), h = history.get(e.userKey);
     if (db.debugDryRun) { if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey); }
-    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, ...summary,
+    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, owned: !!h?.owned, error: h?.error || "", ...summary,
       evidence: rows.filter(e => !e.error).slice(0, 30).map(({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt }) => ({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt })) });
   }
   // Evidence can expire independently of an actual submitted block. Keep its undo entry.
   for (const [userKey, h] of history) if (!groups.has(userKey) && h.observerOwner && !["unblocked", "cancelled"].includes(h.status)) {
-    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
+    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, owned: !!h.owned, error: h.error || "", hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
   }
   return { accounts: accounts.sort((a, b) => (b.evidence[0]?.observedAt || 0) - (a.evidence[0]?.observedAt || 0)), dailyUsed };
 }
@@ -341,7 +375,8 @@ async function observeReply(message, sender) {
       let simulated = false;
       if (dryRun && !summary.eligible) observerSimulations.delete(entry.userKey);
       if (summary.eligible) await change(d => {
-        if (!observerAllowed(d, account, root, reply, ancestors) || controller.signal.aborted || !!d.debugDryRun !== dryRun) return;
+        if (!observerAllowed(d, account, root, reply, ancestors) || controller.signal.aborted || !!d.debugDryRun !== dryRun
+          || (d.observerPolicyRevision || 0) !== policyRevision || (d.settings.analysisRevision || 0) !== (db.settings.analysisRevision || 0)) return;
         if (d.debugDryRun) { simulated = true; observerSimulations.add(entry.userKey); return; }
         enqueueBlock(d, { account, ...binding, tabId: sender.tab.id, id: `observer:${account}:${reply.userId}`, root, excluded: [] }, reply, reply, { ...decision, action: "block", module: "observer", fingerprint }, "observer");
       });
@@ -544,7 +579,7 @@ async function drain() {
           j.status = "pending"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "pending";
           return false;
         }
-        j.submitted = true; j.transport = "worker";
+        j.submitted = true; j.transport = "worker"; j.resultKnown = false;
         return true;
       });
       if (!allowed) { notify(); return; }
@@ -560,7 +595,7 @@ async function drain() {
       h.updated = Date.now();
       d.nextActionAt = Date.now() + Math.max(2500, Number(result?.retryAfterMs) || 0);
       if (result?.ok) {
-        j.status = "done"; h.error = "";
+        j.status = "done"; j.resultKnown = true; h.error = "";
         if (result.target?.userId) h.target.userId = result.target.userId;
         if (job.kind === "unblock") h.status = "unblocked";
         else if (result.preexisting) { h.status = "preexisting"; h.owned = false; }
@@ -568,9 +603,11 @@ async function drain() {
       } else if (result?.cancelled) { j.status = "cancelled"; h.status = job.kind === "unblock" ? "blocked" : "cancelled"; }
       else {
         const uncertain = result?.uncertain && j.submitted;
+        j.resultKnown = !uncertain;
         j.status = uncertain ? "uncertain" : "failed";
         h.status = uncertain ? "uncertain" : job.kind === "unblock" ? "undo_failed" : "failed";
         h.error = String(result?.error || t("ui_no_verifiable_result_received")).slice(0, 300); j.error = h.error;
+        if (job.kind === "block" && j.status === "failed") finishObserverRevocation(j, h);
         // A failed account does not hold up the remaining queue. Auth/rate-limit errors do.
         if (job.kind === "unblock" || result?.pauseQueue) d.queueError = h.error;
       }
@@ -707,6 +744,7 @@ async function handle(message, sender) {
         const current = observerConfig(d);
         if (JSON.stringify(getObserverRule(current)) === JSON.stringify(rule)) return d.observerPolicyRevision || 0;
         d.settings.observer = normalizeObserverSettings({ analysisRule: rule, prompt: "" }, current);
+        invalidateObserverJobs(d);
         return d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
       });
       if (revision !== message.revision) {
@@ -771,6 +809,7 @@ async function handle(message, sender) {
     const changed = await change(d => {
       if ((d.settings.analysisRevision || 0) !== (previous.analysisRevision || 0)) throw new Error(t("ui_model_settings_changed_in_another_window_save_again"));
       const changed = ["endpoint", "model", "customPrompt"].some(k => next[k] !== d.settings[k]) || secret !== previousKey;
+      if (["endpoint", "model"].some(k => next[k] !== d.settings[k])) invalidateObserverJobs(d);
       if (changed) {
         d.settings.analysisRevision = (d.settings.analysisRevision || 0) + 1;
         for (const session of Object.values(d.sessions)) { session.results = {}; session.count = 0; }
@@ -795,11 +834,8 @@ async function handle(message, sender) {
         for (const s of Object.values(d.sessions)) { s.results = {}; s.count = 0; }
       }
       if (JSON.stringify(next.observer) !== JSON.stringify(d.settings.observer)) d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
+      if (observerPolicyKeys.some(k => JSON.stringify(next.observer?.[k]) !== JSON.stringify(d.settings.observer?.[k]))) invalidateObserverJobs(d);
       d.settings = next;
-      if (!next.observer?.enabled) for (const j of d.jobs) if (j.module === "observer" && j.kind === "block" && !j.submitted && ["pending", "running"].includes(j.status)) {
-        const h = d.history.find(h => h.id === j.historyId); if (h?.stanceOwner) continue;
-        j.status = "cancelled"; if (h) { h.status = "cancelled"; h.updated = Date.now(); }
-      }
       cancelFollowingJobs(d);
     });
     if (message.value?.observer) for (const flight of observerFlights.values()) flight.controller.abort();
@@ -963,11 +999,13 @@ async function handle(message, sender) {
   if (type === "RETRY_JOB") {
     await change(d => {
       const j = d.jobs.find(j => j.historyId === message.id && j.status === "failed"); if (!j) throw new Error(t("ui_verify_unknown_results_before_retrying"));
+      if (j.kind === "block" && j.transport === "worker" && j.submitted && !j.resultKnown) throw new Error(t("ui_verify_unknown_results_before_retrying"));
       const record = d.history.find(h => h.id === j.historyId);
+      if (j.kind === "block" && j.observerAuthorizationRevoked && !record?.stanceOwner && !j.manual) throw new Error(t("ui_task_canceled"));
       if (j.kind === "block" && record?.taskWithdrawn) throw new Error(t("ui_this_task_was_undone_start_again_from_the_original_post"));
       if (protectedFollowingJob(d, j)) throw new Error(t("ui_following_protected"));
       if (j.kind === "block" && isWhitelisted(d, j.target)) throw new Error(t("ui_this_user_is_already_allowlisted"));
-      j.status = "pending"; j.submitted = false;
+      j.status = "pending"; j.submitted = false; j.resultKnown = false;
       const h = d.history.find(h => h.id === j.historyId); h.status = j.kind === "block" ? "pending" : "undo_pending"; h.error = "";
       d.queueError = "";
     }); notify(); void drain(); return true;
@@ -986,6 +1024,8 @@ async function handle(message, sender) {
       if (r.target.blocking) { entry.status = j.kind === "unblock" ? "undo_failed" : "blocked"; entry.owned = entry.owned || j.wasBlocked === false; if (j.kind === "block") markTrashUnread(entry); }
       else entry.status = j.kind === "unblock" ? "unblocked" : "failed";
       job.status = ["failed", "undo_failed"].includes(entry.status) ? "failed" : "done";
+      job.resultKnown = true;
+      if (job.kind === "block" && job.status === "failed") finishObserverRevocation(job, entry);
       entry.error = ""; entry.updated = Date.now(); d.queueError = "";
     }); notify(); return true;
   }
