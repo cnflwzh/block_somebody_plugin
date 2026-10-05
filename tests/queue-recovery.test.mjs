@@ -13,6 +13,8 @@ test("worker recovery preserves unknown block outcomes and their reconciliation 
     { id: "interrupted", status: "running", submitted: true },
     { id: "legacy", status: "failed", submitted: true },
     { id: "legacy-blocked", status: "failed", submitted: true },
+    { id: "revoked-absent", status: "failed", submitted: true },
+    { id: "shared-absent", status: "failed", submitted: true, manual: true },
     { id: "known-failure", status: "failed", submitted: true, resultKnown: true }
   ];
   const history = specs.map((spec, i) => ({ id: spec.id, status: spec.status, module: "observer", observerOwner: true, stanceOwner: false,
@@ -20,9 +22,10 @@ test("worker recovery preserves unknown block outcomes and their reconciliation 
     root, reason: "observer", owned: false, created: Date.now(), updated: Date.now() }));
   const jobs = specs.map(spec => ({ ...spec, historyId: spec.id, kind: "block", module: "observer", transport: "worker",
     account: "viewer", actorId: "990000", origin: "https://x.com", target: history.find(h => h.id === spec.id).target }));
+  history.find(h => h.id === "shared-absent").stanceOwner = true;
   const data = { state: { settings: { ...DEFAULTS, paused: true, observer: { ...DEFAULTS.observer, enabled: true } },
     history, jobs, whitelist: [], sessions: {}, nextActionAt: 0, queueError: "", modelError: "" } };
-  let receive, requests = 0, inspections = 0;
+  let receive, requests = 0, inspections = 0, holdInspection = false, inspectionStarted, releaseInspection;
   const origin = "chrome-extension://recovery-fixture/";
   const ui = { id: "recovery-fixture", url: origin + "src/manager/manager.html" };
   globalThis.chrome = {
@@ -32,7 +35,12 @@ test("worker recovery preserves unknown block outcomes and their reconciliation 
     alarms: { create: async () => {}, onAlarm: { addListener: () => {} } },
     tabs: { query: async () => [{ id: 1, url: "https://x.com/home" }], onRemoved: { addListener: () => {} }, sendMessage: async (_, message) => {
       if (message.type === "GET_VIEWER") return { account: "viewer" };
-      if (message.type === "INSPECT_TARGET") { inspections++; return { ok: true, target: { ...message.target, blocking: message.target.handle === "target3" } }; }
+      if (message.type === "INSPECT_TARGET") {
+        inspections++;
+        const answer = { ok: true, target: { ...message.target, blocking: message.target.handle === "target3" } };
+        if (holdInspection) return new Promise(resolve => { releaseInspection = () => resolve(answer); inspectionStarted(); });
+        return answer;
+      }
     } }
   };
   globalThis.fetch = async () => { requests++; throw new Error("No outbound request is allowed in recovery fixtures"); };
@@ -80,6 +88,38 @@ test("worker recovery preserves unknown block outcomes and their reconciliation 
       assert.equal(record("legacy-blocked").status, "blocked"); assert.equal(job("legacy-blocked").status, "done");
       assert.equal(inspections, 2); assert.equal(requests, 0);
       await assert.rejects(rpc("RETRY_JOB", { id: "legacy-blocked" }));
+    });
+    await t.test("an absent relationship cannot restore revoked observer retry authorization", async () => {
+      await rpc("RECONCILE", { id: "revoked-absent" });
+      assert.equal(job("revoked-absent").status, "cancelled"); assert.equal(record("revoked-absent").status, "cancelled");
+      assert.equal(record("revoked-absent").observerOwner, false);
+      await assert.rejects(rpc("RETRY_JOB", { id: "revoked-absent" }));
+      assert.equal(requests, 0);
+    });
+    await t.test("independent manual ownership survives reconciliation after observer revocation", async () => {
+      await rpc("RECONCILE", { id: "shared-absent" });
+      assert.equal(job("shared-absent").status, "failed"); assert.equal(job("shared-absent").module, "stance");
+      assert.equal(record("shared-absent").observerOwner, false); assert.equal(record("shared-absent").stanceOwner, true);
+      await rpc("RETRY_JOB", { id: "shared-absent" });
+      assert.equal(job("shared-absent").status, "pending"); assert.equal(requests, 0);
+    });
+    await t.test("a policy change during a relationship read is checked in the reconciliation transaction", async () => {
+      const { change } = await import("../src/lib/store.js");
+      await rpc("SAVE_SETTINGS", { value: { observer: { enabled: true } } });
+      await change(db => {
+        const original = db.history.find(h => h.id === "interrupted");
+        db.history.push({ ...structuredClone(original), id: "during-read", observerOwner: true });
+        db.jobs.push({ ...structuredClone(db.jobs.find(j => j.id === "interrupted")), id: "during-read", historyId: "during-read", observerAuthorizationRevoked: false });
+      });
+      holdInspection = true;
+      const started = new Promise(resolve => { inspectionStarted = resolve; });
+      const pending = rpc("RECONCILE", { id: "during-read" });
+      await started;
+      await rpc("SAVE_SETTINGS", { value: { observer: { minHits: 4 } } });
+      releaseInspection(); await pending; holdInspection = false;
+      assert.equal(job("during-read").status, "cancelled"); assert.equal(record("during-read").status, "cancelled");
+      await assert.rejects(rpc("RETRY_JOB", { id: "during-read" }));
+      assert.equal(requests, 0);
     });
   } finally {
     await new Promise(resolve => setTimeout(resolve, 150));

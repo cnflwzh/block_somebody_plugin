@@ -169,7 +169,10 @@ function enqueueBlock(db, s, target, reply, decision, reason) {
   if (isWhitelisted(db, target) || target.handle === s.account || (reply && protectedFollowing) || (!manual && s.excluded.includes(target.handle))) return null;
   const existing = db.history.findLast(h => h.account === s.account && sameTarget(h.target, target));
   if (existing && !["unblocked", "cancelled"].includes(existing.status)) {
-    if (observer) existing.observerOwner = true;
+    if (observer) {
+      existing.observerOwner = true;
+      for (const job of db.jobs) if (job.historyId === existing.id && job.kind === "block") job.observerAuthorizationRevoked = false;
+    }
     else {
       existing.stanceOwner = true;
       if (existing.module === "observer") {
@@ -229,17 +232,28 @@ function taskUndoSummary(plan) {
  * Preserve independently authorized stance/manual jobs and already-sent requests.
  * Failed observer blocks also lose retry eligibility until new evidence authorizes them.
  */
+function finishObserverRevocation(job, history) {
+  if (!job.observerAuthorizationRevoked) return;
+  if (history) history.observerOwner = false;
+  if (history?.stanceOwner || job.manual) {
+    job.module = "stance";
+    if (history) history.module = "stance";
+    return;
+  }
+  job.status = "cancelled";
+  if (history) { history.status = "cancelled"; history.updated = Date.now(); }
+}
 function invalidateObserverJobs(db) {
   const history = new Map(db.history.map(h => [h.id, h]));
   for (const j of db.jobs) {
-    if (j.kind !== "block" || !["pending", "running", "failed"].includes(j.status)
-      || j.submitted && (j.status !== "failed" || !j.resultKnown)) continue;
+    if (j.kind !== "block" || !["pending", "running", "uncertain", "failed"].includes(j.status)) continue;
     const h = history.get(j.historyId);
     if (j.module !== "observer" && !h?.observerOwner) continue;
-    if (h) h.observerOwner = false;
-    if (h?.stanceOwner) { j.module = "stance"; if (h) h.module = "stance"; continue; }
-    j.status = "cancelled";
-    if (h) { h.status = "cancelled"; h.updated = Date.now(); }
+    // Keep sent/unknown records visible for reconciliation, but remember that their
+    // old observer policy can no longer authorize a future POST after that read.
+    j.observerAuthorizationRevoked = true;
+    if (j.submitted && (j.status !== "failed" || !j.resultKnown)) continue;
+    finishObserverRevocation(j, h);
   }
 }
 // Appearance/budget changes do not revoke an already-authorized block.
@@ -593,6 +607,7 @@ async function drain() {
         j.status = uncertain ? "uncertain" : "failed";
         h.status = uncertain ? "uncertain" : job.kind === "unblock" ? "undo_failed" : "failed";
         h.error = String(result?.error || t("ui_no_verifiable_result_received")).slice(0, 300); j.error = h.error;
+        if (job.kind === "block" && j.status === "failed") finishObserverRevocation(j, h);
         // A failed account does not hold up the remaining queue. Auth/rate-limit errors do.
         if (job.kind === "unblock" || result?.pauseQueue) d.queueError = h.error;
       }
@@ -986,6 +1001,7 @@ async function handle(message, sender) {
       const j = d.jobs.find(j => j.historyId === message.id && j.status === "failed"); if (!j) throw new Error(t("ui_verify_unknown_results_before_retrying"));
       if (j.kind === "block" && j.transport === "worker" && j.submitted && !j.resultKnown) throw new Error(t("ui_verify_unknown_results_before_retrying"));
       const record = d.history.find(h => h.id === j.historyId);
+      if (j.kind === "block" && j.observerAuthorizationRevoked && !record?.stanceOwner && !j.manual) throw new Error(t("ui_task_canceled"));
       if (j.kind === "block" && record?.taskWithdrawn) throw new Error(t("ui_this_task_was_undone_start_again_from_the_original_post"));
       if (protectedFollowingJob(d, j)) throw new Error(t("ui_following_protected"));
       if (j.kind === "block" && isWhitelisted(d, j.target)) throw new Error(t("ui_this_user_is_already_allowlisted"));
@@ -1009,6 +1025,7 @@ async function handle(message, sender) {
       else entry.status = j.kind === "unblock" ? "unblocked" : "failed";
       job.status = ["failed", "undo_failed"].includes(entry.status) ? "failed" : "done";
       job.resultKnown = true;
+      if (job.kind === "block" && job.status === "failed") finishObserverRevocation(job, entry);
       entry.error = ""; entry.updated = Date.now(); d.queueError = "";
     }); notify(); return true;
   }
