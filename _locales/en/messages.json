@@ -1,6 +1,6 @@
 {
   "action_title": {
-    "message": "block s.b. · History, allowlist and settings"
+    "message": "block s.b. · History, AI spam filter and settings"
   },
   "agreement_probability": {
     "message": "Agreement probability"
@@ -18,7 +18,7 @@
     "message": "Auto-load: on"
   },
   "block_history": {
-    "message": "Block history"
+    "message": "Group blocking"
   },
   "category_neutral": {
     "message": "Unrelated"
@@ -33,7 +33,7 @@
     "message": "Uncertain"
   },
   "extension_description": {
-    "message": "Show reply probabilities on X, block matching accounts, and manage history and your allowlist."
+    "message": "Filter agreement and suspected AI spam in X replies, with automatic observation, account blocking, undo and an allowlist."
   },
   "match_probability": {
     "message": "Match probability"
@@ -1799,6 +1799,324 @@
   },
   "ui_debug_hint": {
     "message": "Jev analysis still uses credits. Existing block jobs wait while this switch is on; turning it off resumes them. Restart the tweet task to leave simulation. Requests already sent cannot be recalled."
+  },
+  "ui_invalid_interface_language": {
+    "message": "Unsupported interface language."
+  },
+  "observer_content_marker": {
+    "message": "Suspected spam $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_mask": {
+    "message": "Suspected spam · $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_reason": {
+    "message": "$v0$ · $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_title": {
+    "message": "AI spam filter"
+  },
+  "ui_observer_enable": {
+    "message": "Automatic observation"
+  },
+  "ui_observer_watching": {
+    "message": "Watching"
+  },
+  "ui_observer_search": {
+    "message": "Search accounts"
+  },
+  "ui_observer_adjust": {
+    "message": "Adjust detection settings"
+  },
+  "ui_general_settings": {
+    "message": "General"
+  },
+  "ui_observer_settings": {
+    "message": "AI spam settings"
+  },
+  "ui_support_settings": {
+    "message": "Group blocking settings"
+  },
+  "ui_model_connection": {
+    "message": "Model connection"
+  },
+  "ui_modify": {
+    "message": "Edit"
+  },
+  "ui_api_model": {
+    "message": "API endpoint and model"
+  },
+  "ui_shared_allowlist": {
+    "message": "Shared by both filters"
+  },
+  "ui_manage_allowlist": {
+    "message": "Manage allowlist"
+  },
+  "ui_display_animation": {
+    "message": "Display and animation"
+  },
+  "ui_interface_language": {
+    "message": "Interface language"
+  },
+  "ui_language_auto": {
+    "message": "Browser default"
+  },
+  "ui_delete_effect": {
+    "message": "Removal effect"
+  },
+  "ui_observer_scope": {
+    "message": "Observation scope"
+  },
+  "ui_observer_blue": {
+    "message": "Blue check only"
+  },
+  "ui_observer_all": {
+    "message": "All accounts"
+  },
+  "ui_observer_conditions": {
+    "message": "Cumulative block conditions"
+  },
+  "ui_observer_hits": {
+    "message": "Suspicious replies"
+  },
+  "ui_observer_threads": {
+    "message": "Distinct original posts"
+  },
+  "ui_observer_rate": {
+    "message": "Recent hit rate"
+  },
+  "ui_observer_items": {
+    "message": "items"
+  },
+  "ui_observer_recent_hint": {
+    "message": "Based on the latest 5 valid judgments"
+  },
+  "ui_observer_retention": {
+    "message": "Evidence retention"
+  },
+  "ui_observer_daily": {
+    "message": "Daily analysis limit"
+  },
+  "ui_observer_days_7": {
+    "message": "7 days"
+  },
+  "ui_observer_days_30": {
+    "message": "30 days"
+  },
+  "ui_observer_days_90": {
+    "message": "90 days"
+  },
+  "ui_observer_markers": {
+    "message": "Show detection labels"
+  },
+  "ui_observer_mask": {
+    "message": "Mask suspicious replies before blocking"
+  },
+  "ui_observer_advanced": {
+    "message": "Advanced rules"
+  },
+  "ui_probability_range": {
+    "message": "Support probability range"
+  },
+  "ui_hide_lower": {
+    "message": "Lower probability bound for masking"
+  },
+  "ui_hide_upper": {
+    "message": "Upper probability bound for masking"
+  },
+  "ui_auto_load_default": {
+    "message": "Auto-load replies by default"
+  },
+  "ui_observer_state_active": {
+    "message": "Observing in the background"
+  },
+  "ui_observer_state_off": {
+    "message": "Automatic observation is off"
+  },
+  "ui_observer_state_paused": {
+    "message": "Paused"
+  },
+  "ui_observer_state_unconfigured": {
+    "message": "Connect a model first"
+  },
+  "ui_observer_state_limited": {
+    "message": "Daily analysis limit reached"
+  },
+  "ui_observer_state_error": {
+    "message": "Service error needs attention"
+  },
+  "ui_observer_evidence_summary": {
+    "message": "$v0$ suspicious / $v1$ valid · $v2$ original posts",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_observer_empty": {
+    "message": "No observations yet"
+  },
+  "ui_observer_empty_hint": {
+    "message": "Turn on automatic observation to collect judgments as you browse replies."
+  },
+  "ui_observer_no_matches": {
+    "message": "No matching accounts"
+  },
+  "ui_observer_no_evidence": {
+    "message": "No valid evidence yet"
+  },
+  "ui_observer_blue_verified": {
+    "message": "Blue-check account"
+  },
+  "ui_observer_actor": {
+    "message": "Using @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_simulated": {
+    "message": "Debug simulation"
+  },
+  "ui_observer_forget": {
+    "message": "Clear observations"
+  },
+  "ui_observer_forget_copy": {
+    "message": "Clear accumulated records for @$v0$. New replies you encounter will start a fresh observation.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_single_threshold": {
+    "message": "Per-reply suspicion threshold"
+  },
+  "ui_observer_invalid_rule": {
+    "message": "Enter a probability between 50 and 100."
+  },
+  "ui_observer_connected": {
+    "message": "Connected"
+  },
+  "ui_cache_summary": {
+    "message": "$v0$ entries · $v1$ days",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "observer_category_spam": {
+    "message": "Template spam"
+  },
+  "observer_category_template": {
+    "message": "Templated paraphrase"
+  },
+  "observer_category_empty": {
+    "message": "Empty response"
+  },
+  "observer_category_repetitive": {
+    "message": "Repeated stock phrases"
+  },
+  "observer_category_useful": {
+    "message": "Substantive content"
+  },
+  "observer_category_normal": {
+    "message": "Normal conversation"
+  },
+  "observer_category_uncertain": {
+    "message": "Uncertain"
+  },
+  "observer_error_settings": {
+    "message": "Invalid AI spam settings. Check the entered values."
+  },
+  "observer_error_threads": {
+    "message": "The required number of original posts cannot exceed the suspicious reply count."
+  },
+  "observer_error_prompt": {
+    "message": "The prompt must be text and contain no more than 12,000 characters."
+  },
+  "observer_error_answer": {
+    "message": "The model returned an invalid spam classification or probability distribution. This result was not counted."
+  },
+  "observer_error_database_timeout": {
+    "message": "Opening the observation database timed out. Try again later."
+  },
+  "observer_error_database_unavailable": {
+    "message": "The observation database could not be opened."
+  },
+  "observer_error_transaction": {
+    "message": "The observation database operation failed. Try again."
+  },
+  "ui_cache": {
+    "message": "Cache"
+  },
+  "ui_observer_state_debug": {
+    "message": "Observing in debug mode"
+  },
+  "ui_prompt_settings": {
+    "message": "Custom prompt"
+  },
+  "ui_auto_hide_heading": {
+    "message": "Auto-hide"
+  },
+  "observer_error_database_transaction": {
+    "message": "The observation database operation failed. Try again."
+  },
+  "ui_observer_probability_threshold": {
+    "message": "Per-reply suspicion threshold $v0$ · Confidence must be ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_probability_note": {
+    "message": "The badge shows the combined probability of the selected categories. Evidence requires the individual category probability and confidence thresholds; blocking also requires the cumulative account criteria."
+  },
+  "variable_ancestors": {
+    "message": "Parent reply chain"
+  },
+  "ui_observer_count_evidence": {
+    "message": "Count as suspicious evidence"
+  },
+  "ui_observer_rule_selection": {
+    "message": "Select one or more categories. A selected category counts as evidence only when its probability and confidence meet the thresholds. Blocking also requires the cumulative account criteria."
+  },
+  "ui_observer_beta_notice": {
+    "message": "This feature is in beta and may flag genuine replies or miss spam. Have a better prompt? Contributions via pull request are welcome."
+  },
+  "ui_observer_beta_contribute": {
+    "message": "Contribute a prompt"
   }
-
 }

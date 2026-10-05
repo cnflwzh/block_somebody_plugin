@@ -12,6 +12,8 @@ export function mergeContextPost(previous, post) {
   if (!previous || previous.id !== post.id || previous.handle !== post.handle) return post;
   const keepText = previous.text && (!post.text || !previous.incomplete && post.incomplete);
   return { ...post, userId: post.userId || previous.userId, conversationId: post.conversationId || previous.conversationId,
+    // DOM cards may omit subscription metadata that was present in the API observation.
+    blueVerified: typeof post.blueVerified === "boolean" ? post.blueVerified : previous.blueVerified ?? null,
     parentId: post.parentId || previous.parentId, text: keepText ? previous.text : post.text,
     incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia };
 }

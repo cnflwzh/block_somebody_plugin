@@ -1,5 +1,31 @@
 (() => {
-  const { t, locale } = globalThis.BlockSBI18n;
+  const { t } = globalThis.BlockSBI18n;
+  let extensionBase;
+  try { if (!chrome.runtime?.id) return; extensionBase = chrome.runtime.getURL(""); } catch { return; }
+  let invalidated = false, pageObserver, pollTimer;
+  const listeners = new AbortController();
+  /** Page listeners belong to this content-script generation and stop together on reload. */
+  function listen(target, type, callback, options = {}) {
+    target.addEventListener(type, event => { if (contextAlive()) callback(event); },
+      { ...(typeof options === "boolean" ? { capture: options } : options), signal: listeners.signal });
+  }
+  function contextAlive() {
+    if (invalidated) return false;
+    try { if (chrome.runtime?.id) return true; } catch { /* The old native bridge is gone. */ }
+    dispose(); return false;
+  }
+  /** Restore only our own DOM changes. Worker-owned durable jobs are not cancelled here. */
+  function dispose() {
+    if (invalidated) return;
+    invalidated = true; listeners.abort(); pageObserver?.disconnect(); clearInterval(pollTimer);
+    for (const handle of [timer, refreshTimer, probabilityHideTimer, toastTimer]) clearTimeout(handle);
+    observerEpoch++;
+    for (const article of new Set([...movingRows, ...document.querySelectorAll(".blocksb-removed,.blocksb-exiting,.blocksb-masked,.blocksb-folded")])) { clearMask(article); restore(article); }
+    document.querySelectorAll(".blocksb-comment-tools,.blocksb-observer-marker,.blocksb-menu-item").forEach(node => node.remove());
+    drawerOpen = false; iframe.removeAttribute("src"); host.remove();
+    try { chrome.runtime.onMessage.removeListener(onStateChanged); } catch { /* Already detached by Chrome. */ }
+  }
+  let locale = globalThis.BlockSBI18n.locale;
   const metadata = new Map(), busy = new Set(), skipped = new Map(), rowState = new WeakMap(), manualPending = new Set();
   const contextPosts = new Map(), savedContext = new Map(), requestedContext = new Set();
   let contextFlight = null, contextRetryAt = 0, contextError = "";
@@ -11,6 +37,16 @@
   let followingAccount = "";
   const movingRows = new Set(), played = new Set(), reportedFailures = new Set(), debugRows = new Map();
   const simulatedHandles = new Map();
+  const trashReadPending = new Set();
+  // Browser-local observation is independent of an explicitly armed agreement task.
+  // Only reply IDs and decisions live here; the worker owns durable evidence/limits.
+  const observerDecisions = new Map(), observerLoaded = new Set(), observerRetries = new Map();
+  const observerHistory = new Map();
+  const observerSimulated = new Map();
+  const observerRelationships = new Map();
+  const observerSeen = new WeakMap();
+  let observerEpoch = 0, observerAccount = "", observerFlight = null, observerLookup = null, observerReload = true;
+  let observerLookupAt = 0, observerConfig = "", observerRelationshipFlight = null, observerRelationshipRetryAt = 0;
   let debugVisible = false, debugBusy = false;
   let animationDebug = false, debugEffect = "fly", debugRoute = "", anchorUsers = 0, anchorStyle;
   let pageReady = false, sortFlow = null, loadNote = "", lastSortNote = "", autoAt = 0, loadWait = null, autoStopping = false;
@@ -23,16 +59,20 @@
   const featureEnabled = () => !!(state?.session && !state.session.stopped && state.session.account === viewer());
   const threadEnabled = () => featureEnabled() && route() === state.session.root.id;
   const white = p => whiteHandles.has(p.handle) || !!(p.userId && whiteIds.has(p.userId));
-  function followingStatus(p) {
+  function followingObservation(p) {
     const account = viewer();
     let latest = p.followingAccount === account && typeof p.following === "boolean" ? p : null;
     const keys = [p.userId && `id:${p.userId}`, `handle:${p.handle}`].filter(Boolean);
     for (const key of keys) for (const entry of [followingAccount === account && followingUsers.get(key), state?.session?.account === account && state.session.following?.[key]]) {
       if (entry && (!p.userId || !entry.userId || p.userId === entry.userId) && (!latest || entry.followingAt >= latest.followingAt)) latest = entry;
     }
-    return latest?.following ?? null;
+    return latest;
   }
+  const followingStatus = p => followingObservation(p)?.following ?? null;
   const skipFollowing = p => state?.settings.skipFollowing && followingStatus(p) !== false;
+  const observerSurface = () => !!route() || /^\/home\/?$/.test(location.pathname);
+  const observerEnabled = () => !!state?.settings.observer?.enabled && observerSurface() && state.account === viewer();
+  const observerProtected = p => white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
   const hasDecision = p => {
     const result = state?.session?.results[p.id];
     return result && (result.error || !state.decisionVersion || result.decisionVersion === state.decisionVersion);
@@ -53,19 +93,27 @@
       if (result.dryRun && result.action === "block" && result.handle) simulatedHandles.set(result.handle,
         { id: `debug:${state.session.id}:${postId}`, status: "blocked", rootId: state.session.root.id, updated: result.simulatedAt || Date.now() });
     }
-    whiteHandles.clear(); whiteIds.clear(); historyHandles.clear(); historyIds.clear();
+    whiteHandles.clear(); whiteIds.clear(); historyHandles.clear(); historyIds.clear(); observerHistory.clear();
     for (const w of state.whitelist) { whiteHandles.add(w.handle); if (w.userId) whiteIds.add(w.userId); }
     state.history.forEach((entry, order) => {
       const value = { entry, order };
       historyHandles.set(entry.target.handle, value);
       if (entry.target.userId) historyIds.set(entry.target.userId, value);
+      if ((entry.module === "observer" || entry.observerOwner) && entry.target.userId) observerHistory.set(entry.target.userId, entry);
     });
   }
   const isBlocked = h => h && ["submitted", "blocked", "preexisting", "undo_pending", "undo_running", "undo_failed"].includes(h.status);
   const send = async (type, payload = {}) => {
+    if (!contextAlive()) throw new Error(t("ui_extension_disconnected_refresh_this_page"));
     // Animation preview is local only, including clicks on normal controls while enabled.
-    if ((animationDebug || debugBusy) && ["ARM", "CLASSIFY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
-    const r = await chrome.runtime.sendMessage({ type, ...payload });
+    if ((animationDebug || debugBusy) && ["ARM", "CLASSIFY", "OBSERVE_REPLY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
+    let r;
+    try { r = await chrome.runtime.sendMessage({ type, ...payload }); }
+    catch (e) {
+      if (!contextAlive() || /extension context invalidated/i.test(e.message || "")) dispose();
+      throw e;
+    }
+    if (!contextAlive()) throw new Error(t("ui_extension_disconnected_refresh_this_page"));
     if (!r?.ok) throw new Error(r?.error || t("ui_extension_disconnected_refresh_this_page"));
     return r.data;
   };
@@ -76,7 +124,8 @@
     const keepText = previous.text && (!post.text || !previous.incomplete && post.incomplete);
     return { ...post, userId: post.userId || previous.userId, conversationId: post.conversationId || previous.conversationId,
       parentId: post.parentId || previous.parentId, text: keepText ? previous.text : post.text,
-      incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia };
+      incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia,
+      blueVerified: typeof post.blueVerified === "boolean" ? post.blueVerified : previous.blueVerified ?? null };
   }
   const sameContext = (a, b) => a && ["handle", "userId", "conversationId", "parentId", "text", "incomplete", "hasMedia", "following", "followingAccount", "followingAt"].every(key => a[key] === b[key]);
   const contextFor = id => {
@@ -100,7 +149,7 @@
       for (let depth = 0; next && next !== s.root.id && depth < 30 && !seen.has(next); depth++) {
         seen.add(next);
         const parent = contextFor(next);
-        if (!parent || !parent.text || !parent.parentId) {
+        if (!parent || !parent.text?.trim() && !parent.hasMedia || !parent.parentId) {
           if (!requestedContext.has(next) && missing.size < 40) missing.add(next);
           break;
         }
@@ -137,15 +186,24 @@
     }).finally(() => { if (contextFlight === token) contextFlight = null; schedule(); });
     return true;
   }
-  const button = (text, action, className = "") => { const b = element("button", className, text); b.type = "button"; b.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); action(e); }); return b; };
+  const button = (text, action, className = "") => {
+    const b = element("button", className, text); b.type = "button";
+    b.addEventListener("click", e => {
+      e.preventDefault(); e.stopPropagation(); if (!contextAlive()) return;
+      // An extension reload may reject a pending click handler's message promise.
+      const failed = error => { if (contextAlive()) toast(error?.message || String(error)); };
+      try { Promise.resolve(action(e)).catch(failed); } catch (error) { failed(error); }
+    });
+    return b;
+  };
   const host = element("div"); host.id = "blocksb-overlay"; host.lang = locale;
   const shadow = host.attachShadow({ mode: "closed" });
-  const css = element("link"); css.rel = "stylesheet"; css.href = chrome.runtime.getURL("src/content/overlay.css"); shadow.append(css);
-  const trash = button("", () => openDrawer("history"), "trash"); trash.title = t("ui_block_s_b_block_history"); trash.setAttribute("aria-label", trash.title);
+  const css = element("link"); css.rel = "stylesheet"; css.href = `${extensionBase}src/content/overlay.css`; shadow.append(css);
+  const trash = button("", () => { openDrawer(featureEnabled() ? "history" : "observer"); void readTrash(); }, "trash"); trash.title = t("ui_block_s_b_block_history"); trash.setAttribute("aria-label", trash.title);
   trash.hidden = true;
   // Static SVG only. All page-derived strings use textContent.
   trash.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7M14 10v7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const badge = element("span", "badge", "0"); trash.append(badge);
+  const badge = element("span", "badge", "0"); badge.hidden = true; trash.append(badge);
   const status = element("div", "session-bar"); status.hidden = true;
   const statusText = element("span");
   const pause = button(t("pause"), async () => { try { await send("TOGGLE_PAUSE"); } catch (e) { toast(e.message); } });
@@ -205,6 +263,7 @@
   debugPanel.append(debugHeading, dryToggle.label, previewToggle.label, effectLabel, debugActions, debugStatus, element("p", "debug-hint", t("ui_debug_hint")));
   shadow.append(debugPanel);
   function renderDebugPanel() {
+    if (invalidated) return;
     // A persisted guard stays visible after refresh or in another X tab; hiding it must not
     // silently resume real block jobs. Page messages can only reveal this panel.
     debugPanel.hidden = !debugVisible && !state?.settings.debugDryRun;
@@ -241,7 +300,7 @@
     if (post) { debugRows.set(post.id, post.handle); updateOverlay(); removeCard(article, post, true, true); }
     else toast(t("ui_block_s_b_no_reply_to_preview_scroll_to_the"));
   }
-  const probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  let probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const probabilityPercent = value => `${probabilityFormat.format(value * 100)}%`;
   function hideProbabilityPanel() {
     clearTimeout(probabilityHideTimer);
@@ -259,14 +318,22 @@
    */
   function refreshProbabilityPanel() {
     const anchor = probabilityAnchor, detail = anchor && probabilityDetails.get(anchor);
-    if (!anchor?.isConnected || !detail || !threadEnabled() || drawerOpen || document.hidden
-      || detail.sessionId !== state.session?.id || detail.revision !== state.settings.analysisRevision
-      || anchor.closest(".blocksb-masked,.blocksb-exiting,.blocksb-removed")
-      || anchor.closest(".blocksb-comment-tools")?.dataset.postId !== detail.postId) { hideProbabilityPanel(); return; }
+    const observer = detail?.module === "observer";
+    const article = anchor?.closest('article[data-testid="tweet"]');
+    const validScope = observer ? observerEnabled() && state.settings.observer.showMarkers && detail.account === viewer()
+      && detail.policy === observerConfig && anchor.dataset.postId === detail.postId
+      && article && readPost(article)?.id === detail.postId
+      : threadEnabled() && detail?.sessionId === state.session?.id
+        && anchor?.closest(".blocksb-comment-tools")?.dataset.postId === detail?.postId;
+    if (!anchor?.isConnected || !detail || !validScope || drawerOpen || document.hidden
+      || detail.revision !== state.settings.analysisRevision
+      || anchor.closest(".blocksb-masked,.blocksb-exiting,.blocksb-removed")) { hideProbabilityPanel(); return; }
     const rect = anchor.getBoundingClientRect();
     if (rect.bottom <= 0 || rect.top >= innerHeight || !rect.width) { hideProbabilityPanel(); return; }
-    const options = state.settings.ruleOptions || [], decision = detail.decision;
-    const signature = JSON.stringify([detail, options, state.settings.high, state.settings.confidence]);
+    const options = (observer ? state.settings.observer.ruleOptions : state.settings.ruleOptions) || [];
+    const decision = detail.decision, high = observer ? state.settings.observer.threshold : state.settings.high;
+    const confidence = observer ? state.settings.observer.confidence : state.settings.confidence;
+    const signature = JSON.stringify([detail, options, high, confidence]);
     if (signature !== probabilitySignature) {
       probabilitySignature = signature;
       probabilityPanel.replaceChildren();
@@ -277,16 +344,17 @@
       const palette = ["#d97706", "#0d9488", "#3982d5", "#9261cb", "#dc5277", "#728b20"];
       let missing = false;
       options.forEach((option, index) => {
-        // Before full distributions were stored, only the built-in support score was retained.
-        const value = decision?.probabilities?.[option.id] ?? (!decision?.customRule && option.id === "support" ? decision?.support : undefined);
+        // Legacy records retain only support or the observer's winning score, never the other probabilities.
+        const value = decision?.probabilities?.[option.id] ?? (observer ? option.id === decision?.label ? decision.score : undefined : !decision?.customRule && option.id === "support" ? decision?.support : undefined);
         const known = Number.isFinite(value) && value >= 0 && value <= 1;
         if (!known) missing = true;
         const row = element("div", "probability-option");
         row.style.setProperty("--option-color", palette[index] || `hsl(${Math.round(index * 137.508) % 360} 62% 48%)`);
-        const optionName = !state.settings.customRule && ["support", "oppose", "neutral", "uncertain"].includes(option.id) ? t(`category_${option.id}`) : option.name;
+        const optionName = observer && !state.settings.observer.customRule ? t(`observer_category_${option.id}`)
+          : !observer && !state.settings.customRule && ["support", "oppose", "neutral", "uncertain"].includes(option.id) ? t(`category_${option.id}`) : option.name;
         const line = element("div", "probability-option-heading"), name = element("span", "probability-option-name", optionName);
         const tags = element("span", "probability-tags");
-        if (option.block) tags.append(element("span", "probability-tag", t("ui_block_target")));
+        if (option.block) tags.append(element("span", "probability-tag", t(observer ? "ui_observer_count_evidence" : "ui_block_target")));
         if (decision?.label === option.id) tags.append(element("span", "probability-tag chosen", t("ui_model_selection")));
         line.append(name, tags, element("strong", "probability-value", known ? probabilityPercent(value) : "—"));
         const bar = element("div", "probability-bar");
@@ -296,14 +364,14 @@
         else bar.setAttribute("aria-valuetext", t("ui_no_probability_available"));
         const fill = element("div", "probability-fill"); fill.style.width = `${known ? value * 100 : 0}%`; bar.append(fill);
         if (option.block) {
-          const marker = element("span", "probability-threshold"); marker.style.left = `${state.settings.high * 100}%`;
-          marker.setAttribute("aria-label", t("ui_block_threshold", probabilityPercent(state.settings.high))); bar.append(marker);
+          const marker = element("span", "probability-threshold"); marker.style.left = `${high * 100}%`;
+          marker.setAttribute("aria-label", observer ? `${t("ui_observer_single_threshold")} ${probabilityPercent(high)}` : t("ui_block_threshold", probabilityPercent(high))); bar.append(marker);
         }
         const scale = element("div", "probability-scale"); scale.append(element("span", "", "0%"), element("span", "", "100%"));
         row.append(line, bar, scale); list.append(row);
       });
       const legend = element("div", "probability-legend");
-      legend.append(element("span", "probability-legend-marker"), document.createTextNode(t("ui_block_threshold_confidence_must_be", probabilityPercent(state.settings.high), probabilityPercent(state.settings.confidence))));
+      legend.append(element("span", "probability-legend-marker"), document.createTextNode(t(observer ? "ui_observer_probability_threshold" : "ui_block_threshold_confidence_must_be", probabilityPercent(high), probabilityPercent(confidence))));
       probabilityPanel.append(list, legend);
       if (missing && decision && !decision.error) probabilityPanel.append(element("p", "probability-note", t("ui_older_results_may_lack_a_full_distribution_missing_values_show")));
       probabilityPanel.append(element("p", "probability-note", detail.explanation));
@@ -320,8 +388,8 @@
     if (probabilityAnchor !== anchor) probabilityAnchor?.setAttribute("aria-expanded", "false");
     probabilityAnchor = anchor; anchor.setAttribute("aria-expanded", "true"); refreshProbabilityPanel();
   }
-  function probabilityBadge() {
-    const badge = element("button", "blocksb-probability"); badge.type = "button"; badge.setAttribute("aria-expanded", "false");
+  function probabilityBadge(className = "blocksb-probability") {
+    const badge = element("button", className); badge.type = "button"; badge.setAttribute("aria-expanded", "false");
     badge.addEventListener("pointerenter", e => { if (e.pointerType !== "touch") showProbabilityPanel(badge); });
     badge.addEventListener("pointerleave", deferProbabilityHide);
     badge.addEventListener("focus", () => showProbabilityPanel(badge)); badge.addEventListener("blur", deferProbabilityHide);
@@ -330,21 +398,36 @@
   }
   probabilityPanel.addEventListener("pointerenter", () => clearTimeout(probabilityHideTimer));
   probabilityPanel.addEventListener("pointerleave", deferProbabilityHide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hideProbabilityPanel(); }, true);
-  document.addEventListener("pointerdown", e => { if (e.target !== probabilityAnchor && !e.composedPath().includes(host)) hideProbabilityPanel(); }, true);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) hideProbabilityPanel(); });
+  listen(document, "keydown", e => { if (e.key === "Escape") hideProbabilityPanel(); }, true);
+  listen(document, "pointerdown", e => { if (e.target !== probabilityAnchor && !e.composedPath().includes(host)) hideProbabilityPanel(); }, true);
+  listen(document, "visibilitychange", () => { if (document.hidden) hideProbabilityPanel(); });
   let toastTimer;
-  function toast(text) { toastEl.textContent = String(text); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
+  function toast(text) { if (invalidated) return; toastEl.textContent = String(text); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
   function openDrawer(tab) {
+    if (!contextAlive()) return;
     hideProbabilityPanel();
     // An empty srcdoc injected by another page script takes precedence over src and leaves the drawer blank.
     iframe.removeAttribute("srcdoc");
-    iframe.src = chrome.runtime.getURL(`src/manager/manager.html?embedded=1&tab=${tab}&account=${encodeURIComponent(viewer())}`);
+    iframe.src = `${extensionBase}src/manager/manager.html?embedded=1&tab=${tab}&account=${encodeURIComponent(viewer())}`;
     drawerOpen = true; drawer.hidden = backdrop.hidden = false; close.focus();
   }
   function closeDrawer() { drawerOpen = false; drawer.hidden = backdrop.hidden = true; trash.focus(); }
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && drawerOpen) { e.stopPropagation(); closeDrawer(); } }, true);
-  window.addEventListener("message", e => {
+  /** Clear immediately, then persist only this click's unread records across X tabs/reloads. */
+  async function readTrash() {
+    if (!state || state.account !== viewer()) return;
+    const account = state.account;
+    const ids = state.history.filter(h => h.trashUnread && !trashReadPending.has(h.id)).map(h => h.id);
+    if (!ids.length) return;
+    ids.forEach(id => trashReadPending.add(id)); updateOverlay();
+    try {
+      for (let offset = 0; offset < ids.length; offset += 5000) await send("READ_TRASH", { account, ids: ids.slice(offset, offset + 5000) });
+      void refresh();
+    } catch (e) {
+      ids.forEach(id => trashReadPending.delete(id)); updateOverlay(); toast(e.message);
+    }
+  }
+  listen(document, "keydown", e => { if (e.key === "Escape" && drawerOpen) { e.stopPropagation(); closeDrawer(); } }, true);
+  listen(window, "message", e => {
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:animation-debug:v1") {
       // Console code and site scripts share MAIN world. Neither source/origin nor a
       // trusted MessageEvent authenticates the user. Legacy commands only open UI;
@@ -354,7 +437,7 @@
       }
       return;
     }
-    if (e.source === iframe.contentWindow && e.origin === new URL(chrome.runtime.getURL("/")).origin && e.data?.type === "blocksb:close") closeDrawer();
+    if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:close") closeDrawer();
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:timeline:v1") {
       const event = e.data;
       if (!/^\d{5,25}$/.test(event.rootId || "") || typeof event.recent !== "boolean" || !Number.isFinite(event.observedAt)) return;
@@ -377,15 +460,19 @@
           if ((followingUsers.get(key)?.followingAt || 0) <= relation.followingAt) followingUsers.set(key, { ...relation, userId: p.userId });
         }
         skipped.delete(`${state?.session?.id}:${p.id}`);
+        if (/^\d{5,25}$/.test(p.userId || "") && relation.followingAt > (observerRelationships.get(p.userId)?.followingAt || 0)) {
+          observerRelationships.set(p.userId, { id: p.id, userId: p.userId, handle: p.handle, name: String(p.name || p.handle).slice(0, 80), ...relation });
+        }
       }
       metadata.set(p.id, mergeContext(previous, { id: p.id, handle: p.handle, userId: /^\d{5,25}$/.test(p.userId) ? p.userId : "", name: String(p.name || p.handle).slice(0, 80),
-        ...relation,
+        ...relation, blueVerified: typeof p.blueVerified === "boolean" ? p.blueVerified : null,
         text: String(p.text || "").slice(0, 14000), conversationId: String(p.conversationId || ""), parentId: String(p.parentId || ""), hasMedia: !!p.hasMedia, incomplete: !!p.incomplete,
         domSeen: e.data.source === "dom" || !!previous?.domSeen,
         networkAt: e.data.source === "network" ? Math.max(previous?.networkAt || 0, observedAt) : previous?.networkAt || 0 }));
     }
     while (metadata.size > 2500) metadata.delete(metadata.keys().next().value);
     while (followingUsers.size > 5000) followingUsers.delete(followingUsers.keys().next().value);
+    while (observerRelationships.size > 2500) observerRelationships.delete(observerRelationships.keys().next().value);
     contextRevision++;
     schedule();
   });
@@ -419,6 +506,157 @@
     }
     return next === root.id ? chain : null;
   }
+  /** Return only complete, already-observed reply ancestry. No profile or parent fetches:
+   * context missing from a home feed is a reason to wait, not to guess the conversation.
+   */
+  function observerContext(post) {
+    if (!post?.userId || !/^\d{5,25}$/.test(post.userId) || !post.parentId || !post.conversationId || post.id === post.conversationId) return null;
+    const root = contextFor(post.conversationId);
+    if (!root || root.id !== root.conversationId || post.handle === root.handle) return null;
+    const chain = ancestors(post, root);
+    // Media presence is not missing ancestry. A media-only parent/root still lets
+    // Jev assess the reply text; unseen_media tells it which context it cannot read.
+    if (!chain || !post.text?.trim() || [root, post, ...chain].some(p => !p.text?.trim() && !p.hasMedia || p.incomplete || white(p))) return null;
+    return { root, ancestors: chain };
+  }
+  const observerDecision = post => {
+    const value = observerDecisions.get(post.id);
+    return value?.userId === post.userId && value?.handle === post.handle ? value : null;
+  };
+  function indexObserverSimulations() {
+    observerSimulated.clear();
+    for (const value of observerDecisions.values()) if (value.status === "simulated") observerSimulated.set(value.userId, value);
+  }
+  /** Render removal only for replies on the current thread, or context-complete feed replies.
+   * A past account decision must never blank a profile or a root post.
+   */
+  function observerRemoval(post) {
+    if (!observerEnabled() || observerProtected(post) || !post.userId || !post.parentId || post.id === post.conversationId || post.id === route()) return null;
+    const rootId = route();
+    if (rootId) {
+      const focal = contextFor(rootId);
+      if (!focal || post.conversationId !== focal.conversationId || (focal.id !== focal.conversationId && ancestors(post, focal) === null)) return null;
+    } else if (!observerContext(post)) return null;
+    const decision = observerDecision(post), history = observerHistory.get(post.userId);
+    if (history) {
+      if (isBlocked(history) || ["pending", "running"].includes(history.status) && !history.waitingFollowing) return history;
+      // Undo, cancellation and failures override a stale reply classification.
+      return null;
+    }
+    if (decision?.status === "simulated" && state.settings.debugDryRun) return { ...decision, id: `observer-debug:${post.userId}`, updated: decision.simulatedAt || Date.now() };
+    if (decision?.historyId && ["pending", "running", "submitted", "blocked"].includes(decision.status)) return { ...decision, id: decision.historyId, updated: Date.now() };
+    // A later reply by this author can trigger a simulated account-level action.
+    const simulated = state.settings.debugDryRun && observerSimulated.get(post.userId);
+    if (simulated) return { ...simulated, id: `observer-debug:${post.userId}`, updated: simulated.simulatedAt || Date.now() };
+    return null;
+  }
+  /** Rehydrate visible decisions in bounded batches. One worker lookup also refreshes
+   * account-level queue/undo state, so a third hit updates earlier visible replies.
+   */
+  function loadObserverDecisions(posts) {
+    if (observerLookup || !observerEnabled() || Date.now() < observerLookupAt) return;
+    const ids = [...new Set(posts.filter(p => p?.userId && p.parentId && !observerProtected(p)).map(p => p.id))];
+    const requested = (observerReload ? ids : ids.filter(id => !observerLoaded.has(id))).slice(0, 100);
+    if (!requested.length) { observerReload = false; return; }
+    const epoch = observerEpoch, account = viewer(), token = {};
+    observerLookup = token; observerReload = false;
+    send("OBSERVER_DECISIONS", { account, replyIds: requested }).then(values => {
+      if (epoch !== observerEpoch || account !== viewer() || !Array.isArray(values)) return;
+      // A forgotten/expired observation must also invalidate old simulated author
+      // state, including offscreen replies retained in this tab's bounded cache.
+      const returned = new Set(values.map(value => value.replyId));
+      const invalidated = new Set(requested.filter(id => !returned.has(id)).map(id => observerDecisions.get(id)?.userId).filter(Boolean));
+      if (invalidated.size) for (const [id, value] of observerDecisions) if (invalidated.has(value.userId)) observerDecisions.delete(id);
+      for (const id of requested) { observerDecisions.delete(id); observerLoaded.add(id); }
+      for (const value of values) if (requested.includes(value.replyId)) observerDecisions.set(value.replyId, value);
+      while (observerLoaded.size > 2500) observerLoaded.delete(observerLoaded.values().next().value);
+      while (observerDecisions.size > 2500) observerDecisions.delete(observerDecisions.keys().next().value);
+      indexObserverSimulations();
+      observerLookupAt = Date.now() + 600;
+    }).catch(() => { observerReload = true; observerLookupAt = Date.now() + 5000; })
+      .finally(() => { if (observerLookup === token) observerLookup = null; schedule(); });
+  }
+  function syncObserverRelationships() {
+    if (!state?.settings.observer?.enabled || observerRelationshipFlight || Date.now() < observerRelationshipRetryAt) return !!observerRelationshipFlight;
+    const account = viewer(), posts = [...observerRelationships.values()].filter(p => p.followingAccount === account).slice(0, 40);
+    if (!posts.length) return false;
+    const token = {}; observerRelationshipFlight = token;
+    send("OBSERVER_RELATIONSHIPS", { account, posts }).then(() => {
+      for (const p of posts) if (observerRelationships.get(p.userId) === p) observerRelationships.delete(p.userId);
+      observerRelationshipRetryAt = 0;
+    }).catch(() => { observerRelationshipRetryAt = Date.now() + 5000; })
+      .finally(() => { if (observerRelationshipFlight === token) observerRelationshipFlight = null; schedule(); });
+    return true;
+  }
+  /** Observe only replies that remain in the viewport. The worker deduplicates across
+   * tabs/restarts, enforces daily allowance and rechecks every protection before Jev/X.
+   */
+  function scanObserver(rows) {
+    if (!observerEnabled()) return;
+    const config = state.settings.observer, account = viewer(), now = Date.now();
+    const posts = [], candidates = [];
+    for (const article of rows) {
+      const post = readPost(article), rect = article.getBoundingClientRect();
+      if (post) posts.push(post);
+      if (!post || document.hidden || rect.bottom <= 0 || rect.top >= innerHeight || rect.width <= 0 || rect.height <= 0) { observerSeen.delete(article); continue; }
+      const seen = observerSeen.get(article);
+      if (!seen || seen.id !== post.id) { observerSeen.set(article, { id: post.id, at: now }); continue; }
+      if (now - seen.at >= 900) candidates.push(post);
+    }
+    loadObserverDecisions(posts);
+    if (syncObserverRelationships()) return;
+    if (observerFlight || document.hidden || animationDebug || debugBusy || state.settings.paused || state.modelError || !state.settings.configured) return;
+    for (const post of candidates) {
+      if (!observerLoaded.has(post.id) || observerDecision(post) || observerProtected(post)
+        || config.scope === "blue" && post.blueVerified !== true || (observerRetries.get(post.id) || 0) > now
+        || observerRemoval(post)) continue;
+      const context = observerContext(post);
+      if (!context) continue;
+      const relationship = followingObservation(post);
+      // Reuse the actual observation timestamp: revisiting a card must not make an
+      // old "not following" flag newer than a follow action observed in another tab.
+      const reply = { ...post, following: relationship?.following ?? null, followingAccount: relationship?.followingAccount || "", followingAt: relationship?.followingAt || 0 };
+      const epoch = observerEpoch, token = {};
+      observerFlight = token;
+      send("OBSERVE_REPLY", { account, root: context.root, reply, ancestors: context.ancestors }).then(result => {
+        if (epoch !== observerEpoch || account !== viewer()) return;
+        if (result?.action === "skip") observerRetries.set(post.id, ["withdrawn", "previous-error"].includes(result.why) ? Infinity : Date.now() + (result.why === "daily-limit" ? 300000 : 30000));
+        else if (result?.replyId === post.id) { observerDecisions.set(post.id, result); indexObserverSimulations(); observerReload = true; }
+        while (observerRetries.size > 2500) observerRetries.delete(observerRetries.keys().next().value);
+        schedule();
+      }).catch(() => {
+        if (epoch === observerEpoch) observerRetries.set(post.id, Date.now() + 60000);
+      }).finally(() => {
+        if (observerFlight === token) observerFlight = null;
+        clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 200);
+      });
+      break;
+    }
+  }
+  function observerMarker(article, post) {
+    let marker = article.querySelector(".blocksb-observer-marker");
+    const decision = observerDecision(post);
+    if (!observerEnabled() || observerProtected(post) || !state.settings.observer.showMarkers || !decision || !Number.isFinite(decision.spamScore)) { marker?.remove(); return; }
+    const date = (article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time"))?.closest("a");
+    if (!date) { marker?.remove(); return; }
+    if (!marker) { marker = probabilityBadge("blocksb-observer-marker"); date.after(marker); }
+    const text = t("observer_content_marker", Math.round(decision.spamScore * 100));
+    if (marker.textContent !== text) marker.textContent = text;
+    marker.dataset.suspicious = String(!!decision.suspicious);
+    marker.dataset.postId = post.id;
+    marker.removeAttribute("title");
+    const explanation = t("ui_observer_probability_note");
+    marker.setAttribute("aria-label", t("ui_view_probabilities_by_option", text, explanation));
+    probabilityDetails.set(marker, { module: "observer", account: viewer(), policy: observerConfig, postId: post.id, revision: state.settings.analysisRevision, decision, explanation });
+    if (probabilityAnchor === marker) refreshProbabilityPanel();
+  }
+  function observerMask(article, post) {
+    const decision = observerDecision(post), key = `observer:${viewer()}:${post.id}`;
+    if (!observerEnabled() || observerProtected(post) || !state.settings.observer.mask || !decision?.suspicious
+      || !observerContext(post) || revealedMasks.has(key) || ["cancelled", "unblocked"].includes(decision.status)) return false;
+    applyMask(article, key, t("observer_content_mask", Math.round((decision.spamScore ?? decision.score) * 100)), "observer");
+    return true;
+  }
   /** Only the originating task's replies may be hidden. Profiles, other timelines and
    * recommendations are outside scope, even when they contain the same blocked author.
    * A selected nested post also requires a proven parent chain within that branch.
@@ -429,11 +667,11 @@
     if (post.id === root.id || !root.conversationId || post.conversationId !== root.conversationId) return false;
     return root.id === root.conversationId || ancestors(post, root) !== null;
   }
-  document.addEventListener("pointerdown", e => {
+  listen(document, "pointerdown", e => {
     const trigger = e.target.closest?.('[data-testid="caret"]');
     if (trigger) { menuTrigger = trigger; menuTarget = readPost(trigger.closest('article[data-testid="tweet"]') || trigger); }
   }, true);
-  document.addEventListener("keydown", e => {
+  listen(document, "keydown", e => {
     if (["Enter", " "].includes(e.key) && e.target.matches?.('[data-testid="caret"]')) { menuTrigger = e.target; menuTarget = readPost(e.target.closest("article")); }
   }, true);
   /** Dismiss through X's own toggle so its focus trap and backdrop are cleaned up together. */
@@ -517,6 +755,13 @@
     const previous = maskState.get(article);
     if (previous && (!eligible || previous.key !== key)) clearMask(article);
     if (!eligible) return;
+    applyMask(article, key, t("ui_auto_hidden", decision.customRule ? t("match_probability") : t("support_probability"), Math.round(decision.support * 100)), "agreement");
+  }
+  /** Shared equal-height cover; ownership keeps automatic observation and manual
+   * agreement tasks from restoring each other's still-active visual treatment.
+   */
+  function applyMask(article, key, label, module) {
+    if (maskState.get(article)?.key !== key) clearMask(article);
     let info = maskState.get(article);
     if (!info) {
       const cover = element("div", "blocksb-comment-mask");
@@ -528,12 +773,11 @@
       }, "blocksb-mask-reveal"));
       // Do not let the article's navigation handler receive clicks through the mask.
       cover.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); });
-      info = { key, cover, children: new Map() };
+      info = { key, cover, children: new Map(), module };
       maskState.set(article, info);
       article.classList.add("blocksb-masked");
       article.append(cover);
     }
-    const label = t("ui_auto_hidden", decision.customRule ? t("match_probability") : t("support_probability"), Math.round(decision.support * 100));
     if (info.cover.firstElementChild.textContent !== label) info.cover.firstElementChild.textContent = label;
     // X may replace child nodes while the card remains mounted. Protect new children too.
     for (const child of article.children) if (child !== info.cover && !info.children.has(child)) {
@@ -654,14 +898,14 @@
    * X's virtualizer observes the changing height; its cell offsets are never overwritten.
    * The operation is cancellable on undo, failure, account/route change or recycled DOM.
    */
-  function removeCard(article, post, animate, debug = false) {
-    if (rowState.get(article)?.id === post.id && rowState.get(article).mode === "removed") return;
+  function removeCard(article, post, animate, debug = false, module = "agreement") {
+    if (rowState.get(article)?.id === post.id && rowState.get(article).mode === "removed") { rowState.get(article).module = module; return; }
     restore(article);
-    const info = { id: post.id, mode: "removed", handle: post.handle, cancelled: false, debug, inert: article.inert, animations: [] };
+    const info = { id: post.id, mode: "removed", handle: post.handle, cancelled: false, debug, module, inert: article.inert, animations: [] };
     rowState.set(article, info);
     movingRows.add(article);
     const rect = article.getBoundingClientRect(), dest = trash.getBoundingClientRect();
-    const key = `${sessionId}:${post.id}`;
+    const key = `${module === "observer" ? `observer:${viewer()}` : sessionId}:${post.id}`;
     const motion = animate && (debug || !played.has(key)) && !trash.hidden && (debug || state.settings.animation) && !(state?.settings.reducedMotion && matchMedia("(prefers-reduced-motion: reduce)").matches) && rect.bottom > 0 && rect.top < innerHeight && rect.width > 0;
     const valid = () => !info.cancelled && article.isConnected && rowState.get(article) === info && readPost(article)?.id === post.id;
     const finish = () => {
@@ -715,11 +959,12 @@
     finish();
   }
   function updateOverlay() {
+    if (!contextAlive()) return;
     renderDebugPanel();
-    trash.hidden = !featureEnabled() && !(animationDebug && debugRows.size);
+    trash.hidden = !featureEnabled() && !observerEnabled() && !(animationDebug && debugRows.size);
     alignTrash();
     const s = state?.session;
-    const count = state?.history.filter(h => ["blocked", "submitted"].includes(h.status)).length || 0;
+    const count = state?.account === viewer() ? state.history.filter(h => h.trashUnread && !trashReadPending.has(h.id) && ["blocked", "submitted"].includes(h.status)).length : 0;
     badge.textContent = count > 99 ? "99+" : String(count); badge.hidden = !count;
     status.hidden = !featureEnabled();
     if (!status.hidden) {
@@ -752,18 +997,53 @@
     Object.assign(trash.style, { left: `${rect.left}px`, right: "auto", top: `${top}px`, bottom: "auto", width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: getComputedStyle(grok.e).borderRadius });
     Object.assign(status.style, { right: `${innerWidth - rect.left + 12}px`, bottom: `${innerHeight - top - rect.height / 2 - 21}px` });
   }
+  function localizeOverlay() {
+    locale = globalThis.BlockSBI18n.locale; host.lang = locale;
+    probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+    probabilitySignature = ""; hideProbabilityPanel();
+    trash.title = t("ui_block_s_b_block_history"); trash.setAttribute("aria-label", trash.title);
+    stop.textContent = t("ui_stop"); autoLoad.title = t("ui_automatically_load_more_replies_pauses_when_you_switch_pages_or");
+    backdrop.setAttribute("aria-label", t("ui_close_panel")); close.setAttribute("aria-label", t("ui_close_panel"));
+    drawer.setAttribute("aria-label", t("ui_block_s_b_panel")); iframe.title = t("ui_block_somebody_panel");
+    probabilityPanel.setAttribute("aria-label", t("ui_probabilities_by_option"));
+    debugPanel.setAttribute("aria-label", t("ui_debug_panel")); debugHeading.firstElementChild.textContent = t("ui_debug_panel");
+    debugExit.textContent = t("ui_debug_exit"); dryToggle.label.firstElementChild.textContent = t("ui_debug_no_block");
+    previewToggle.label.firstElementChild.textContent = t("ui_debug_preview_only");
+    effectLabel.firstChild.textContent = t("ui_animation_style");
+    debugSelect.options[0].textContent = t("ui_fly_to_trash"); debugSelect.options[1].textContent = t("ui_particle_dissolve");
+    debugPlay.textContent = t("ui_debug_play"); debugReset.textContent = t("ui_debug_restore");
+    debugPanel.querySelector(".debug-hint").textContent = t("ui_debug_hint");
+    document.querySelectorAll(".blocksb-menu-item").forEach(node => node.remove());
+    document.querySelectorAll(".blocksb-mask-reveal").forEach(node => { node.textContent = t("ui_show_reply"); });
+  }
   async function refresh() {
+    if (!contextAlive()) return;
     if (refreshing) { refreshAgain = true; return; }
     refreshing = true;
     try {
       const previousState = state;
       state = await send("SNAPSHOT", { account: viewer() });
+      const unreadIds = new Set(state.history.filter(h => h.trashUnread).map(h => h.id));
+      for (const id of trashReadPending) if (!unreadIds.has(id)) trashReadPending.delete(id);
+      if (globalThis.BlockSBI18n.setLanguage && previousState?.settings.language !== state.settings.language) {
+        await globalThis.BlockSBI18n.setLanguage(state.settings.language);
+        localizeOverlay();
+      }
+      const nextObserverConfig = JSON.stringify([state.settings.observer, state.settings.analysisRevision, state.settings.debugDryRun]);
+      if (observerAccount !== viewer() || observerConfig !== nextObserverConfig) {
+        if (observerAccount !== viewer()) {
+          for (const [id, p] of observerRelationships) if (p.followingAccount !== viewer()) observerRelationships.delete(id);
+        }
+        observerAccount = viewer(); observerConfig = nextObserverConfig; observerEpoch++;
+        observerDecisions.clear(); observerSimulated.clear(); observerLoaded.clear(); observerRetries.clear(); observerLookupAt = 0;
+      }
+      observerReload = true;
       indexSnapshot();
       if (previousState && JSON.stringify(previousState.whitelist) !== JSON.stringify(state.whitelist)) {
         syncedContextRevision = -1; requestedContext.clear();
         for (const [id, p] of contextPosts) if (white(p)) { contextPosts.delete(id); savedContext.delete(id); }
       }
-      if (previousState && (previousState.modelError && !state.modelError || previousState.settings.paused && !state.settings.paused || previousState.settings.analysisRevision !== state.settings.analysisRevision || previousState.settings.skipFollowing !== state.settings.skipFollowing)) skipped.clear();
+      if (previousState && (previousState.modelError && !state.modelError || previousState.settings.paused && !state.settings.paused || previousState.settings.analysisRevision !== state.settings.analysisRevision || previousState.settings.skipFollowing !== state.settings.skipFollowing)) { skipped.clear(); observerRetries.clear(); }
       if (sessionId !== (state.session?.id || "")) {
         contextPosts.clear(); savedContext.clear(); requestedContext.clear(); contextFlight = null; contextRetryAt = 0; contextError = ""; syncedContextRevision = -1;
         sessionId = state.session?.id || ""; skipped.clear(); failure = ""; lastLocation = ""; locationRetryAt = 0; locationError = "";
@@ -775,7 +1055,7 @@
     } catch (e) { statusText.textContent = String(e.message); }
     finally { refreshing = false; if (refreshAgain) { refreshAgain = false; void refresh(); } }
   }
-  function schedule() { if (!timer) timer = setTimeout(() => { timer = null; scan(); }, 160); }
+  function schedule() { if (contextAlive() && !timer) timer = setTimeout(() => { timer = null; scan(); }, 160); }
   /** Drive X's native sort menu without changing location or reloading the document.
    * A selected label is not readiness: wait for a matching response or settled replacement rows.
    */
@@ -874,18 +1154,24 @@
     window.scrollBy({ top: Math.max(240, innerHeight * .8), behavior: "instant" });
   }
   function scan() {
+    if (!contextAlive()) return;
     if (probabilityAnchor) refreshProbabilityPanel();
     injectMenu();
     if (debugRoute !== route()) { debugRows.clear(); debugRoute = route(); }
     for (const article of movingRows) {
       const info = rowState.get(article), post = readPost(article);
-      if (!article.isConnected || post?.id !== info.id || info.debug && (!animationDebug || !debugRows.has(info.id))) restore(article);
+      if (!article.isConnected || post?.id !== info.id || info.debug && (!animationDebug || !debugRows.has(info.id)) || info.module === "observer" && !observerEnabled()) restore(article);
     }
+    if (!observerEnabled()) document.querySelectorAll(".blocksb-observer-marker,.blocksb-masked").forEach(node => {
+      if (node.classList.contains("blocksb-observer-marker")) node.remove();
+      else if (maskState.get(node)?.module === "observer") clearMask(node);
+    });
     // Also clean recycled/hidden rows when the task ends or the user leaves its thread.
     if (!threadEnabled() || state?.account !== viewer()) {
       document.querySelectorAll(".blocksb-comment-tools").forEach(node => node.remove());
       document.querySelectorAll(".blocksb-masked,.blocksb-removed,.blocksb-exiting").forEach(article => {
-        if (!(animationDebug && debugRows.has(readPost(article)?.id))) restore(article);
+        const owner = rowState.get(article)?.module || maskState.get(article)?.module;
+        if (owner !== "observer" && !(animationDebug && debugRows.has(readPost(article)?.id))) restore(article);
       });
     }
     updateOverlay();
@@ -896,6 +1182,7 @@
     const rows = articles();
     prepareThread(rows);
     if (state.account !== account) { void refresh(); return; }
+    scanObserver(rows);
     const candidateRoot = rows.map(readPost).find(p => p?.id === s?.root.id) || metadata.get(s?.root.id);
     const focal = candidateRoot?.handle === s?.root.handle ? candidateRoot : null;
     // Save even replies by already-blocked authors: another comment may refer to them later.
@@ -923,20 +1210,27 @@
     const active = pageReady && s && !s.stopped && !s.paused && !state.settings.paused && s.active && s.account === account && rootId === s.root.id;
     for (const article of rows) {
       const p = readPost(article);
-      if (!p) { restore(article); article.querySelector(".blocksb-comment-tools")?.remove(); continue; }
+      if (!p) { restore(article); article.querySelector(".blocksb-comment-tools")?.remove(); article.querySelector(".blocksb-observer-marker")?.remove(); continue; }
+      observerMarker(article, p);
       const old = rowState.get(article);
       const decision = s?.root.id === rootId ? s.results[p.id] : null;
       // The classification response already confirms durable enqueue, before the X request completes.
       const h = historyFor(p, account) || (decision?.historyId ? { id: decision.historyId, rootId, status: "pending", updated: Date.now() } : null);
       const queued = ["pending", "running"].includes(h?.status) && !h?.waitingFollowing;
-      const hide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
+      const manualHide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
+      const observedRemoval = observerRemoval(p);
+      const hide = manualHide || !!observedRemoval;
       if (old && !hide && ["failed", "uncertain"].includes(h?.status) && !reportedFailures.has(h.id)) {
         reportedFailures.add(h.id); toast(t("ui_block_for_did_not_complete_replies_restored_check_the_trash", p.handle));
       }
       if (old && (old.id !== p.id || !hide || old.mode !== "removed")) restore(article);
-      if (hide) { removeCard(article, p, queued || ["blocked", "submitted"].includes(h.status) && Date.now() - h.updated < 6000); continue; }
+      if (hide) {
+        const removal = manualHide ? h : observedRemoval;
+        const recent = ["pending", "running", "simulated"].includes(removal.status) || ["blocked", "submitted"].includes(removal.status) && Date.now() - removal.updated < 6000;
+        removeCard(article, p, recent, false, manualHide ? "agreement" : "observer"); continue;
+      }
       commentTools(article, p, decision, h, rootId);
-      maskCard(article, p, decision);
+      if (!observerMask(article, p)) maskCard(article, p, decision);
     }
     // Existing candidates come from DOM scans. New responses may add candidates after activation;
     // replayed old network data supplies context only. Both paths share deduplication and ancestry checks.
@@ -968,21 +1262,22 @@
     }
     advanceComments(active); updateOverlay();
   }
-  const observer = new MutationObserver(records => {
+  pageObserver = new MutationObserver(records => {
     if (records.some(r => {
       const node = r.target.nodeType === 1 ? r.target : r.target.parentElement;
-      const owned = "#blocksb-overlay,.blocksb-comment-tools,.blocksb-comment-mask,.blocksb-flying-card,.blocksb-menu-item";
+      const owned = "#blocksb-overlay,.blocksb-comment-tools,.blocksb-observer-marker,.blocksb-comment-mask,.blocksb-flying-card,.blocksb-menu-item";
       if (node?.closest?.(owned)) return false;
       const changed = [...r.addedNodes, ...r.removedNodes];
       return !changed.length || !changed.every(n => n.nodeType === 1 && n.matches(owned));
     })) schedule();
   });
-  observer.observe(document.body, { childList: true, subtree: true });
-  document.addEventListener("scroll", e => { if (e.target !== host && !host.contains(e.target)) hideProbabilityPanel(); schedule(); }, { passive: true, capture: true });
-  window.addEventListener("resize", () => { hideProbabilityPanel(); schedule(); }, { passive: true });
+  pageObserver.observe(document.body, { childList: true, subtree: true });
+  listen(document, "scroll", e => { if (e.target !== host && !host.contains(e.target)) hideProbabilityPanel(); schedule(); }, { passive: true, capture: true });
+  listen(window, "resize", () => { hideProbabilityPanel(); schedule(); }, { passive: true });
   let previous = "";
   // Restore rows immediately on route/account changes, even while a background snapshot is pending.
-  setInterval(() => { alignTrash(); const key = `${location.href}|${viewer()}`; if (key !== previous) { previous = key; schedule(); void refresh(); } else if (featureEnabled()) schedule(); }, 900);
-  chrome.runtime.onMessage.addListener(message => { if (message?.type === "STATE_CHANGED") { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 100); } });
+  pollTimer = setInterval(() => { if (!contextAlive()) return; alignTrash(); const key = `${location.href}|${viewer()}`; if (key !== previous) { previous = key; schedule(); void refresh(); } else if (featureEnabled() || observerEnabled()) schedule(); }, 900);
+  function onStateChanged(message) { if (contextAlive() && message?.type === "STATE_CHANGED") { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 100); } }
+  chrome.runtime.onMessage.addListener(onStateChanged);
   void refresh();
 })();

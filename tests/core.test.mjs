@@ -73,3 +73,26 @@ test("threshold preferences reject impossible or non-finite combinations", () =>
   assert.throws(() => updateSettings(DEFAULTS, { model: "https://evil.example" }));
   assert.equal(updateSettings(DEFAULTS, { preset: "balanced" }).high, .87);
 });
+
+test("observer settings stay opt-in and independent of the stance policy", () => {
+  assert.equal(DEFAULTS.observer.enabled, false);
+  const updated = updateSettings(DEFAULTS, { observer: { enabled: true, skipFollowing: false }, autoLoadDefault: true, language: "zh_TW" });
+  assert.equal(updated.observer.enabled, true);
+  assert.equal(updated.observer.skipFollowing, false);
+  assert.equal(updated.skipFollowing, true);
+  assert.equal(updated.observer.minHits, 3);
+  assert.equal(updated.autoLoadDefault, true);
+  assert.equal(updated.language, "zh_TW");
+  assert.equal(DEFAULTS.observer.enabled, false, "saving nested preferences must not mutate defaults");
+  assert.throws(() => updateSettings(DEFAULTS, { language: "../../invalid" }));
+});
+
+test("post snapshots retain explicit blue status without persisting avatar fields", () => {
+  const post = sanitizePost({ ...reply, blueVerified: true, avatar: "https://example.org/avatar.jpg", profile_image_url_https: "https://example.org/another.jpg" });
+  assert.equal(post.blueVerified, true);
+  assert.equal(post.userId, reply.userId);
+  assert.equal("avatar" in post, false);
+  assert.equal("profile_image_url_https" in post, false);
+  assert.equal(sanitizePost({ ...reply, verified: true }).blueVerified, null);
+  assert.equal(sanitizePost({ ...reply, blueVerified: "true" }).blueVerified, null);
+});

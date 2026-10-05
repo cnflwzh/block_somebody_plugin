@@ -1,6 +1,6 @@
 {
   "action_title": {
-    "message": "block s.b. · 기록, 허용 목록 및 설정"
+    "message": "block s.b. · 기록, AI 스팸 차단 및 설정"
   },
   "agreement_probability": {
     "message": "동의 확률"
@@ -18,7 +18,7 @@
     "message": "자동 불러오기: 켜짐"
   },
   "block_history": {
-    "message": "차단 기록"
+    "message": "동조 계정 차단"
   },
   "category_neutral": {
     "message": "무관한 내용"
@@ -33,7 +33,7 @@
     "message": "판단 불가"
   },
   "extension_description": {
-    "message": "X 답글의 동의 확률을 표시하고 조건에 맞는 계정을 차단합니다. 직접 차단, 기록 되돌리기, 허용 목록을 지원합니다."
+    "message": "X의 동조 댓글과 AI 스팸 의심 댓글을 분류합니다. 자동 관찰, 누적 판정 차단, 차단 취소 및 허용 목록을 지원합니다."
   },
   "match_probability": {
     "message": "일치 확률"
@@ -1799,6 +1799,324 @@
   },
   "ui_debug_hint": {
     "message": "Jev 분석 비용은 계속 발생합니다. 이 옵션을 켜면 기존 차단 작업도 대기하고, 끄면 재개됩니다. 시뮬레이션을 끝내려면 게시물 작업을 다시 시작하세요. 이미 보낸 요청은 취소할 수 없습니다."
+  },
+  "ui_invalid_interface_language": {
+    "message": "지원하지 않는 표시 언어입니다."
+  },
+  "observer_content_marker": {
+    "message": "스팸 의심 $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_mask": {
+    "message": "스팸 의심 · $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_reason": {
+    "message": "$v0$ · $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_title": {
+    "message": "AI 스팸 차단"
+  },
+  "ui_observer_enable": {
+    "message": "자동 관찰"
+  },
+  "ui_observer_watching": {
+    "message": "관찰 중"
+  },
+  "ui_observer_search": {
+    "message": "계정 검색"
+  },
+  "ui_observer_adjust": {
+    "message": "분류 설정 변경"
+  },
+  "ui_general_settings": {
+    "message": "일반 설정"
+  },
+  "ui_observer_settings": {
+    "message": "AI 스팸 차단 설정"
+  },
+  "ui_support_settings": {
+    "message": "동조 계정 차단 설정"
+  },
+  "ui_model_connection": {
+    "message": "모델 연결"
+  },
+  "ui_modify": {
+    "message": "변경"
+  },
+  "ui_api_model": {
+    "message": "API 엔드포인트 및 모델"
+  },
+  "ui_shared_allowlist": {
+    "message": "두 기능에서 공통으로 사용"
+  },
+  "ui_manage_allowlist": {
+    "message": "허용 목록 관리"
+  },
+  "ui_display_animation": {
+    "message": "화면 및 애니메이션"
+  },
+  "ui_interface_language": {
+    "message": "표시 언어"
+  },
+  "ui_language_auto": {
+    "message": "브라우저 설정 사용"
+  },
+  "ui_delete_effect": {
+    "message": "삭제 효과"
+  },
+  "ui_observer_scope": {
+    "message": "관찰 범위"
+  },
+  "ui_observer_blue": {
+    "message": "파란 체크만"
+  },
+  "ui_observer_all": {
+    "message": "모든 계정"
+  },
+  "ui_observer_conditions": {
+    "message": "누적 차단 조건"
+  },
+  "ui_observer_hits": {
+    "message": "의심 댓글"
+  },
+  "ui_observer_threads": {
+    "message": "서로 다른 원글"
+  },
+  "ui_observer_rate": {
+    "message": "최근 의심 판정 비율"
+  },
+  "ui_observer_items": {
+    "message": "개"
+  },
+  "ui_observer_recent_hint": {
+    "message": "최근 유효 판정 5건 기준"
+  },
+  "ui_observer_retention": {
+    "message": "판정 근거 보관"
+  },
+  "ui_observer_daily": {
+    "message": "일일 분석 한도"
+  },
+  "ui_observer_days_7": {
+    "message": "7일"
+  },
+  "ui_observer_days_30": {
+    "message": "30일"
+  },
+  "ui_observer_days_90": {
+    "message": "90일"
+  },
+  "ui_observer_markers": {
+    "message": "분류 표시 보기"
+  },
+  "ui_observer_mask": {
+    "message": "차단 전에 의심 댓글 가리기"
+  },
+  "ui_observer_advanced": {
+    "message": "고급 규칙"
+  },
+  "ui_probability_range": {
+    "message": "지지 확률 범위"
+  },
+  "ui_hide_lower": {
+    "message": "자동 가리기 확률 하한"
+  },
+  "ui_hide_upper": {
+    "message": "자동 가리기 확률 상한"
+  },
+  "ui_auto_load_default": {
+    "message": "기본으로 댓글 자동 불러오기"
+  },
+  "ui_observer_state_active": {
+    "message": "백그라운드 관찰 중"
+  },
+  "ui_observer_state_off": {
+    "message": "자동 관찰 꺼짐"
+  },
+  "ui_observer_state_paused": {
+    "message": "일시 정지됨"
+  },
+  "ui_observer_state_unconfigured": {
+    "message": "먼저 모델을 연결하세요"
+  },
+  "ui_observer_state_limited": {
+    "message": "오늘의 분석 한도에 도달했습니다"
+  },
+  "ui_observer_state_error": {
+    "message": "서비스 오류를 확인해 주세요"
+  },
+  "ui_observer_evidence_summary": {
+    "message": "의심 $v0$ / 유효 $v1$ · 원글 $v2$개",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_observer_empty": {
+    "message": "아직 관찰 기록이 없습니다"
+  },
+  "ui_observer_empty_hint": {
+    "message": "자동 관찰을 켜면 탐색 중 본 댓글의 판정이 여기에 쌓입니다."
+  },
+  "ui_observer_no_matches": {
+    "message": "일치하는 계정이 없습니다"
+  },
+  "ui_observer_no_evidence": {
+    "message": "아직 유효한 판정 근거가 없습니다"
+  },
+  "ui_observer_blue_verified": {
+    "message": "파란 체크 계정"
+  },
+  "ui_observer_actor": {
+    "message": "@$v0$ 계정으로 사용 중",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_simulated": {
+    "message": "디버그 시뮬레이션"
+  },
+  "ui_observer_forget": {
+    "message": "관찰 기록 삭제"
+  },
+  "ui_observer_forget_copy": {
+    "message": "@$v0$의 누적 기록을 삭제합니다. 이후 마주치는 새 댓글부터 다시 관찰합니다.",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_single_threshold": {
+    "message": "댓글별 의심 확률 기준"
+  },
+  "ui_observer_invalid_rule": {
+    "message": "50~100 사이의 확률을 입력하세요."
+  },
+  "ui_observer_connected": {
+    "message": "연결됨"
+  },
+  "ui_cache_summary": {
+    "message": "$v0$건 · $v1$일",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "observer_category_spam": {
+    "message": "상투적 스팸"
+  },
+  "observer_category_template": {
+    "message": "정형화된 재진술"
+  },
+  "observer_category_empty": {
+    "message": "내용 없는 반응"
+  },
+  "observer_category_repetitive": {
+    "message": "상투적 표현 반복"
+  },
+  "observer_category_useful": {
+    "message": "실질적인 내용"
+  },
+  "observer_category_normal": {
+    "message": "일반적인 대화"
+  },
+  "observer_category_uncertain": {
+    "message": "판단 불가"
+  },
+  "observer_error_settings": {
+    "message": "AI 스팸 차단 설정이 잘못되었습니다. 입력값을 확인하세요."
+  },
+  "observer_error_threads": {
+    "message": "서로 다른 원글 수는 의심 댓글 수를 초과할 수 없습니다."
+  },
+  "observer_error_prompt": {
+    "message": "프롬프트는 12,000자 이하의 텍스트여야 합니다."
+  },
+  "observer_error_answer": {
+    "message": "모델의 스팸 분류 또는 확률 분포가 잘못되어 이번 결과는 관찰 기록에 반영되지 않았습니다."
+  },
+  "observer_error_database_timeout": {
+    "message": "관찰 기록 데이터베이스를 여는 시간이 초과되었습니다. 잠시 후 다시 시도하세요."
+  },
+  "observer_error_database_unavailable": {
+    "message": "관찰 기록 데이터베이스를 열 수 없습니다."
+  },
+  "observer_error_transaction": {
+    "message": "관찰 기록 데이터베이스 작업에 실패했습니다. 다시 시도하세요."
+  },
+  "ui_cache": {
+    "message": "캐시"
+  },
+  "ui_observer_state_debug": {
+    "message": "디버그 모드로 관찰 중"
+  },
+  "ui_prompt_settings": {
+    "message": "사용자 지정 프롬프트"
+  },
+  "ui_auto_hide_heading": {
+    "message": "자동 가리기"
+  },
+  "observer_error_database_transaction": {
+    "message": "관찰 기록 데이터베이스 작업에 실패했습니다. 다시 시도하세요."
+  },
+  "ui_observer_probability_threshold": {
+    "message": "개별 댓글 의심 기준 $v0$ · 확신도 $v1$ 이상",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_probability_note": {
+    "message": "표시된 확률은 선택한 범주의 확률을 합산한 값입니다. 근거 집계에는 개별 범주의 확률과 신뢰도 기준을, 차단에는 계정별 누적 조건도 충족해야 합니다."
+  },
+  "variable_ancestors": {
+    "message": "상위 답글 맥락"
+  },
+  "ui_observer_count_evidence": {
+    "message": "의심 근거로 집계"
+  },
+  "ui_observer_rule_selection": {
+    "message": "여러 범주를 선택할 수 있습니다. 모델이 선택한 범주의 확률과 신뢰도가 기준을 충족하면 근거로 집계하며, 계정별 누적 조건까지 충족해야 차단합니다."
+  },
+  "ui_observer_beta_notice": {
+    "message": "이 기능은 현재 베타 버전으로, 정상적인 답글을 잘못 판단하거나 스팸을 놓칠 수 있습니다. 더 나은 프롬프트가 있다면 PR로 제안해 주세요. 함께 탐지 품질을 개선할 수 있습니다."
+  },
+  "ui_observer_beta_contribute": {
+    "message": "프롬프트 개선 제안"
   }
-
 }

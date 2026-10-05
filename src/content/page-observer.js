@@ -23,6 +23,14 @@
     }
     return null; // An omitted relationship is not proof that the viewer does not follow.
   };
+  // `verified` also describes legacy/gold/grey badges. Only X's explicit blue
+  // subscription flag is evidence for the observer's blue-only scope.
+  const blueVerified = user => {
+    for (const value of [user?.is_blue_verified, user?.legacy?.is_blue_verified]) {
+      if (typeof value === "boolean") return value;
+    }
+    return null;
+  };
   /** Sparse blocked cards must not overwrite the full post previously observed on this page. */
   function remember(post) {
     const previous = records.get(post.id);
@@ -30,7 +38,8 @@
       const keepText = previous.text && (!post.text || !previous.incomplete && post.incomplete);
       post = { ...post, userId: post.userId || previous.userId, conversationId: post.conversationId || previous.conversationId,
         parentId: post.parentId || previous.parentId, text: keepText ? previous.text : post.text,
-        incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia };
+        incomplete: keepText ? previous.incomplete : post.incomplete, hasMedia: post.hasMedia || previous.hasMedia,
+        blueVerified: typeof post.blueVerified === "boolean" ? post.blueVerified : previous.blueVerified ?? null };
     }
     records.delete(post.id); records.set(post.id, post);
     return post;
@@ -81,6 +90,7 @@
           name: String(tweet.user.name || tweet.user.screen_name), text: text.slice(0, 14000), conversationId: String(tweet.conversation_id_str || ""),
           parentId: String(tweet.in_reply_to_status_id_str || ""), hasMedia: !!(tweet.extended_entities?.media?.length || tweet.entities?.media?.length || tweet.quoted_status || tweet.card),
           incomplete: !!tweet.truncated || text.length > 14000, following: following(tweet.user), followingAccount: account,
+          blueVerified: blueVerified(tweet.user),
           blocking: typeof tweet.user.blocking === "boolean" ? tweet.user.blocking : null };
         // Force a DOM inventory on activation, even if the same card was cached before the click.
         const signature = JSON.stringify(post);
@@ -102,7 +112,7 @@
   const renderedObserver = new MutationObserver(changes => {
     if (changes.some(change => {
       const node = change.target.nodeType === 1 ? change.target : change.target.parentElement;
-      const owned = "#blocksb-overlay,.blocksb-comment-tools,.blocksb-comment-mask,.blocksb-flying-card,.blocksb-menu-item";
+      const owned = "#blocksb-overlay,.blocksb-comment-tools,.blocksb-observer-marker,.blocksb-comment-mask,.blocksb-flying-card,.blocksb-menu-item";
       if (node?.closest?.(owned)) return false;
       const changed = [...change.addedNodes, ...change.removedNodes];
       if (changed.length && changed.every(n => n.nodeType === 1 && n.matches(owned))) return false;
@@ -132,7 +142,7 @@
             conversationId: String(legacy.conversation_id_str), parentId: String(legacy.in_reply_to_status_id_str || ""),
             hasMedia: !!(legacy.extended_entities?.media?.length || legacy.entities?.media?.length || item.quoted_status_result || item.card),
             incomplete: !!legacy.truncated || !!item.is_translatable && !legacy.full_text || (note?.text || legacy.full_text || "").length > 14000,
-            following: following(user), followingAccount: account, followingAt: startedAt,
+            following: following(user), followingAccount: account, followingAt: startedAt, blueVerified: blueVerified(user),
             blocking: typeof profile.blocking === "boolean" ? profile.blocking : null };
           found.push(remember(post));
         }

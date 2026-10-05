@@ -1,6 +1,6 @@
 {
   "action_title": {
-    "message": "block s.b.・紀錄、允許清單與設定"
+    "message": "block s.b. · 封鎖紀錄、封鎖偽人與設定"
   },
   "agreement_probability": {
     "message": "附和機率"
@@ -18,7 +18,7 @@
     "message": "自動載入：開"
   },
   "block_history": {
-    "message": "封鎖紀錄"
+    "message": "封鎖同溫層"
   },
   "category_neutral": {
     "message": "無關內容"
@@ -33,7 +33,7 @@
     "message": "無法判斷"
   },
   "extension_description": {
-    "message": "顯示 X 回覆的附和機率，自動封鎖符合條件的帳號，支援手動封鎖、紀錄撤回與允許清單。"
+    "message": "篩選 X 回覆中的附和與疑似 AI 灌水，支援自動觀察、累計封鎖、紀錄撤回與允許清單。"
   },
   "match_probability": {
     "message": "符合機率"
@@ -1799,6 +1799,324 @@
   },
   "ui_debug_hint": {
     "message": "Jev 分析仍會計費。開啟後暫停既有封鎖佇列，關閉後繼續；模擬任務需重新啟動。已送出的請求無法撤回。"
+  },
+  "ui_invalid_interface_language": {
+    "message": "不支援的介面語言"
+  },
+  "observer_content_marker": {
+    "message": "疑似灌水 $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_mask": {
+    "message": "疑似灌水 · $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_reason": {
+    "message": "$v0$ · $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_title": {
+    "message": "封鎖偽人"
+  },
+  "ui_observer_enable": {
+    "message": "自動觀察"
+  },
+  "ui_observer_watching": {
+    "message": "觀察中"
+  },
+  "ui_observer_search": {
+    "message": "搜尋帳號"
+  },
+  "ui_observer_adjust": {
+    "message": "調整辨識設定"
+  },
+  "ui_general_settings": {
+    "message": "一般設定"
+  },
+  "ui_observer_settings": {
+    "message": "封鎖偽人設定"
+  },
+  "ui_support_settings": {
+    "message": "封鎖同溫層設定"
+  },
+  "ui_model_connection": {
+    "message": "模型連線"
+  },
+  "ui_modify": {
+    "message": "修改"
+  },
+  "ui_api_model": {
+    "message": "API 端點與模型"
+  },
+  "ui_shared_allowlist": {
+    "message": "兩個模組共用"
+  },
+  "ui_manage_allowlist": {
+    "message": "管理允許清單"
+  },
+  "ui_display_animation": {
+    "message": "顯示與動畫"
+  },
+  "ui_interface_language": {
+    "message": "介面語言"
+  },
+  "ui_language_auto": {
+    "message": "依瀏覽器設定"
+  },
+  "ui_delete_effect": {
+    "message": "移除效果"
+  },
+  "ui_observer_scope": {
+    "message": "觀察範圍"
+  },
+  "ui_observer_blue": {
+    "message": "僅藍勾勾"
+  },
+  "ui_observer_all": {
+    "message": "所有帳號"
+  },
+  "ui_observer_conditions": {
+    "message": "累計封鎖條件"
+  },
+  "ui_observer_hits": {
+    "message": "可疑回覆"
+  },
+  "ui_observer_threads": {
+    "message": "不同原始貼文"
+  },
+  "ui_observer_rate": {
+    "message": "近期命中比例"
+  },
+  "ui_observer_items": {
+    "message": "則"
+  },
+  "ui_observer_recent_hint": {
+    "message": "依最近 5 則有效判定計算"
+  },
+  "ui_observer_retention": {
+    "message": "證據保留"
+  },
+  "ui_observer_daily": {
+    "message": "每日分析上限"
+  },
+  "ui_observer_days_7": {
+    "message": "7 天"
+  },
+  "ui_observer_days_30": {
+    "message": "30 天"
+  },
+  "ui_observer_days_90": {
+    "message": "90 天"
+  },
+  "ui_observer_markers": {
+    "message": "顯示辨識標記"
+  },
+  "ui_observer_mask": {
+    "message": "預先遮蔽可疑回覆"
+  },
+  "ui_observer_advanced": {
+    "message": "進階規則"
+  },
+  "ui_probability_range": {
+    "message": "支持機率範圍"
+  },
+  "ui_hide_lower": {
+    "message": "自動隱藏的機率下限"
+  },
+  "ui_hide_upper": {
+    "message": "自動隱藏的機率上限"
+  },
+  "ui_auto_load_default": {
+    "message": "預設自動載入回覆"
+  },
+  "ui_observer_state_active": {
+    "message": "正在背景觀察"
+  },
+  "ui_observer_state_off": {
+    "message": "自動觀察已關閉"
+  },
+  "ui_observer_state_paused": {
+    "message": "已暫停"
+  },
+  "ui_observer_state_unconfigured": {
+    "message": "請先連接模型"
+  },
+  "ui_observer_state_limited": {
+    "message": "今日分析已達上限"
+  },
+  "ui_observer_state_error": {
+    "message": "需要處理服務錯誤"
+  },
+  "ui_observer_evidence_summary": {
+    "message": "可疑 $v0$ / 有效 $v1$ · $v2$ 則原始貼文",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_observer_empty": {
+    "message": "尚無觀察紀錄"
+  },
+  "ui_observer_empty_hint": {
+    "message": "開啟自動觀察後，瀏覽到的回覆會在這裡累計。"
+  },
+  "ui_observer_no_matches": {
+    "message": "找不到符合的帳號"
+  },
+  "ui_observer_no_evidence": {
+    "message": "尚無有效證據"
+  },
+  "ui_observer_blue_verified": {
+    "message": "藍勾勾帳號"
+  },
+  "ui_observer_actor": {
+    "message": "使用 @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_simulated": {
+    "message": "偵錯模擬"
+  },
+  "ui_observer_forget": {
+    "message": "清除觀察紀錄"
+  },
+  "ui_observer_forget_copy": {
+    "message": "清除 @$v0$ 的累計紀錄，之後遇到的新回覆會重新觀察。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_single_threshold": {
+    "message": "單則可疑機率"
+  },
+  "ui_observer_invalid_rule": {
+    "message": "請輸入 50–100 之間的機率。"
+  },
+  "ui_observer_connected": {
+    "message": "已連線"
+  },
+  "ui_cache_summary": {
+    "message": "$v0$ 筆 · $v1$ 天",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "observer_category_spam": {
+    "message": "模板灌水"
+  },
+  "observer_category_template": {
+    "message": "制式複述"
+  },
+  "observer_category_empty": {
+    "message": "空泛回應"
+  },
+  "observer_category_repetitive": {
+    "message": "重複套話"
+  },
+  "observer_category_useful": {
+    "message": "有實質內容"
+  },
+  "observer_category_normal": {
+    "message": "正常交流"
+  },
+  "observer_category_uncertain": {
+    "message": "無法判斷"
+  },
+  "observer_error_settings": {
+    "message": "封鎖偽人的設定無效，請檢查輸入值。"
+  },
+  "observer_error_threads": {
+    "message": "不同原始貼文的數量不能超過可疑回覆的數量。"
+  },
+  "observer_error_prompt": {
+    "message": "提示詞必須為文字，且不能超過 12000 個字元。"
+  },
+  "observer_error_answer": {
+    "message": "模型回傳的灌水分類或機率分布無效，本次結果未計入觀察紀錄。"
+  },
+  "observer_error_database_timeout": {
+    "message": "開啟觀察紀錄資料庫逾時，請稍後再試。"
+  },
+  "observer_error_database_unavailable": {
+    "message": "無法開啟觀察紀錄資料庫。"
+  },
+  "observer_error_transaction": {
+    "message": "觀察紀錄儲存失敗，請重試。"
+  },
+  "ui_cache": {
+    "message": "快取"
+  },
+  "ui_observer_state_debug": {
+    "message": "正在偵錯觀察"
+  },
+  "ui_prompt_settings": {
+    "message": "自訂提示詞"
+  },
+  "ui_auto_hide_heading": {
+    "message": "自動隱藏"
+  },
+  "observer_error_database_transaction": {
+    "message": "觀察紀錄資料庫操作失敗，請重試。"
+  },
+  "ui_observer_probability_threshold": {
+    "message": "單則可疑門檻 $v0$ · 信心程度須 ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_probability_note": {
+    "message": "標記顯示勾選類別的合計機率。單一類別機率與信心分數須達標，封鎖還須符合帳號累計條件。"
+  },
+  "variable_ancestors": {
+    "message": "上層回覆串"
+  },
+  "ui_observer_count_evidence": {
+    "message": "列入可疑紀錄"
+  },
+  "ui_observer_rule_selection": {
+    "message": "可勾選多個類別。模型選中的類別機率與信心分數達標後，才列入紀錄；符合帳號累計條件後才會封鎖。"
+  },
+  "ui_observer_beta_notice": {
+    "message": "「封鎖偽人」目前仍在 Beta 測試階段，辨識結果可能出現誤判或漏判。如果你有更好的提示詞，歡迎提交 PR，一起改善辨識效果。"
+  },
+  "ui_observer_beta_contribute": {
+    "message": "貢獻提示詞"
   }
-
 }
