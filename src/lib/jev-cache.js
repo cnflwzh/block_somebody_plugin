@@ -101,8 +101,10 @@ const cancelled = () => new Error(t("ui_analysis_canceled"));
 /** Return a validated answer, reusing persistent results and concurrent identical requests.
  * validate(payload) must throw on malformed output. Actions/thresholds are never cached.
  * Each caller can cancel independently; abort the HTTP request only when no callers remain.
+ * Optional beforeRequest() reserves observer budget only on a real cache miss. It may
+ * throw to prevent transmission; concurrent callers of one request share that reservation.
  */
-export async function askJevCached(request, apiKey, signal, validate, limit = 10000, endpoint = DEFAULT_ENDPOINT) {
+export async function askJevCached(request, apiKey, signal, validate, limit = 10000, endpoint = DEFAULT_ENDPOINT, beforeRequest) {
   if (signal?.aborted) throw cancelled();
   const key = await requestKey(request, endpoint);
   if (signal?.aborted) throw cancelled();
@@ -121,6 +123,8 @@ export async function askJevCached(request, apiKey, signal, validate, limit = 10
           await transaction(store => store.delete(key)).catch(() => {});
         }
       }
+      if (current.controller.signal.aborted) throw cancelled();
+      if (beforeRequest) await beforeRequest();
       if (current.controller.signal.aborted) throw cancelled();
       const response = await askJev(request, apiKey, current.controller.signal, endpoint);
       if (current.controller.signal.aborted) throw cancelled();

@@ -1,9 +1,14 @@
 import "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { syncThreadContext } from "../src/lib/thread-context.js";
+import { syncThreadContext, mergeContextPost } from "../src/lib/thread-context.js";
 
 const post = { id: "100001", handle: "reader", userId: "900001", text: "完整的父评论", parentId: "100000", conversationId: "100000", incomplete: false, hasMedia: false };
+
+test("missing DOM subscription metadata preserves explicit API evidence", () => {
+  assert.equal(mergeContextPost({ ...post, blueVerified: true }, { ...post, blueVerified: null }).blueVerified, true);
+  assert.equal(mergeContextPost({ ...post, blueVerified: true }, { ...post, blueVerified: false }).blueVerified, false);
+});
 
 test("saved parent context survives tombstones and stays scoped to account and task", async () => {
   await syncThreadContext("viewer", "100000", [post], []);

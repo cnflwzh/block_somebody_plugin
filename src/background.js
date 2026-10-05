@@ -7,9 +7,14 @@ import { askJevCached, cleanJevCache, requestKey } from "./lib/jev-cache.js";
 import { xSession, postBlock } from "./lib/x-block.js";
 import { getAnalysisRule, normalizeRule, customRuleEnabled } from "./lib/core.js";
 import { syncThreadContext } from "./lib/thread-context.js";
+import { OBSERVER_VERSION, getObserverRule, normalizeObserverRule, observerBuiltinCategories, observerRuleIdentity, observerSuspicious, normalizeObserverSettings, buildObserverRequest, parseObserverDecision, summarizeObserverEvidence } from "./lib/observer-core.js";
+import { observerUserKey, observerEvidenceKey, readObserverEvidence, readObserverUser, readObserverAll, readObserverReplies, observerEpoch, saveObserverEvidence, markObserverEvaluated, forgetObserverUser, reserveObserverBudget, readObserverBudget, cleanObserverEvidence } from "./lib/observer-store.js";
 
 const X_URLS = ["https://x.com/*", "https://twitter.com/*"];
 const flights = new Map();
+const observerFlights = new Map();
+const observerSimulations = new Set();
+let observerFinalizing = Promise.resolve();
 let draining = false;
 let drainTimer;
 let notifyTimer;
@@ -48,15 +53,25 @@ async function snapshot(sender, accountValue) {
     if (job.status === "pending" && waitingFollowingJob(db, job, historyById)) waitingHistory.add(job.historyId);
   }
   const history = db.history.map(h => ({ ...h, waitingFollowing: h.status === "pending" && waitingHistory.has(h.id) }));
-  if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), sessions: Object.values(db.sessions), queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
+  if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), sessions: Object.values(db.sessions), observer: await observerSnapshot(db), queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
   const s = db.sessions[sender.tab.id];
   const account = accountValue ? normalizeHandle(accountValue) : "";
   const { endpoint, customPrompt, analysisRule, ...pageSettings } = settings;
+  if (pageSettings.observer) {
+    const { prompt, analysisRule, ...publicObserver } = pageSettings.observer, rule = getObserverRule(pageSettings.observer);
+    pageSettings.observer = { ...publicObserver, revision: db.observerPolicyRevision || 0, customRule: !observerBuiltinCategories(rule), ruleOptions: rule.options.map(({ id, name, block }) => ({ id, name, block })) };
+  }
   pageSettings.customRule = customRuleEnabled(settings);
   // The page needs display names and action markers, not the private templates or rubric text.
   pageSettings.ruleOptions = getAnalysisRule(settings).options.map(({ id, name, block }) => ({ id, name, block }));
   return { settings: pageSettings, account, decisionVersion: DECISION_VERSION, whitelist: db.whitelist.map(w => ({ handle: w.handle, userId: w.userId })), session: s?.account === account ? s : null, queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError,
-    history: history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, waitingFollowing: h.waitingFollowing, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
+    history: history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, trashUnread: !!h.trashUnread, module: h.module, observerOwner: !!h.observerOwner, waitingFollowing: h.waitingFollowing, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
+}
+/** Record one notification per successful block, not per status refresh or retry.
+ * Historical records without these fields stay read when upgrading.
+ */
+function markTrashUnread(history) {
+  if (!history.trashNotified) { history.trashNotified = true; history.trashUnread = true; }
 }
 function sessionFor(db, tabId, sessionId, account) {
   const s = db.sessions[tabId];
@@ -65,18 +80,22 @@ function sessionFor(db, tabId, sessionId, account) {
 }
 function cancelSession(db, sessionId) {
   for (const j of db.jobs) if (j.sessionId === sessionId && !j.manual && j.kind === "block" && (j.status === "pending" || j.status === "running" && !j.submitted)) {
+    const owner = db.history.find(h => h.id === j.historyId);
+    if (owner?.observerOwner) { owner.stanceOwner = false; owner.module = "observer"; j.module = "observer"; continue; }
     j.status = "cancelled";
     const h = db.history.find(h => h.id === j.historyId);
     if (h) { h.status = "cancelled"; h.updated = Date.now(); }
   }
 }
-function abortFlights(predicate) { for (const f of flights.values()) if (predicate(f)) f.controller.abort(); }
+function abortFlights(predicate) { for (const f of [...flights.values(), ...observerFlights.values()]) if (predicate(f)) f.controller.abort(); }
 
 /** Resolve only observations made under this acting account. Unknown is not "not followed".
  * Session observations override older post snapshots, including results still in flight.
  */
 function followingObservation(db, account, target) {
   let latest = target.followingAccount === account && typeof target.following === "boolean" ? target : null;
+  const observation = db.observerFollowing?.[observerUserKey(account, target.userId)];
+  if (observation && (!latest || observation.followingAt >= latest.followingAt)) latest = observation;
   for (const s of Object.values(db.sessions)) if (s.account === account) {
     for (const key of [target.userId && `id:${target.userId}`, `handle:${target.handle}`].filter(Boolean)) {
       const observed = s.following?.[key];
@@ -92,15 +111,16 @@ function skipFollowing(db, account, target) { return db.settings.skipFollowing &
  * a historyById Map from the same db snapshot to avoid repeated history scans.
  */
 function jobFollowingStatus(db, job, historyById) {
-  if (job.kind !== "block" || !db.settings.skipFollowing) return false;
+  if (job.kind !== "block" || !(job.module === "observer" ? db.settings.observer?.skipFollowing : db.settings.skipFollowing)) return false;
   const history = historyById ? historyById.get(job.historyId) : db.history.find(h => h.id === job.historyId);
-  return history?.reason !== "author" ? followingStatus(db, job.account, job.target) : false;
+  return job.module === "observer" || history?.reason !== "author" ? followingStatus(db, job.account, job.target) : false;
 }
 function protectedFollowingJob(db, job) { return jobFollowingStatus(db, job) === true; }
 function waitingFollowingJob(db, job, historyById) { return jobFollowingStatus(db, job, historyById) === null; }
 // Whitelisted jobs can be cancelled immediately even when their relationship is unknown.
 function runnableBlockJob(db, job) {
   return job.kind === "block" && !db.queueError && !db.settings.paused && !db.debugDryRun
+    && (job.module !== "observer" || db.settings.observer?.enabled)
     && (!waitingFollowingJob(db, job) || isWhitelisted(db, job.target));
 }
 /** Cancel unsent comment blocks only. Already submitted requests cannot be recalled. */
@@ -144,16 +164,29 @@ function enqueueBlock(db, s, target, reply, decision, reason) {
   // Dry-run decisions never become jobs or real block history, even after debugging ends.
   if (db.debugDryRun) return null;
   const manual = reason === "manual";
-  if (isWhitelisted(db, target) || target.handle === s.account || (reply && skipFollowing(db, s.account, target)) || (!manual && s.excluded.includes(target.handle))) return null;
+  const observer = reason === "observer";
+  const protectedFollowing = observer ? db.settings.observer?.skipFollowing && followingStatus(db, s.account, target) !== false : skipFollowing(db, s.account, target);
+  if (isWhitelisted(db, target) || target.handle === s.account || (reply && protectedFollowing) || (!manual && s.excluded.includes(target.handle))) return null;
   const existing = db.history.findLast(h => h.account === s.account && sameTarget(h.target, target));
-  if (existing && !["unblocked", "cancelled"].includes(existing.status)) return existing.id;
+  if (existing && !["unblocked", "cancelled"].includes(existing.status)) {
+    if (observer) existing.observerOwner = true;
+    else {
+      existing.stanceOwner = true;
+      if (existing.module === "observer") {
+        existing.module = "stance"; existing.root = { ...s.root, text: s.root.text.slice(0, 1500) }; existing.sessionId = s.id;
+        existing.reply = reply ? { ...reply, text: reply.text.slice(0, 1500) } : null; existing.reason = reason; existing.decision = decision;
+      }
+      for (const job of db.jobs) if (job.historyId === existing.id && !job.submitted && job.kind === "block") { job.module = "stance"; job.sessionId = existing.sessionId; job.rootId = existing.root.id; }
+    }
+    return existing.id;
+  }
   if (db.history.length >= 5000) throw new Error(t("ui_history_has_reached_5_000_records_export_and_clear_completed"));
   const relation = followingObservation(db, s.account, target);
   const h = { id: id(), account: s.account, target: { handle: target.handle, userId: target.userId || "", name: target.name,
     following: relation?.following ?? null, followingAccount: s.account, followingAt: relation?.followingAt || 0 }, root: { ...s.root, text: s.root.text.slice(0, 1500) },
-    reply: reply ? { ...reply, text: reply.text.slice(0, 1500) } : null, decision, reason, sessionId: s.id, status: "pending", created: Date.now(), updated: Date.now(), error: "", owned: false };
+    reply: reply ? { ...reply, text: reply.text.slice(0, 1500) } : null, decision, reason, module: observer ? "observer" : "stance", observerOwner: observer, stanceOwner: !observer, sessionId: s.id, status: "pending", created: Date.now(), updated: Date.now(), error: "", owned: false };
   db.history.push(h);
-  db.jobs.push({ id: id(), historyId: h.id, kind: "block", account: s.account, actorId: s.actorId || "", origin: s.origin || "https://x.com", target: h.target, tabId: s.tabId, sessionId: s.id, manual, rootId: s.root.id, status: "pending", created: Date.now(), submitted: false });
+  db.jobs.push({ id: id(), historyId: h.id, kind: "block", module: h.module, account: s.account, actorId: s.actorId || "", origin: s.origin || "https://x.com", target: h.target, tabId: s.tabId, sessionId: s.id, manual, rootId: s.root.id, status: "pending", created: Date.now(), submitted: false });
   return h.id;
 }
 function enqueueUnblock(db, h) {
@@ -165,7 +198,7 @@ function enqueueUnblock(db, h) {
 }
 
 /** A task is one selected tweet under one acting account, even across repeated sessions. */
-function taskScope(entry, account, rootId) { return entry.account === account && entry.root?.id === rootId; }
+function taskScope(entry, account, rootId) { return entry.module !== "observer" && entry.account === account && entry.root?.id === rootId; }
 
 /** Compute a fresh undo preview from durable records; never trust IDs/counts supplied by the UI. */
 function taskUndoPlan(db, account, rootId) {
@@ -174,6 +207,7 @@ function taskUndoPlan(db, account, rootId) {
   if (!rows.length && !sessions.length) throw new Error(t("ui_task_not_found_or_already_cleared"));
   const plan = { account, rootId, root: rows[0]?.root || sessions[0].root, ready: [], cancel: [], inFlight: [], existing: 0, review: 0, protected: 0, active: sessions.filter(s => !s.stopped).length };
   for (const h of rows) {
+    if (h.observerOwner) { plan.protected++; continue; }
     // A later task may own the account's current relationship. Do not undo it through an older record.
     const latest = db.history.findLast(other => other.account === account && sameTarget(other.target, h.target));
     if (latest?.id !== h.id || h.status === "preexisting") { if (!["cancelled", "unblocked"].includes(h.status)) plan.protected++; continue; }
@@ -189,6 +223,140 @@ function taskUndoPlan(db, account, rootId) {
 }
 function taskUndoSummary(plan) {
   return { account: plan.account, rootId: plan.rootId, root: plan.root, ready: plan.ready.length, cancel: plan.cancel.length, inFlight: plan.inFlight.length, existing: plan.existing, review: plan.review, protected: plan.protected, active: plan.active };
+}
+
+const observerConfig = db => normalizeObserverSettings(db.settings.observer || {});
+async function observerFingerprint(db) {
+  const config = observerConfig(db);
+  return requestKey({ module: OBSERVER_VERSION, model: db.settings.model, ...observerRuleIdentity(config) }, db.settings.endpoint);
+}
+function observerHistoryIndex(db) {
+  const index = new Map();
+  for (const h of db.history) if (h.target.userId && (h.module === "observer" || h.observerOwner)) index.set(observerUserKey(h.account, h.target.userId), h);
+  return index;
+}
+function observerResult(entry, db, historyIndex = observerHistoryIndex(db)) {
+  const config = observerConfig(db), h = historyIndex.get(entry.userKey);
+  const protectedUser = isWhitelisted(db, entry) || config.skipFollowing && followingStatus(db, entry.account, entry) !== false;
+  const active = config.enabled && !protectedUser && !entry.withdrawn;
+  const status = !active ? "observing" : db.debugDryRun && observerSimulations.has(entry.userKey) ? "simulated" : h?.status || "observing";
+  const suspicious = observerSuspicious(entry, config);
+  return { replyId: entry.replyId, rootId: entry.rootId, userId: entry.userId, handle: entry.handle, label: entry.label, score: entry.score, probabilities: entry.probabilities, spamScore: entry.spamScore, confidence: entry.confidence, suspicious, status,
+    action: active && ["pending", "running", "submitted", "blocked", "simulated"].includes(status) ? "block" : "keep", historyId: active ? h?.id || null : null, dryRun: status === "simulated", excerpt: entry.excerpt, observedAt: entry.observedAt };
+}
+async function observerSnapshot(db) {
+  const config = observerConfig(db), fingerprint = await observerFingerprint(db);
+  const [entries, dailyUsed] = await Promise.all([readObserverAll(), readObserverBudget()]);
+  const groups = new Map(), history = observerHistoryIndex(db);
+  for (const e of entries) if (!e.withdrawn && e.fingerprint === fingerprint && e.observedAt > Date.now() - config.retentionDays * 86400000) {
+    if (!groups.has(e.userKey)) groups.set(e.userKey, []); groups.get(e.userKey).push(e);
+  }
+  const accounts = [];
+  for (const rows of groups.values()) {
+    rows.sort((a, b) => b.observedAt - a.observedAt);
+    const e = rows[0], summary = summarizeObserverEvidence(rows, { ...config, includeDryRun: !!db.debugDryRun }, fingerprint), h = history.get(e.userKey);
+    if (db.debugDryRun) { if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey); }
+    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, ...summary,
+      evidence: rows.filter(e => !e.error).slice(0, 30).map(({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt }) => ({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt })) });
+  }
+  // Evidence can expire independently of an actual submitted block. Keep its undo entry.
+  for (const [userKey, h] of history) if (!groups.has(userKey) && h.observerOwner && !["unblocked", "cancelled"].includes(h.status)) {
+    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
+  }
+  return { accounts: accounts.sort((a, b) => (b.evidence[0]?.observedAt || 0) - (a.evidence[0]?.observedAt || 0)), dailyUsed };
+}
+function recordObserverRelations(db, account, posts) {
+  db.observerFollowing ||= {};
+  for (const p of posts) if (p.userId && p.followingAccount === account && typeof p.following === "boolean" && p.followingAt > 0) {
+    const k = observerUserKey(account, p.userId), old = db.observerFollowing[k];
+    if (!old || old.followingAt <= p.followingAt) db.observerFollowing[k] = { handle: p.handle, userId: p.userId, following: p.following, followingAccount: account, followingAt: p.followingAt };
+    for (const job of db.jobs) if (job.account === account && job.target.userId === p.userId && !job.submitted && (job.target.followingAt || 0) <= p.followingAt) Object.assign(job.target, db.observerFollowing[k]);
+  }
+  const entries = Object.entries(db.observerFollowing);
+  if (entries.length > 10000) db.observerFollowing = Object.fromEntries(entries.sort((a, b) => b[1].followingAt - a[1].followingAt).slice(0, 10000));
+  cancelFollowingJobs(db);
+}
+function observerAllowed(db, account, root, reply, ancestors) {
+  const config = observerConfig(db);
+  return config.enabled && !db.settings.paused && !db.modelError && reply.userId && reply.handle !== account && reply.handle !== root.handle
+    && !(config.scope === "blue" && reply.blueVerified !== true)
+    && ![root, reply, ...ancestors].some(p => isWhitelisted(db, p))
+    && !(config.skipFollowing && followingStatus(db, account, reply) !== false);
+}
+/** Passive analysis still binds the acting account; a forged page handle never authorizes jobs. */
+async function observeReply(message, sender) {
+  const account = normalizeHandle(message.account), root = sanitizePost(message.root), reply = sanitizePost(message.reply);
+  const ancestors = Array.isArray(message.ancestors) && message.ancestors.length <= 30 ? message.ancestors.map(sanitizePost) : [];
+  // Match the page's eligibility rule: unread media does not veto textual replies,
+  // including those beneath a media-only root or parent. Actual missing context still waits.
+  if (!reply.userId || !validateThread(root, reply, ancestors) || !reply.text.trim() || [root, reply, ...ancestors].some(p => p.incomplete || !p.text.trim() && !p.hasMedia)) return { action: "skip", why: "missing-context" };
+  let db = await read();
+  if (!observerAllowed(db, account, root, reply, ancestors)) return { action: "skip", why: "protected" };
+  const binding = await bindAccount(sender.tab.id, account);
+  await change(d => recordObserverRelations(d, account, [reply, ...ancestors]));
+  const fingerprint = await observerFingerprint(db), evidenceKey = observerEvidenceKey(account, reply.id, fingerprint);
+  if (observerFlights.has(evidenceKey)) return observerFlights.get(evidenceKey).promise;
+  // A bounded flight pool prevents fast scrolling from producing an unbounded model queue.
+  if (observerFlights.size >= 2) return { action: "skip", why: "busy" };
+  const controller = new AbortController();
+  const run = (async () => {
+    const config = observerConfig(db), epoch = await observerEpoch(account, reply.userId);
+    let existing = await readObserverEvidence(evidenceKey);
+    if (existing?.observedAt <= Date.now() - config.retentionDays * 86400000) existing = null;
+    if (existing && (existing.error || existing.withdrawn || existing.simulation && !db.debugDryRun)) return { action: "skip", why: existing.error ? "previous-error" : "withdrawn" };
+    db = await read();
+    if (!observerAllowed(db, account, root, reply, ancestors) || controller.signal.aborted || await observerFingerprint(db) !== fingerprint) return { action: "skip", why: "config-changed" };
+    const dryRun = !!db.debugDryRun;
+    const policyRevision = db.observerPolicyRevision || 0;
+    const request = buildObserverRequest(root, reply, ancestors, db.settings.model, config), secret = await key();
+    if (!secret) return { action: "skip", why: "missing-key" };
+    const entry = { key: evidenceKey, userKey: observerUserKey(account, reply.userId), replyKey: `${account}:${reply.id}`, account, userId: reply.userId, handle: reply.handle, name: reply.name, blueVerified: reply.blueVerified === true, simulation: dryRun,
+      replyId: reply.id, rootId: root.id, url: reply.url, excerpt: reply.text.slice(0, 160), observedAt: Date.now(), fingerprint,
+      following: reply.following, followingAccount: reply.followingAccount, followingAt: reply.followingAt };
+    let decision = existing;
+    if (!existing) try {
+      const payload = await askJevCached(request, secret, controller.signal, answer => parseObserverDecision(answer, config), db.settings.cacheLimit, db.settings.endpoint, async () => {
+        const current = await read();
+        if (!observerAllowed(current, account, root, reply, ancestors) || controller.signal.aborted || await observerFingerprint(current) !== fingerprint) throw Object.assign(new Error("Observer observation cancelled"), { code: "OBSERVER_CANCELLED" });
+        if (!await reserveObserverBudget(config.dailyLimit)) throw Object.assign(new Error("Observer daily analysis limit reached"), { code: "OBSERVER_BUDGET" });
+      });
+      decision = parseObserverDecision(payload, config);
+    } catch (error) {
+      // Only a completed but malformed answer gets a per-reply tombstone. Connection,
+      // authentication and rate-limit failures must remain retryable after Resume.
+      if (!controller.signal.aborted && error.code === "JEV_INVALID_ANSWER") await saveObserverEvidence({ ...entry, label: "uncertain", score: 0, confidence: 0, error: true }, epoch, config.retentionDays);
+      if (!controller.signal.aborted && !["OBSERVER_BUDGET", "OBSERVER_CANCELLED", "JEV_INVALID_ANSWER"].includes(error.code)) {
+        await change(d => { if ((d.settings.analysisRevision || 0) === (db.settings.analysisRevision || 0) && (d.observerPolicyRevision || 0) === policyRevision) d.modelError = error.message; }); notify();
+      }
+      return { action: "skip", why: error.code === "OBSERVER_BUDGET" ? "daily-limit" : "analysis-error" };
+    }
+    const finalize = observerFinalizing.then(async () => {
+      let current = await read();
+      if (!observerAllowed(current, account, root, reply, ancestors) || controller.signal.aborted || !!current.debugDryRun !== dryRun || (current.observerPolicyRevision || 0) !== policyRevision || await observerFingerprint(current) !== fingerprint) return { action: "skip", why: "config-changed" };
+      const config = observerConfig(current);
+      await saveObserverEvidence({ ...entry, ...decision }, epoch, config.retentionDays);
+      const rows = await readObserverUser(account, reply.userId), summary = summarizeObserverEvidence(rows, { ...config, includeDryRun: dryRun }, fingerprint);
+      const saved = rows.find(e => e.key === evidenceKey);
+      if (!saved || saved.withdrawn || await observerEpoch(account, reply.userId) !== epoch) return { action: "skip", why: "withdrawn" };
+      let simulated = false;
+      if (dryRun && !summary.eligible) observerSimulations.delete(entry.userKey);
+      if (summary.eligible) await change(d => {
+        if (!observerAllowed(d, account, root, reply, ancestors) || controller.signal.aborted || !!d.debugDryRun !== dryRun) return;
+        if (d.debugDryRun) { simulated = true; observerSimulations.add(entry.userKey); return; }
+        enqueueBlock(d, { account, ...binding, tabId: sender.tab.id, id: `observer:${account}:${reply.userId}`, root, excluded: [] }, reply, reply, { ...decision, action: "block", module: "observer", fingerprint }, "observer");
+      });
+      current = await read();
+      if (controller.signal.aborted || (current.observerPolicyRevision || 0) !== policyRevision) return { action: "skip", why: "config-changed" };
+      await markObserverEvaluated(evidenceKey, epoch, policyRevision);
+      notify(); void drain();
+      void cleanObserverEvidence(config.retentionDays).catch(() => {});
+      return observerResult({ ...saved, dryRun: simulated }, current);
+    });
+    observerFinalizing = finalize.catch(() => {});
+    return finalize;
+  })();
+  observerFlights.set(evidenceKey, { promise: run, controller, tabId: sender.tab.id, handle: reply.handle, account, userId: reply.userId, contextHandles: [root.handle, ...ancestors.map(p => p.handle)] });
+  try { return await run; } finally { observerFlights.delete(evidenceKey); }
 }
 
 async function classify(message, sender) {
@@ -372,7 +540,7 @@ async function drain() {
           j.status = "cancelled"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "cancelled";
           return false;
         }
-        if (waitingFollowingJob(d, j) || d.settings.paused || d.queueError || d.debugDryRun) {
+        if (waitingFollowingJob(d, j) || d.settings.paused || d.queueError || d.debugDryRun || j.module === "observer" && !d.settings.observer?.enabled) {
           j.status = "pending"; const h = d.history.find(h => h.id === j.historyId); if (h) h.status = "pending";
           return false;
         }
@@ -396,7 +564,7 @@ async function drain() {
         if (result.target?.userId) h.target.userId = result.target.userId;
         if (job.kind === "unblock") h.status = "unblocked";
         else if (result.preexisting) { h.status = "preexisting"; h.owned = false; }
-        else { h.status = result.accepted ? "submitted" : "blocked"; h.owned = true; h.verification = result.accepted ? "http-only" : "relationship"; }
+        else { h.status = result.accepted ? "submitted" : "blocked"; h.owned = true; h.verification = result.accepted ? "http-only" : "relationship"; markTrashUnread(h); }
       } else if (result?.cancelled) { j.status = "cancelled"; h.status = job.kind === "unblock" ? "blocked" : "cancelled"; }
       else {
         const uncertain = result?.uncertain && j.submitted;
@@ -433,6 +601,58 @@ async function handle(message, sender) {
   if (sender.id !== chrome.runtime.id || (!ui && !web)) throw new Error(t("ui_invalid_request_source"));
   const type = message?.type;
   if (type === "SNAPSHOT") return snapshot(sender, message.account);
+  if (type === "READ_TRASH") {
+    if (!web || !Array.isArray(message.ids) || message.ids.length > 5000 || message.ids.some(id => typeof id !== "string" || id.length > 80)) throw new Error(t("ui_invalid_request_source"));
+    const account = normalizeHandle(message.account);
+    const visible = await chrome.tabs.sendMessage(sender.tab.id, { type: "GET_VIEWER" });
+    if (visible?.account !== account) throw new Error(t("ui_account_changed_start_the_task_again"));
+    const ids = new Set(message.ids);
+    // Acknowledge only records shown at click time. A later queue completion stays unread.
+    await change(d => { for (const h of d.history) if (h.account === account && ids.has(h.id)) h.trashUnread = false; });
+    notify(); return true;
+  }
+  if (type === "OBSERVE_REPLY") { if (!web) throw new Error(t("ui_invalid_request_source")); return observeReply(message, sender); }
+  if (type === "OBSERVER_DECISIONS") {
+    if (!web || !Array.isArray(message.replyIds) || message.replyIds.length > 100) throw new Error(t("ui_invalid_request_source"));
+    const account = normalizeHandle(message.account);
+    await bindAccount(sender.tab.id, account);
+    const db = await read(), fingerprint = await observerFingerprint(db), config = observerConfig(db);
+    const rows = await readObserverReplies(account, message.replyIds.map(numericId).filter(Boolean)), history = observerHistoryIndex(db);
+    if (db.debugDryRun) {
+      // Recover derived preview state after MV3 suspension; old simulations never authorize
+      // real jobs, and withdrawn/normal evidence can remove an earlier simulated result.
+      const users = new Map(rows.map(e => [e.userKey, e]));
+      await Promise.all([...users.values()].map(async e => {
+        const all = await readObserverUser(account, e.userId), summary = summarizeObserverEvidence(all, { ...config, includeDryRun: true }, fingerprint);
+        if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey);
+      }));
+    }
+    return rows.filter(e => !e.error && !e.withdrawn && (!e.simulation || db.debugDryRun) && (e.policyRevision || 0) === (db.observerPolicyRevision || 0) && e.fingerprint === fingerprint && e.observedAt > Date.now() - config.retentionDays * 86400000 && (!message.rootId || e.rootId === numericId(message.rootId))).map(e => observerResult(e, db, history));
+  }
+  if (type === "OBSERVER_RELATIONSHIPS") {
+    if (!web || !Array.isArray(message.posts) || message.posts.length > 40) throw new Error(t("ui_invalid_request_source"));
+    const account = normalizeHandle(message.account), posts = message.posts.map(sanitizePost);
+    await bindAccount(sender.tab.id, account);
+    await change(d => recordObserverRelations(d, account, posts));
+    const db = await read();
+    if (observerConfig(db).skipFollowing) abortFlights(f => f.account === account && posts.some(p => p.userId === f.userId && p.following === true));
+    notify(); void drain(); return true;
+  }
+  if (type === "OBSERVER_FORGET") {
+    if (!ui) throw new Error(t("ui_use_the_management_panel_for_this_action"));
+    const account = normalizeHandle(message.account), userId = numericId(message.userId);
+    if (!userId) throw new Error(t("ui_account_verification_failed"));
+    abortFlights(f => f.account === account && f.userId === userId);
+    await forgetObserverUser(account, userId);
+    observerSimulations.delete(observerUserKey(account, userId));
+    await change(d => {
+      for (const h of d.history) if (h.account === account && h.target.userId === userId) h.observerOwner = false;
+      for (const j of d.jobs) if (j.module === "observer" && j.account === account && j.target.userId === userId && !j.submitted && ["pending", "running"].includes(j.status)) {
+        const h = d.history.find(h => h.id === j.historyId); if (h?.stanceOwner) continue;
+        j.status = "cancelled"; if (h) h.status = "cancelled";
+      }
+    }); notify(); return true;
+  }
   if (type === "DEBUG_DRY_RUN") {
     if (!web || typeof message.enabled !== "boolean") throw new Error(t("ui_invalid_request_source"));
     await change(d => {
@@ -445,6 +665,7 @@ async function handle(message, sender) {
       }
     });
     abortFlights(() => true);
+    observerSimulations.clear();
     notify(); void drain(); return { enabled: !!(await read()).debugDryRun };
   }
   if (type === "THREAD_CONTEXT") {
@@ -468,12 +689,32 @@ async function handle(message, sender) {
   }
   if (type === "OPEN_MANAGER") { await chrome.tabs.create({ url: chrome.runtime.getURL("src/manager/manager.html") }); return true; }
   if (["RULE_CONFIG", "SAVE_RULE_CONFIG", "OPEN_RULE_EDITOR", "SAVE_SETTINGS", "SAVE_MODEL_CONFIG", "SAVE_KEY", "REMOVE_KEY", "UNDO", "TASK_UNDO_PREVIEW", "UNDO_TASK", "RETRY_JOB", "RECONCILE", "CLEAR_FINISHED", "EXPORT"].includes(type) && !ui) throw new Error(t("ui_use_the_management_panel_for_this_action"));
-  if (type === "OPEN_RULE_EDITOR") { await chrome.tabs.create({ url: chrome.runtime.getURL("src/manager/rules.html") }); return true; }
+  if (type === "OPEN_RULE_EDITOR") { await chrome.tabs.create({ url: chrome.runtime.getURL(message.module === "observer" ? "src/manager/observer-rules.html" : "src/manager/rules.html") }); return true; }
   if (type === "RULE_CONFIG") {
-    const { settings } = await read();
-    return { rule: getAnalysisRule(settings), revision: settings.analysisRevision || 0, model: settings.model };
+    const db = await read(), { settings } = db;
+    if (message.module === "observer") {
+      const config = observerConfig(db);
+      return { rule: getObserverRule(config), revision: db.observerPolicyRevision || 0, model: settings.model, language: settings.language || "auto" };
+    }
+    return { rule: getAnalysisRule(settings), revision: settings.analysisRevision || 0, model: settings.model, language: settings.language || "auto" };
   }
   if (type === "SAVE_RULE_CONFIG") {
+    if (message.module === "observer") {
+      // Only the rule changes here. Thresholds and cumulative policy belong to settings.
+      const rule = normalizeObserverRule(message.rule);
+      const revision = await change(d => {
+        if (!Number.isInteger(message.revision) || message.revision !== (d.observerPolicyRevision || 0)) throw new Error(t("ui_settings_changed_in_another_window_copy_your_draft_then_load"));
+        const current = observerConfig(d);
+        if (JSON.stringify(getObserverRule(current)) === JSON.stringify(rule)) return d.observerPolicyRevision || 0;
+        d.settings.observer = normalizeObserverSettings({ analysisRule: rule, prompt: "" }, current);
+        return d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
+      });
+      if (revision !== message.revision) {
+        for (const flight of observerFlights.values()) flight.controller.abort();
+        observerSimulations.clear();
+      }
+      notify(); return { rule, revision };
+    }
     const rule = normalizeRule(message.rule);
     const revision = await change(d => {
       if (!Number.isInteger(message.revision) || message.revision !== (d.settings.analysisRevision || 0)) throw new Error(t("ui_settings_changed_in_another_window_copy_your_draft_then_load"));
@@ -493,7 +734,10 @@ async function handle(message, sender) {
     const result = await change(d => {
       const plan = taskUndoPlan(d, account, rootId);
       for (const s of Object.values(d.sessions)) if (taskScope(s, account, rootId)) { s.stopped = true; s.active = false; }
-      for (const h of d.history) if (taskScope(h, account, rootId)) h.taskWithdrawn = true;
+      for (const h of d.history) if (taskScope(h, account, rootId)) {
+        h.taskWithdrawn = true; h.stanceOwner = false;
+        if (h.observerOwner) { h.module = "observer"; for (const j of d.jobs) if (j.historyId === h.id && j.kind === "block" && !j.submitted) j.module = "observer"; }
+      }
       for (const historyId of plan.cancel) {
         const h = d.history.find(h => h.id === historyId);
         const job = d.jobs.find(j => j.historyId === historyId && j.kind === "block" && ["pending", "running"].includes(j.status));
@@ -550,9 +794,16 @@ async function handle(message, sender) {
       if (["high", "confidence", "skipFollowing"].some(key => next[key] !== d.settings[key])) {
         for (const s of Object.values(d.sessions)) { s.results = {}; s.count = 0; }
       }
+      if (JSON.stringify(next.observer) !== JSON.stringify(d.settings.observer)) d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
       d.settings = next;
+      if (!next.observer?.enabled) for (const j of d.jobs) if (j.module === "observer" && j.kind === "block" && !j.submitted && ["pending", "running"].includes(j.status)) {
+        const h = d.history.find(h => h.id === j.historyId); if (h?.stanceOwner) continue;
+        j.status = "cancelled"; if (h) { h.status = "cancelled"; h.updated = Date.now(); }
+      }
       cancelFollowingJobs(d);
     });
+    if (message.value?.observer) for (const flight of observerFlights.values()) flight.controller.abort();
+    await globalThis.BlockSBI18n.setLanguage?.((await read()).settings.language || "auto");
     void cleanJevCache((await read()).settings.cacheLimit).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
     if (message.value?.paused) abortFlights(() => true);
     notify(); void drain(); return true;
@@ -577,6 +828,10 @@ async function handle(message, sender) {
       }
       if (ui && message.undoId) { const h = d.history.find(h => h.id === message.undoId && sameTarget(h.target, target)); if (h && ["blocked", "submitted"].includes(h.status)) enqueueUnblock(d, h); }
     });
+    const observed = await readObserverAll();
+    const users = new Map(observed.filter(e => sameTarget(e, target)).map(e => [e.userKey, e]));
+    await Promise.all([...users.values()].map(e => forgetObserverUser(e.account, e.userId)));
+    for (const userKey of users.keys()) observerSimulations.delete(userKey);
     notify(); void drain(); return true;
   }
   if (type === "WHITELIST_REMOVE") { if (!ui) throw new Error(t("ui_remove_users_from_the_allowlist_panel")); await change(d => { d.whitelist = d.whitelist.filter(w => w.handle !== normalizeHandle(message.handle)); }); notify(); return true; }
@@ -590,7 +845,7 @@ async function handle(message, sender) {
       if (root.handle === account) throw new Error(t("ui_you_cannot_block_yourself_2"));
       if (isWhitelisted(d, root)) throw new Error(t("ui_the_original_author_is_allowlisted_remove_them_before_starting"));
       // Selecting a different post changes analysis scope, not previously queued block jobs.
-      const s = { id: id(), tabId: sender.tab.id, account, ...binding, root, dryRun: !!d.debugDryRun, active: false, paused: false, stopped: false, sortRequired: true, pageReady: false, autoLoad: false, authorQueued: false, results: {}, excluded: [], count: 0, created: Date.now() };
+      const s = { id: id(), tabId: sender.tab.id, account, ...binding, root, dryRun: !!d.debugDryRun, active: false, paused: false, stopped: false, sortRequired: true, pageReady: false, autoLoad: !!d.settings.autoLoadDefault, authorQueued: false, results: {}, excluded: [], count: 0, created: Date.now() };
       d.sessions[sender.tab.id] = s; return s;
     }); notify(); return session;
   }
@@ -663,17 +918,45 @@ async function handle(message, sender) {
   if (type === "CLASSIFY") { if (!web) throw new Error(t("ui_invalid_page")); return classify(message, sender); }
   if (type === "ACTION_ALLOWED" || type === "ACTION_SUBMIT") { if (!web) return false; return permit(message.jobId, sender, type === "ACTION_SUBMIT", message.baseline); }
   if (type === "UNDO") {
+    const original = (await read()).history.find(h => h.id === message.id);
+    if (original?.target.userId && (message.module === "observer" || !original.observerOwner || original.module === "observer")) {
+      abortFlights(f => f.account === original.account && f.userId === original.target.userId);
+      await forgetObserverUser(original.account, original.target.userId);
+      observerSimulations.delete(observerUserKey(original.account, original.target.userId));
+    }
     await change(d => {
-      const h = d.history.find(h => h.id === message.id); if (!h || !["blocked", "submitted", "undo_failed"].includes(h.status)) throw new Error(t("ui_this_record_cannot_be_unblocked_right_now"));
+      const h = d.history.find(h => h.id === message.id);
+      if (h?.observerOwner && h.module !== "observer" && message.module !== "observer" && !message.whitelist) {
+        h.stanceOwner = false; h.module = "observer";
+        for (const j of d.jobs) if (j.historyId === h.id && j.kind === "block" && !j.submitted) j.module = "observer";
+        return;
+      }
+      if (h && message.module === "observer") {
+        h.observerOwner = false;
+        if (h.stanceOwner || h.module !== "observer") return;
+        const job = d.jobs.find(j => j.historyId === h.id && j.kind === "block" && ["pending", "running"].includes(j.status));
+        if (job) { if (job.submitted) h.undoRequested = true; else { job.status = "cancelled"; h.status = "cancelled"; } return; }
+      }
+      if (!h || !["blocked", "submitted", "undo_failed"].includes(h.status)) throw new Error(t("ui_this_record_cannot_be_unblocked_right_now"));
+      h.observerOwner = false;
       if (message.whitelist && !isWhitelisted(d, h.target)) d.whitelist.push({ ...h.target, note: t("ui_added_when_unblocking"), created: Date.now() });
       enqueueUnblock(d, h);
     }); notify(); void drain(); return true;
   }
   if (type === "CANCEL_JOB") {
     if (!ui) throw new Error(t("ui_use_the_history_panel"));
+    const before = await read(), original = before.history.find(h => h.id === message.id);
+    if (original?.module === "observer" && before.jobs.some(j => j.historyId === original.id && j.status === "pending")) {
+      abortFlights(f => f.account === original.account && f.userId === original.target.userId);
+      await forgetObserverUser(original.account, original.target.userId);
+      observerSimulations.delete(observerUserKey(original.account, original.target.userId));
+    }
     await change(d => {
       const j = d.jobs.find(j => j.historyId === message.id && j.status === "pending"); if (!j) throw new Error(t("ui_action_already_started_submitted_requests_cannot_be_canceled"));
-      j.status = "cancelled"; const h = d.history.find(h => h.id === message.id); h.status = j.kind === "unblock" ? h.verification === "http-only" ? "submitted" : "blocked" : "cancelled"; h.updated = Date.now();
+      const h = d.history.find(h => h.id === message.id);
+      if (j.kind === "block" && h.observerOwner && h.module !== "observer") { h.stanceOwner = false; h.module = "observer"; j.module = "observer"; return; }
+      j.status = "cancelled"; h.status = j.kind === "unblock" ? h.verification === "http-only" ? "submitted" : "blocked" : "cancelled"; h.updated = Date.now();
+      if (j.kind === "block") h.observerOwner = false;
       for (const s of Object.values(d.sessions)) if (s.account === h.account && !s.excluded.includes(h.target.handle)) s.excluded.push(h.target.handle);
     }); notify(); return true;
   }
@@ -700,7 +983,7 @@ async function handle(message, sender) {
     await change(d => {
       const entry = d.history.find(x => x.id === h.id), job = d.jobs.find(x => x.id === j.id);
       // Explicit user reconciliation accepts the observed state; no automatic mutation occurs here.
-      if (r.target.blocking) { entry.status = j.kind === "unblock" ? "undo_failed" : "blocked"; entry.owned = entry.owned || j.wasBlocked === false; }
+      if (r.target.blocking) { entry.status = j.kind === "unblock" ? "undo_failed" : "blocked"; entry.owned = entry.owned || j.wasBlocked === false; if (j.kind === "block") markTrashUnread(entry); }
       else entry.status = j.kind === "unblock" ? "unblocked" : "failed";
       job.status = ["failed", "undo_failed"].includes(entry.status) ? "failed" : "done";
       entry.error = ""; entry.updated = Date.now(); d.queueError = "";
@@ -721,6 +1004,7 @@ chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === "blocksb-cache-cleanup") void (async () => {
     // A failed IndexedDB cleanup must not prevent session-result expiry in local storage.
     await cleanJevCache((await read()).settings.cacheLimit).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
+    await cleanObserverEvidence(observerConfig(await read()).retentionDays).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
     await change(d => {
       for (const s of Object.values(d.sessions)) {
         s.results = Object.fromEntries(Object.entries(s.results).filter(([, result]) => (result.analyzedAt || s.created) > Date.now() - JEV_CACHE_TTL));
@@ -733,11 +1017,15 @@ chrome.alarms.onAlarm.addListener(alarm => {
 chrome.tabs.onRemoved.addListener(tabId => { abortFlights(f => f.tabId === tabId); void change(d => { delete d.sessions[tabId]; }); });
 // A login/account change can release waiting jobs without requiring the original post or any X tab.
 chrome.cookies.onChanged.addListener(({ cookie }) => {
-  if (["ct0", "twid"].includes(cookie.name) && /(^|\.)(x\.com|twitter\.com)$/.test(cookie.domain)) void drain();
+  if (["ct0", "twid"].includes(cookie.name) && /(^|\.)(x\.com|twitter\.com)$/.test(cookie.domain)) {
+    if (cookie.name === "twid") for (const flight of observerFlights.values()) flight.controller.abort();
+    void drain();
+  }
 });
 // Chrome rejects top-level await anywhere in a service worker's module graph.
 // Register listeners synchronously above, then initialize storage and queue asynchronously.
 void ready.then(async () => {
+  await globalThis.BlockSBI18n.setLanguage?.((await read()).settings.language || "auto");
   await chrome.alarms.create("blocksb-queue", { periodInMinutes: 0.5 });
   await chrome.alarms.create("blocksb-cache-cleanup", { periodInMinutes: 60 });
   void read().then(d => cleanJevCache(d.settings.cacheLimit)).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));

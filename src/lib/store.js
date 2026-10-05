@@ -1,6 +1,7 @@
 import "./i18n.js";
 const { t } = globalThis.BlockSBI18n;
 import { DEFAULTS, STANCE_PROMPT_VERSION, JEV_CACHE_TTL } from "./core.js";
+import { normalizeObserverSettings } from "./observer-core.js";
 let cache;
 let chain = Promise.resolve();
 /** Only trusted extension contexts may access persisted data, especially the Jev secret. */
@@ -9,6 +10,7 @@ export const ready = (async () => {
   const { state } = await chrome.storage.local.get("state");
   cache = state || { version: 1, settings: { ...DEFAULTS }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: 0, queueError: "", modelError: "" };
   cache.settings = { ...DEFAULTS, ...cache.settings };
+  cache.settings.observer = normalizeObserverSettings(cache.settings.observer || {});
   // Versions through 0.1.10 incorrectly made one invalid answer a persistent service-wide outage.
   if (/^Jev (概率分布不一致|返回的分类格式无效)/.test(cache.modelError)) cache.modelError = "";
   // Existing custom block thresholds can be below the new default mask threshold.

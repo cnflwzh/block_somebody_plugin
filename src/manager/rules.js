@@ -1,7 +1,15 @@
 import "../lib/i18n.js";
 const { t, localizeDocument } = globalThis.BlockSBI18n;
+await globalThis.BlockSBI18n.ready;
 import { RULE_VARIABLES, getAnalysisRule, normalizeRule, buildRequest } from "../lib/core.js";
+import { OBSERVER_VARIABLES, getObserverRule, normalizeObserverRule, buildObserverRequest } from "../lib/observer-core.js";
 localizeDocument(document);
+
+// Both modules use one editor so visual/Raw behavior and draft protection cannot drift.
+const observer = document.body.dataset.ruleModule === "observer";
+const variables = observer ? OBSERVER_VARIABLES : RULE_VARIABLES;
+const normalize = observer ? normalizeObserverRule : normalizeRule;
+const defaultRule = observer ? getObserverRule : getAnalysisRule;
 
 // This extension-owned editor saves a typed rule, never executable code or login credentials.
 const $ = id => document.getElementById(id);
@@ -14,7 +22,7 @@ const element = (tag, className, text) => {
   if (text !== undefined) node.textContent = text; return node;
 };
 async function send(type, payload = {}) {
-  const result = await chrome.runtime.sendMessage({ type, ...payload });
+  const result = await chrome.runtime.sendMessage({ type, ...(observer ? { module: "observer" } : {}), ...payload });
   if (!result?.ok) throw new Error(result?.error || t("ui_cannot_connect_to_the_extension_reload_the_extension_and_this"));
   return result.data;
 }
@@ -31,9 +39,9 @@ function collect() {
   if (mode === "raw") {
     let value;
     try { value = JSON.parse($("raw-editor").value); } catch { throw new Error(t("ui_invalid_json_check_brackets_commas_and_quotes")); }
-    return normalizeRule(value);
+    return normalize(value);
   }
-  return normalizeRule(draft);
+  return normalize(draft);
 }
 
 function optionButton(text, title, action) {
@@ -51,7 +59,7 @@ function renderOptions() {
     name.oninput = () => { option.name = name.value; markDirty(); };
     const check = element("label", "check"), enabled = element("input"); enabled.type = "checkbox"; enabled.checked = option.block;
     enabled.onchange = () => { option.block = enabled.checked; markDirty(); };
-    check.append(enabled, document.createTextNode(t("ui_block_on_match"))); heading.append(name, check);
+    check.append(enabled, document.createTextNode(t(observer ? "ui_observer_count_evidence" : "ui_block_on_match"))); heading.append(name, check);
     const description = element("textarea", "option-description"); description.value = option.description; description.rows = 2; description.maxLength = 4000;
     description.placeholder = t("ui_criteria_which_replies_belong_in_this_category"); description.setAttribute("aria-label", t("ui_option_criteria", index + 1));
     description.oninput = () => { option.description = description.value; markDirty(); };
@@ -88,12 +96,13 @@ modes.forEach(button => { button.onclick = () => switchMode(button.id === "visua
 for (const [field, property, container] of [["input-template", "input", "input-variables"], ["prompt-template", "prompt", "prompt-variables"]]) {
   const textarea = $(field);
   textarea.oninput = () => { draft[property] = textarea.value; markDirty(); };
-  for (const [name, label] of Object.entries(RULE_VARIABLES)) {
+  for (const [name, label] of Object.entries(variables)) {
     const button = optionButton(t(label), t("ui_insert", name), () => {
       const token = `{{${name}}}`, start = textarea.selectionStart, end = textarea.selectionEnd;
       if (textarea.value.length - (end - start) + token.length > 12000) { error(t("ui_templates_can_contain_up_to_12_000_characters")); return; }
       textarea.setRangeText(token, start, end, "end"); draft[property] = textarea.value; textarea.focus(); markDirty();
     });
+    button.dataset.i18n = label; button.dataset.variableName = name;
     button.onmousedown = event => event.preventDefault(); $(container).append(button);
   }
 }
@@ -104,7 +113,7 @@ $("add-option").onclick = () => {
   $("options-list").lastElementChild.querySelector("input").focus();
 };
 $("restore-default").onclick = () => {
-  draft = getAnalysisRule({}); renderVisual(); $("raw-editor").value = JSON.stringify(draft, null, 2); markDirty();
+  draft = defaultRule({}); renderVisual(); $("raw-editor").value = JSON.stringify(draft, null, 2); markDirty();
 };
 
 /** Preview uses synthetic text and the same compiler as the worker, with no network side effects. */
@@ -113,7 +122,8 @@ function renderPreview() {
   const parentText = $("sample-parent").value;
   const parent = parentText.trim() ? { id: "100002", text: parentText, parentId: root.id } : null;
   const reply = { id: "100001", text: $("sample-reply").value, parentId: parent?.id || root.id };
-  $("request-output").textContent = JSON.stringify(buildRequest(root, reply, parent, model, "", previewRule), null, 2);
+  const request = observer ? buildObserverRequest(root, reply, parent ? [parent] : [], model, { analysisRule: previewRule }) : buildRequest(root, reply, parent, model, "", previewRule);
+  $("request-output").textContent = JSON.stringify(request, null, 2);
 }
 $("preview-request").onclick = () => {
   try { previewRule = collect(); renderPreview(); error(); $("preview-dialog").showModal(); }
@@ -142,7 +152,17 @@ async function load() {
   loading = true;
   try {
     const latest = await send("RULE_CONFIG");
+    const previousLocale = globalThis.BlockSBI18n.locale;
+    await globalThis.BlockSBI18n.setLanguage(latest.language || "auto");
+    localizeDocument(document);
+    if (observer) document.title = `block s.b. · ${t("ui_observer_settings")}`;
+    document.querySelectorAll("[data-variable-name]").forEach(button => { button.title = t("ui_insert", button.dataset.variableName); button.setAttribute("aria-label", button.title); });
+    if (previousLocale !== globalThis.BlockSBI18n.locale && draft) {
+      // Rebuild labels without resetting the current input or Raw draft.
+      renderOptions(); $("save-state").textContent = dirty ? t("ui_unsaved_changes") : t("ui_saved");
+    }
     if (busy) { reloadAgain = true; return; }
+    model = latest.model;
     if (latest.revision < revision) return;
     // Queue notifications can be frequent. Do not reset selection/scroll for an unchanged rule.
     if (draft && latest.revision === revision) return;
@@ -150,7 +170,7 @@ async function load() {
       if (latest.revision !== revision) $("conflict").hidden = false;
       return;
     }
-    draft = latest.rule; revision = latest.revision; model = latest.model;
+    draft = latest.rule; revision = latest.revision;
     renderVisual(); $("raw-editor").value = JSON.stringify(draft, null, 2);
     $("save-state").textContent = t("ui_saved"); $("retry-load").hidden = true; $("conflict").hidden = true; error();
   } catch (e) { error(e.message); $("retry-load").hidden = false; }

@@ -1,6 +1,6 @@
 {
   "action_title": {
-    "message": "block s.b.・履歴、許可リスト、設定"
+    "message": "block s.b. · 履歴・AIスパム対策・設定"
   },
   "agreement_probability": {
     "message": "賛同の確率"
@@ -18,7 +18,7 @@
     "message": "自動読み込み：オン"
   },
   "block_history": {
-    "message": "ブロック履歴"
+    "message": "同調アカウント対策"
   },
   "category_neutral": {
     "message": "無関係な内容"
@@ -33,7 +33,7 @@
     "message": "判定できない"
   },
   "extension_description": {
-    "message": "X の返信の賛同確率を表示し、条件に合うアカウントをブロック。手動ブロック、履歴の取り消し、許可リストに対応。"
+    "message": "Xの同調コメントやAIによるスパムが疑われる返信を判定。自動観察、累積判定によるブロック、取り消し、許可リストに対応。"
   },
   "match_probability": {
     "message": "該当する確率"
@@ -1799,6 +1799,324 @@
   },
   "ui_debug_hint": {
     "message": "Jev の分析は引き続き課金対象です。有効中は既存のブロック処理も待機し、無効にすると再開します。シミュレーションを終えるには投稿のタスクを開始し直してください。送信済みのリクエストは取り消せません。"
+  },
+  "ui_invalid_interface_language": {
+    "message": "この表示言語には対応していません。"
+  },
+  "observer_content_marker": {
+    "message": "スパムの疑い $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_mask": {
+    "message": "スパムの疑い · $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_reason": {
+    "message": "$v0$ · $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_title": {
+    "message": "AIスパム対策"
+  },
+  "ui_observer_enable": {
+    "message": "自動でチェック"
+  },
+  "ui_observer_watching": {
+    "message": "観察中"
+  },
+  "ui_observer_search": {
+    "message": "アカウントを検索"
+  },
+  "ui_observer_adjust": {
+    "message": "判定設定を変更"
+  },
+  "ui_general_settings": {
+    "message": "一般設定"
+  },
+  "ui_observer_settings": {
+    "message": "AIスパム対策設定"
+  },
+  "ui_support_settings": {
+    "message": "同調アカウントの設定"
+  },
+  "ui_model_connection": {
+    "message": "モデル接続"
+  },
+  "ui_modify": {
+    "message": "変更"
+  },
+  "ui_api_model": {
+    "message": "APIエンドポイントとモデル"
+  },
+  "ui_shared_allowlist": {
+    "message": "両方の機能で共通"
+  },
+  "ui_manage_allowlist": {
+    "message": "許可リストを管理"
+  },
+  "ui_display_animation": {
+    "message": "表示とアニメーション"
+  },
+  "ui_interface_language": {
+    "message": "表示言語"
+  },
+  "ui_language_auto": {
+    "message": "ブラウザーの設定に従う"
+  },
+  "ui_delete_effect": {
+    "message": "削除時のエフェクト"
+  },
+  "ui_observer_scope": {
+    "message": "チェック対象"
+  },
+  "ui_observer_blue": {
+    "message": "青いチェックのみ"
+  },
+  "ui_observer_all": {
+    "message": "すべてのアカウント"
+  },
+  "ui_observer_conditions": {
+    "message": "蓄積した判定によるブロック条件"
+  },
+  "ui_observer_hits": {
+    "message": "疑わしい返信"
+  },
+  "ui_observer_threads": {
+    "message": "異なる元のポスト"
+  },
+  "ui_observer_rate": {
+    "message": "直近の該当率"
+  },
+  "ui_observer_items": {
+    "message": "件"
+  },
+  "ui_observer_recent_hint": {
+    "message": "直近5件の有効な判定で計算"
+  },
+  "ui_observer_retention": {
+    "message": "判定記録の保存期間"
+  },
+  "ui_observer_daily": {
+    "message": "1日の分析上限"
+  },
+  "ui_observer_days_7": {
+    "message": "7日"
+  },
+  "ui_observer_days_30": {
+    "message": "30日"
+  },
+  "ui_observer_days_90": {
+    "message": "90日"
+  },
+  "ui_observer_markers": {
+    "message": "判定ラベルを表示"
+  },
+  "ui_observer_mask": {
+    "message": "ブロック前に疑わしい返信を覆う"
+  },
+  "ui_observer_advanced": {
+    "message": "詳細ルール"
+  },
+  "ui_probability_range": {
+    "message": "支持確率の範囲"
+  },
+  "ui_hide_lower": {
+    "message": "非表示にする確率の下限"
+  },
+  "ui_hide_upper": {
+    "message": "非表示にする確率の上限"
+  },
+  "ui_auto_load_default": {
+    "message": "返信の自動読み込みを既定にする"
+  },
+  "ui_observer_state_active": {
+    "message": "バックグラウンドで観察中"
+  },
+  "ui_observer_state_off": {
+    "message": "自動チェックはオフです"
+  },
+  "ui_observer_state_paused": {
+    "message": "一時停止中"
+  },
+  "ui_observer_state_unconfigured": {
+    "message": "先にモデルを接続してください"
+  },
+  "ui_observer_state_limited": {
+    "message": "本日の分析上限に達しました"
+  },
+  "ui_observer_state_error": {
+    "message": "サービスエラーを確認してください"
+  },
+  "ui_observer_evidence_summary": {
+    "message": "疑い $v0$ / 有効 $v1$ · 元のポスト $v2$ 件",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_observer_empty": {
+    "message": "観察記録はまだありません"
+  },
+  "ui_observer_empty_hint": {
+    "message": "自動チェックをオンにすると、閲覧した返信の判定がここに蓄積されます。"
+  },
+  "ui_observer_no_matches": {
+    "message": "該当するアカウントはありません"
+  },
+  "ui_observer_no_evidence": {
+    "message": "有効な判定記録はまだありません"
+  },
+  "ui_observer_blue_verified": {
+    "message": "青いチェック付きアカウント"
+  },
+  "ui_observer_actor": {
+    "message": "@$v0$ で利用中",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_simulated": {
+    "message": "デバッグシミュレーション"
+  },
+  "ui_observer_forget": {
+    "message": "観察記録を消去"
+  },
+  "ui_observer_forget_copy": {
+    "message": "@$v0$ の蓄積した記録を消去します。今後見かける新しい返信から、改めて観察します。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_single_threshold": {
+    "message": "返信ごとの疑い判定のしきい値"
+  },
+  "ui_observer_invalid_rule": {
+    "message": "50〜100の範囲で確率を入力してください。"
+  },
+  "ui_observer_connected": {
+    "message": "接続済み"
+  },
+  "ui_cache_summary": {
+    "message": "$v0$ 件 · $v1$ 日",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "observer_category_spam": {
+    "message": "定型スパム"
+  },
+  "observer_category_template": {
+    "message": "定型的な言い換え"
+  },
+  "observer_category_empty": {
+    "message": "中身のない反応"
+  },
+  "observer_category_repetitive": {
+    "message": "決まり文句の繰り返し"
+  },
+  "observer_category_useful": {
+    "message": "具体的な内容あり"
+  },
+  "observer_category_normal": {
+    "message": "通常のやり取り"
+  },
+  "observer_category_uncertain": {
+    "message": "判断できない"
+  },
+  "observer_error_settings": {
+    "message": "AIスパム対策の設定が無効です。入力値を確認してください。"
+  },
+  "observer_error_threads": {
+    "message": "元のポストの必要数は、疑わしい返信の必要数以下にしてください。"
+  },
+  "observer_error_prompt": {
+    "message": "プロンプトは12,000文字以内のテキストにしてください。"
+  },
+  "observer_error_answer": {
+    "message": "モデルのスパム分類または確率分布が無効なため、今回の結果は集計されませんでした。"
+  },
+  "observer_error_database_timeout": {
+    "message": "観察記録データベースの読み込みがタイムアウトしました。しばらくしてから再試行してください。"
+  },
+  "observer_error_database_unavailable": {
+    "message": "観察記録データベースを開けませんでした。"
+  },
+  "observer_error_transaction": {
+    "message": "観察記録データベースの処理に失敗しました。再試行してください。"
+  },
+  "ui_cache": {
+    "message": "キャッシュ"
+  },
+  "ui_observer_state_debug": {
+    "message": "デバッグモードで観察中"
+  },
+  "ui_prompt_settings": {
+    "message": "カスタムプロンプト"
+  },
+  "ui_auto_hide_heading": {
+    "message": "自動で非表示"
+  },
+  "observer_error_database_transaction": {
+    "message": "観察記録データベースの処理に失敗しました。再試行してください。"
+  },
+  "ui_observer_probability_threshold": {
+    "message": "返信ごとの疑わしさの閾値 $v0$ · 確信度 $v1$ 以上",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_probability_note": {
+    "message": "ラベルには選択したカテゴリの合計確率を表示します。記録には個別カテゴリの確率と信頼度の条件を、ブロックにはアカウント単位の累積条件も満たす必要があります。"
+  },
+  "variable_ancestors": {
+    "message": "親返信の連なり"
+  },
+  "ui_observer_count_evidence": {
+    "message": "疑わしい返信として記録"
+  },
+  "ui_observer_rule_selection": {
+    "message": "複数のカテゴリを選択できます。モデルが選んだカテゴリの確率と信頼度がしきい値に達すると記録に加算され、アカウント単位の累積条件を満たすとブロックされます。"
+  },
+  "ui_observer_beta_notice": {
+    "message": "この機能はベータ版です。通常の返信を誤検知したり、スパムを見逃したりすることがあります。より良いプロンプトがあれば、ぜひプルリクエストで改善にご協力ください。"
+  },
+  "ui_observer_beta_contribute": {
+    "message": "プロンプトの改善を提案"
   }
-
 }

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title data-i18n="ui_observer_settings"></title>
+  <link rel="icon" href="../../assets/brand.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="rules.css"><script src="rules.js" type="module"></script>
+</head>
+<body data-rule-module="observer">
+  <main class="editor">
+    <header class="page-header"><a class="brand" href="manager.html?tab=settings&amp;section=observer"><img src="../../assets/brand.svg" alt="" width="28" height="28">block s.b.</a><span id="save-state" role="status" data-i18n="ui_loading"></span></header>
+    <div class="title-row"><div><h1 data-i18n="ui_observer_settings"></h1><p class="muted" data-i18n="ui_set_inputs_instructions_and_blocking_options"></p></div><div class="mode-switch" aria-label="" data-i18n-aria-label="ui_editing_mode"><button type="button" id="visual-mode" aria-pressed="true" disabled data-i18n="ui_visual"></button><button type="button" id="raw-mode" aria-pressed="false" disabled>Raw</button></div></div>
+    <div id="error" class="error" role="alert" hidden></div>
+    <div id="conflict" class="conflict" hidden><span data-i18n="ui_settings_changed_in_another_window_your_draft_is_kept_copy"></span><button type="button" id="reload-rule" data-i18n="ui_load_latest_settings"></button></div>
+    <button type="button" id="retry-load" hidden data-i18n="ui_reload"></button>
+    <fieldset id="editor-fields" disabled>
+      <div id="visual-panel">
+        <section class="card"><div class="section-heading"><h2 data-i18n="ui_input"></h2><span class="section-number">01</span></div><label class="sr-only" for="input-template" data-i18n="ui_input_template"></label><textarea id="input-template" rows="8" maxlength="12000" spellcheck="false"></textarea><div id="input-variables" class="variables" aria-label="" data-i18n-aria-label="ui_insert_input_variable"></div></section>
+        <section class="card"><div class="section-heading"><h2 data-i18n="ui_prompt"></h2><span class="section-number">02</span></div><label class="sr-only" for="prompt-template" data-i18n="ui_classification_prompt"></label><textarea id="prompt-template" rows="10" maxlength="12000" spellcheck="false"></textarea><div id="prompt-variables" class="variables" aria-label="" data-i18n-aria-label="ui_insert_prompt_variable"></div></section>
+        <section class="card"><div class="section-heading"><h2 data-i18n="ui_output_options"></h2><span class="section-number">03</span></div><p class="muted compact" data-i18n="ui_observer_rule_selection"></p><div id="options-list"></div><button type="button" id="add-option" class="add-option" data-i18n="ui_add_option"></button></section>
+      </div>
+      <section id="raw-panel" class="card" hidden><div class="section-heading"><h2 data-i18n="ui_raw_configuration"></h2><span class="muted">JSON</span></div><label class="sr-only" for="raw-editor" data-i18n="ui_rule_json"></label><textarea id="raw-editor" rows="30" maxlength="200000" spellcheck="false"></textarea><p class="muted compact" data-i18n="ui_observer_rule_selection"></p></section>
+    </fieldset>
+    <footer class="actions"><button type="button" id="restore-default" disabled data-i18n="ui_restore_defaults"></button><div><button type="button" id="preview-request" disabled data-i18n="ui_preview_request"></button><button type="button" id="save-rule" class="primary" disabled data-i18n="ui_save_rules"></button></div></footer>
+  </main>
+  <dialog id="preview-dialog">
+    <div class="section-heading"><h2 data-i18n="ui_request_preview"></h2><button type="button" id="close-preview" aria-label="" data-i18n-aria-label="ui_close_preview">×</button></div>
+    <p class="muted compact" data-i18n="ui_expands_variables_locally_without_calling_an_api"></p>
+    <div class="preview-grid"><div class="sample-fields">
+      <label for="sample-root" data-i18n="ui_sample_original_post"></label><textarea id="sample-root" rows="3" maxlength="14000" data-i18n-value="ui_if_you_agree_to_meet_you_should_be_on_time"></textarea>
+      <label for="sample-parent" data-i18n="ui_sample_parent_reply_leave_blank_for_direct_replies"></label><textarea id="sample-parent" rows="2" maxlength="14000"></textarea>
+      <label for="sample-reply" data-i18n="ui_sample_reply"></label><textarea id="sample-reply" rows="3" maxlength="14000" data-i18n-value="ui_agreed_being_on_time_is_basic_courtesy"></textarea>
+      <label class="check"><input type="checkbox" id="sample-media"><span data-i18n="ui_contains_unread_media"></span></label><label class="check"><input type="checkbox" id="sample-incomplete"><span data-i18n="ui_incomplete_text"></span></label>
+    </div><pre id="request-output" tabindex="0" aria-label="" data-i18n-aria-label="ui_final_request_content"></pre></div>
+  </dialog>
+</body>
+</html>

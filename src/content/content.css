@@ -18,3 +18,7 @@ article[data-testid="tweet"].blocksb-masked>:not(.blocksb-comment-mask){visibili
 .blocksb-flying-card{position:fixed!important;z-index:2147483645!important;pointer-events:none!important;overflow:hidden;border:1px solid #cfd9de;border-radius:16px;background:Canvas;color:CanvasText;box-shadow:0 10px 36px #0002;transform-origin:center center}
 .blocksb-particle{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;contain:layout paint;will-change:transform,opacity}
 .blocksb-particle-content{position:absolute!important;margin:0!important;pointer-events:none!important;box-sizing:border-box!important}
+.blocksb-observer-marker{display:inline-flex;align-items:center;flex:0 0 auto;appearance:none;border:0;margin-inline-start:8px;padding:1px 5px;border-radius:4px;background:#5364710d;color:#536471;font:11px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;white-space:nowrap;cursor:help}
+.blocksb-observer-marker:focus-visible{outline:2px solid #1d9bf0;outline-offset:3px}
+.blocksb-observer-marker[data-suspicious="true"]{color:#b87500;background:#ffb02012}
+@media(prefers-color-scheme:dark){.blocksb-observer-marker{color:#8b98a5}.blocksb-observer-marker[data-suspicious="true"]{color:#f0b84c}}

@@ -1,6 +1,6 @@
 {
   "action_title": {
-    "message": "block s.b. · 历史、白名单与设置"
+    "message": "block s.b. · 屏蔽记录、屏蔽伪人与设置"
   },
   "agreement_probability": {
     "message": "附和概率"
@@ -18,7 +18,7 @@
     "message": "自动加载：开"
   },
   "block_history": {
-    "message": "屏蔽记录"
+    "message": "屏蔽抱团"
   },
   "category_neutral": {
     "message": "无关内容"
@@ -33,7 +33,7 @@
     "message": "无法判断"
   },
   "extension_description": {
-    "message": "为选定的 X 评论展示附和概率，自动屏蔽明确支持者，支持手动屏蔽、历史撤销和白名单。"
+    "message": "筛选 X 评论中的附和与疑似 AI 灌水，支持自动观察、累计屏蔽、历史撤回和白名单。"
   },
   "match_probability": {
     "message": "命中概率"
@@ -1799,6 +1799,324 @@
   },
   "ui_debug_hint": {
     "message": "Jev 分析仍会计费。开启后历史屏蔽队列暂缓，关闭后恢复；模拟任务需重新启动。已发送的请求无法撤回。"
+  },
+  "ui_invalid_interface_language": {
+    "message": "不支持的界面语言"
+  },
+  "observer_content_marker": {
+    "message": "疑似灌水 $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_mask": {
+    "message": "疑似灌水 · $v0$%",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "observer_content_reason": {
+    "message": "$v0$ · $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_title": {
+    "message": "屏蔽伪人"
+  },
+  "ui_observer_enable": {
+    "message": "自动观察"
+  },
+  "ui_observer_watching": {
+    "message": "观察中"
+  },
+  "ui_observer_search": {
+    "message": "搜索账号"
+  },
+  "ui_observer_adjust": {
+    "message": "调整识别设置"
+  },
+  "ui_general_settings": {
+    "message": "通用设置"
+  },
+  "ui_observer_settings": {
+    "message": "屏蔽伪人设置"
+  },
+  "ui_support_settings": {
+    "message": "屏蔽抱团设置"
+  },
+  "ui_model_connection": {
+    "message": "模型连接"
+  },
+  "ui_modify": {
+    "message": "修改"
+  },
+  "ui_api_model": {
+    "message": "API 端点与模型"
+  },
+  "ui_shared_allowlist": {
+    "message": "两个模块共用"
+  },
+  "ui_manage_allowlist": {
+    "message": "管理白名单"
+  },
+  "ui_display_animation": {
+    "message": "显示与动画"
+  },
+  "ui_interface_language": {
+    "message": "界面语言"
+  },
+  "ui_language_auto": {
+    "message": "跟随浏览器"
+  },
+  "ui_delete_effect": {
+    "message": "删除效果"
+  },
+  "ui_observer_scope": {
+    "message": "观察范围"
+  },
+  "ui_observer_blue": {
+    "message": "仅蓝 V"
+  },
+  "ui_observer_all": {
+    "message": "全部账号"
+  },
+  "ui_observer_conditions": {
+    "message": "累计屏蔽条件"
+  },
+  "ui_observer_hits": {
+    "message": "可疑评论"
+  },
+  "ui_observer_threads": {
+    "message": "不同原帖"
+  },
+  "ui_observer_rate": {
+    "message": "近期命中占比"
+  },
+  "ui_observer_items": {
+    "message": "条"
+  },
+  "ui_observer_recent_hint": {
+    "message": "按最近 5 条有效判断计算"
+  },
+  "ui_observer_retention": {
+    "message": "证据保留"
+  },
+  "ui_observer_daily": {
+    "message": "每日分析上限"
+  },
+  "ui_observer_days_7": {
+    "message": "7 天"
+  },
+  "ui_observer_days_30": {
+    "message": "30 天"
+  },
+  "ui_observer_days_90": {
+    "message": "90 天"
+  },
+  "ui_observer_markers": {
+    "message": "显示识别标记"
+  },
+  "ui_observer_mask": {
+    "message": "提前遮罩可疑评论"
+  },
+  "ui_observer_advanced": {
+    "message": "高级规则"
+  },
+  "ui_probability_range": {
+    "message": "支持概率区间"
+  },
+  "ui_hide_lower": {
+    "message": "自动隐藏的概率下限"
+  },
+  "ui_hide_upper": {
+    "message": "自动隐藏的概率上限"
+  },
+  "ui_auto_load_default": {
+    "message": "默认自动加载评论"
+  },
+  "ui_observer_state_active": {
+    "message": "后台观察中"
+  },
+  "ui_observer_state_off": {
+    "message": "自动观察已关闭"
+  },
+  "ui_observer_state_paused": {
+    "message": "已暂停"
+  },
+  "ui_observer_state_unconfigured": {
+    "message": "请先连接模型"
+  },
+  "ui_observer_state_limited": {
+    "message": "今日分析已达上限"
+  },
+  "ui_observer_state_error": {
+    "message": "需要处理服务错误"
+  },
+  "ui_observer_evidence_summary": {
+    "message": "可疑 $v0$ / 有效 $v1$ · $v2$ 个原帖",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      },
+      "v2": {
+        "content": "$3"
+      }
+    }
+  },
+  "ui_observer_empty": {
+    "message": "暂无观察记录"
+  },
+  "ui_observer_empty_hint": {
+    "message": "开启自动观察后，浏览到的评论会在这里累计。"
+  },
+  "ui_observer_no_matches": {
+    "message": "没有匹配的账号"
+  },
+  "ui_observer_no_evidence": {
+    "message": "暂无有效证据"
+  },
+  "ui_observer_blue_verified": {
+    "message": "蓝 V 账号"
+  },
+  "ui_observer_actor": {
+    "message": "使用 @$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_simulated": {
+    "message": "调试模拟"
+  },
+  "ui_observer_forget": {
+    "message": "清除观察记录"
+  },
+  "ui_observer_forget_copy": {
+    "message": "清除 @$v0$ 的累计记录，之后遇到的新评论会重新观察。",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_observer_single_threshold": {
+    "message": "单条可疑概率"
+  },
+  "ui_observer_invalid_rule": {
+    "message": "请填写 50–100 之间的概率。"
+  },
+  "ui_observer_connected": {
+    "message": "已连接"
+  },
+  "ui_cache_summary": {
+    "message": "$v0$ 条 · $v1$ 天",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "observer_category_spam": {
+    "message": "模板灌水"
+  },
+  "observer_category_template": {
+    "message": "模板化复述"
+  },
+  "observer_category_empty": {
+    "message": "空泛回应"
+  },
+  "observer_category_repetitive": {
+    "message": "重复套话"
+  },
+  "observer_category_useful": {
+    "message": "有实质内容"
+  },
+  "observer_category_normal": {
+    "message": "正常交流"
+  },
+  "observer_category_uncertain": {
+    "message": "无法判断"
+  },
+  "observer_error_settings": {
+    "message": "屏蔽伪人的设置无效，请检查输入值。"
+  },
+  "observer_error_threads": {
+    "message": "不同原帖的数量不能超过可疑评论的数量。"
+  },
+  "observer_error_prompt": {
+    "message": "提示词必须是文本，且不超过 12000 个字符。"
+  },
+  "observer_error_answer": {
+    "message": "模型返回的灌水分类或概率分布无效，本次结果未计入观察记录。"
+  },
+  "observer_error_database_timeout": {
+    "message": "打开观察记录数据库超时，请稍后重试。"
+  },
+  "observer_error_database_unavailable": {
+    "message": "无法打开观察记录数据库。"
+  },
+  "observer_error_transaction": {
+    "message": "观察记录保存失败，请重试。"
+  },
+  "ui_cache": {
+    "message": "缓存"
+  },
+  "ui_observer_state_debug": {
+    "message": "调试观察中"
+  },
+  "ui_prompt_settings": {
+    "message": "自定义提示词"
+  },
+  "ui_auto_hide_heading": {
+    "message": "自动隐藏"
+  },
+  "observer_error_database_transaction": {
+    "message": "观察记录数据库操作失败，请重试。"
+  },
+  "ui_observer_probability_threshold": {
+    "message": "单条可疑阈值 $v0$ · 置信度需 ≥ $v1$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      },
+      "v1": {
+        "content": "$2"
+      }
+    }
+  },
+  "ui_observer_probability_note": {
+    "message": "标记显示勾选类别的合计概率。单项概率及置信度需达标，屏蔽还需满足账号累计条件。"
+  },
+  "variable_ancestors": {
+    "message": "父级回复链"
+  },
+  "ui_observer_count_evidence": {
+    "message": "计入可疑证据"
+  },
+  "ui_observer_rule_selection": {
+    "message": "可勾选多个类别。选中类别的概率及置信度达标后计入证据，达到账号累计条件才屏蔽。"
+  },
+  "ui_observer_beta_notice": {
+    "message": "“屏蔽伪人”目前处于 Beta 阶段，仍可能出现误判或漏判。如果你有更好的提示词，欢迎通过 PR 贡献，一起改进识别效果。"
+  },
+  "ui_observer_beta_contribute": {
+    "message": "贡献提示词"
   }
-
 }
