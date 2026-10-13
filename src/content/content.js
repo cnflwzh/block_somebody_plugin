@@ -80,7 +80,8 @@
   const observerSurface = () => !!route() || /^\/home\/?$/.test(location.pathname);
   const nameEnabled = () => !!state?.settings.filterRules?.some(r => r.enabled) && observerSurface() && state.account === viewer();
   // Filter first, then allow model analysis only for replies that did not match.
-  const nameMatches = p => nameEnabled() && !nameProtected(p) && (nameResults.get(p.id)?.pending || ["block", "mask"].includes(nameResults.get(p.id)?.result?.action));
+  const nameMatches = p => nameEnabled() && !nameProtected(p) && ((nameResults.get(p.id)?.pendingUntil || 0) > Date.now()
+    || nameRemoval(p) || !!route() && !!nameContext(p) && nameResults.get(p.id)?.result?.action === "mask");
   const nameProtected = p => white(p) || p.handle === viewer() || p.handle?.toLowerCase() === "grok" || followingStatus(p) !== false;
   const observerEnabled = () => !!state?.settings.observer?.enabled && observerSurface() && state.account === viewer();
   const observerProtected = p => p.handle?.toLowerCase() === "grok" || white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
@@ -629,10 +630,12 @@
     return chain ? { root, ancestors: chain } : null;
   }
   function nameRemoval(post) {
-    if (!nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
+    if (!route() || !nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
     const h = nameHistory.get(post.userId), local = nameResults.get(post.id)?.result;
     if (h) return (h.nameRootIds || [h.rootId]).includes(nameContext(post).root.id) && h.nameOwner && !h.nameRuleWithdrawn && (isBlocked(h) || ["pending", "running"].includes(h.status)) ? h : null;
-    return local?.status === "simulated" && state.settings.debugDryRun ? local : local?.action === "block" && local.status === "pending" ? local : null;
+    // Real removals require the current history authorization. A cached enqueue reply
+    // must not resurrect a withdrawn block after its history record is cleared.
+    return local?.status === "simulated" && state.settings.debugDryRun ? local : null;
   }
   // Quote cards can contain their own tweetText/media. Never attribute that text to the reply.
   function filterOwnNode(article, selector) {
@@ -658,13 +661,15 @@
       const hasLink = !!textNode?.querySelector('a[href^="https://t.co/"],a[target="_blank"]') || /https?:\/\//i.test(filterText);
       const signature = JSON.stringify([p.id, displayName, filterText, p.incomplete, filterMedia, hasLink, p.blueVerified]), previous = nameSeen.get(article);
       if (!previous || previous.signature !== signature) {
-        nameResults.set(p.id, { pending: true });
+        // A card may leave the viewport before its dwell time completes. Never let
+        // an unstarted check permanently hold the model/automatic loading pipeline.
+        nameResults.set(p.id, { pendingUntil: Date.now() + 900 });
         while (nameResults.size > 1000) nameResults.delete(nameResults.keys().next().value);
         nameSeen.set(article, { signature, at: Date.now() }); continue;
       }
       if (Date.now() - previous.at < 900 || (nameResults.get(p.id)?.retryAt || 0) > Date.now() || nameRemoval(p)) continue;
       const relation = followingObservation(p), epoch = nameEpoch, token = {};
-      nameResults.set(p.id, { pending: true });
+      nameResults.set(p.id, { pendingUntil: Date.now() + 30000 });
       nameFlight = token;
       send("MATCH_NAME_RULES", { account: viewer(), root: context.root, ancestors: context.ancestors, displayName, hasLink,
         reply: { ...p, name: displayName, text: filterText, hasMedia: filterMedia, following: relation?.following ?? null, followingAccount: relation?.followingAccount || "", followingAt: relation?.followingAt || 0 } }).then(result => {
@@ -1358,7 +1363,7 @@
       commentTools(article, p, decision, h, rootId);
       const filtered = nameResults.get(p.id)?.result;
       const maskKey = `filter:${viewer()}:${p.id}:${nameEpoch}`;
-      if (nameEnabled() && !state.settings.paused && !nameProtected(p) && nameContext(p) && filtered?.action === "mask" && !revealedMasks.has(maskKey)) {
+      if (rootId && nameEnabled() && !state.settings.paused && !nameProtected(p) && nameContext(p) && filtered?.action === "mask" && !revealedMasks.has(maskKey)) {
         applyMask(article, maskKey, t("ui_filter_mask", (filtered.names || []).join(" / ")), "name");
       } else if (!observerMask(article, p)) maskCard(article, p, decision);
     }
