@@ -656,7 +656,7 @@
     "message": "変数展開後のリクエストが大きすぎます。変数の重複を減らすか、テンプレートを短くしてください。"
   },
   "ui_expands_variables_locally_without_calling_an_api": {
-    "message": "変数の展開はローカルで行い、API は呼び出しません。"
+    "message": "ローカルプレビュー。API は呼び出しません。"
   },
   "ui_export": {
     "message": "エクスポート"
@@ -1305,9 +1305,6 @@
   "ui_set_between_2_and_255_output_options": {
     "message": "出力項目は2～255個にしてください。"
   },
-  "ui_set_inputs_instructions_and_blocking_options": {
-    "message": "入力内容、判定方法、ブロック対象を設定します。"
-  },
   "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
     "message": "別のウィンドウで設定が変更されました。下書きをコピーしてから最新の設定を読み込んでください。"
   },
@@ -1609,9 +1606,6 @@
   "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
     "message": "ユーザー名は英数字とアンダースコアで1～15文字にしてください。"
   },
-  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
-    "message": "ビジュアル編集と同じ設定を使用します。block が true の項目がブロック対象です。"
-  },
   "ui_verify_status": {
     "message": "状態を確認"
   },
@@ -1804,7 +1798,7 @@
     "message": "この表示言語には対応していません。"
   },
   "observer_content_marker": {
-    "message": "スパムの疑い $v0$%",
+    "message": "疑わしさ $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1812,7 +1806,7 @@
     }
   },
   "observer_content_mask": {
-    "message": "スパムの疑い · $v0$%",
+    "message": "疑わしい投稿 · $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1862,9 +1856,6 @@
   },
   "ui_api_model": {
     "message": "APIエンドポイントとモデル"
-  },
-  "ui_shared_allowlist": {
-    "message": "両方の機能で共通"
   },
   "ui_manage_allowlist": {
     "message": "許可リストを管理"
@@ -1980,7 +1971,7 @@
     "message": "観察記録はまだありません"
   },
   "ui_observer_empty_hint": {
-    "message": "自動チェックをオンにすると、閲覧した返信の判定がここに蓄積されます。"
+    "message": "自動観察をオンにすると、閲覧に合わせて記録が蓄積されます。"
   },
   "ui_observer_no_matches": {
     "message": "該当するアカウントはありません"
@@ -2032,6 +2023,12 @@
         "content": "$2"
       }
     }
+  },
+  "observer_category_ai_generated": {
+    "message": "AI生成の疑い"
+  },
+  "observer_category_human_like": {
+    "message": "自然なやり取りに近い"
   },
   "observer_category_spam": {
     "message": "定型スパム"
@@ -2102,7 +2099,7 @@
     }
   },
   "ui_observer_probability_note": {
-    "message": "ラベルには選択したカテゴリの合計確率を表示します。記録には個別カテゴリの確率と信頼度の条件を、ブロックにはアカウント単位の累積条件も満たす必要があります。"
+    "message": "バッジは選択カテゴリの合計確率です。ブロックには個別確率・信頼度・累積条件を満たす必要があります。"
   },
   "variable_ancestors": {
     "message": "親返信の連なり"
@@ -2111,12 +2108,187 @@
     "message": "疑わしい返信として記録"
   },
   "ui_observer_rule_selection": {
-    "message": "複数のカテゴリを選択できます。モデルが選んだカテゴリの確率と信頼度がしきい値に達すると記録に加算され、アカウント単位の累積条件を満たすとブロックされます。"
+    "message": "複数選択可。累積条件を満たすとブロックします。"
   },
   "ui_observer_beta_notice": {
-    "message": "この機能はベータ版です。通常の返信を誤検知したり、スパムを見逃したりすることがあります。より良いプロンプトがあれば、ぜひプルリクエストで改善にご協力ください。"
+    "message": "誤判定や見逃しが発生する場合があります。"
   },
   "ui_observer_beta_contribute": {
-    "message": "プロンプトの改善を提案"
+    "message": "PR でプロンプトを改善"
+  },
+  "ui_name_rules": {
+    "message": "カスタムフィルター"
+  },
+  "ui_name_rule_bnb": {
+    "message": "表示名に BNB を含むアカウントをブロック"
+  },
+  "ui_name_rule_ai": {
+    "message": "名前に漢字と独立した AI 表記を含む"
+  },
+  "ui_name_rules_hint": {
+    "message": "閲覧した返信が対象です。許可リスト、フォロー中のアカウント、@grok は除外します。"
+  },
+  "ui_name_records": {
+    "message": "一致したアカウント"
+  },
+  "ui_name_rules_count": {
+    "message": "$v0$ 件が有効",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_hit": {
+    "message": "一致：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_undo": {
+    "message": "このルールの処理を取り消す"
+  },
+  "ui_name_empty": {
+    "message": "記録はありません"
+  },
+  "ui_filter_invalid": {
+    "message": "ルールが無効です：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_add": {
+    "message": "＋ ルールを追加"
+  },
+  "ui_filter_enabled": {
+    "message": "ルールを有効にする"
+  },
+  "ui_filter_hits": {
+    "message": "一致：$v0$ 件",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_rule_name": {
+    "message": "ルール名"
+  },
+  "ui_filter_match": {
+    "message": "一致条件"
+  },
+  "ui_filter_all": {
+    "message": "すべての条件を満たす"
+  },
+  "ui_filter_any": {
+    "message": "いずれかの条件を満たす"
+  },
+  "ui_filter_field": {
+    "message": "対象"
+  },
+  "ui_filter_name": {
+    "message": "表示名"
+  },
+  "ui_filter_handle": {
+    "message": "@ユーザー名"
+  },
+  "ui_filter_text": {
+    "message": "返信本文"
+  },
+  "ui_filter_blue_verified": {
+    "message": "青いチェックマーク"
+  },
+  "ui_filter_has_link": {
+    "message": "リンクあり"
+  },
+  "ui_filter_has_media": {
+    "message": "画像・動画あり"
+  },
+  "ui_filter_yes": {
+    "message": "はい"
+  },
+  "ui_filter_no": {
+    "message": "いいえ"
+  },
+  "ui_filter_contains": {
+    "message": "含む"
+  },
+  "ui_filter_not_contains": {
+    "message": "含まない"
+  },
+  "ui_filter_equals": {
+    "message": "完全一致"
+  },
+  "ui_filter_regex": {
+    "message": "正規表現"
+  },
+  "ui_filter_value": {
+    "message": "キーワード・式"
+  },
+  "ui_filter_ignore_case": {
+    "message": "大文字・小文字を区別しない"
+  },
+  "ui_filter_remove": {
+    "message": "削除"
+  },
+  "ui_filter_add_condition": {
+    "message": "＋ 条件を追加"
+  },
+  "ui_filter_action": {
+    "message": "一致したとき"
+  },
+  "ui_filter_mask": {
+    "message": "返信を非表示 · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_block": {
+    "message": "アカウントをブロック"
+  },
+  "ui_filter_hide_action": {
+    "message": "返信を非表示"
+  },
+  "ui_filter_paused_error": {
+    "message": "タイムアウトまたはエラーで停止しました。編集後に再度有効にできます。"
+  },
+  "ui_filter_preview": {
+    "message": "一致を確認"
+  },
+  "ui_filter_try": {
+    "message": "一致をチェック"
+  },
+  "ui_filter_matched": {
+    "message": "ルールに一致"
+  },
+  "ui_filter_not_matched": {
+    "message": "一致しません"
+  },
+  "ui_filter_delete": {
+    "message": "ルールを削除"
+  },
+  "ui_filter_limit": {
+    "message": "追加できるルールは最大50件です。"
+  },
+  "ui_filter_new": {
+    "message": "新しいルール"
+  },
+  "ui_filter_history": {
+    "message": "ルールで履歴を絞り込む"
+  },
+  "ui_filter_undo_all": {
+    "message": "このルールのブロックを解除"
+  },
+  "ui_filter_view_reply": {
+    "message": "返信を表示"
+  },
+  "ui_filter_preview_error": {
+    "message": "式が無効か、実行がタイムアウトしました。"
   }
 }

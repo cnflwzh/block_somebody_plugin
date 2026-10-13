@@ -656,7 +656,7 @@
     "message": "변수 적용 후 요청이 너무 큽니다. 반복 변수를 줄이거나 템플릿을 줄이세요."
   },
   "ui_expands_variables_locally_without_calling_an_api": {
-    "message": "로컬에서 변수를 적용하며 API를 호출하지 않습니다."
+    "message": "로컬 미리보기입니다. API를 호출하지 않습니다."
   },
   "ui_export": {
     "message": "내보내기"
@@ -1305,9 +1305,6 @@
   "ui_set_between_2_and_255_output_options": {
     "message": "출력 옵션을 2~255개 설정하세요."
   },
-  "ui_set_inputs_instructions_and_blocking_options": {
-    "message": "입력 내용, 판단 방식, 차단 옵션을 설정하세요."
-  },
   "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
     "message": "다른 창에서 설정이 변경되었습니다. 초안을 복사한 뒤 최신 설정을 불러오세요."
   },
@@ -1609,9 +1606,6 @@
   "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
     "message": "사용자 이름은 영문자, 숫자, 밑줄로 이루어진 1~15자여야 합니다."
   },
-  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
-    "message": "시각적 편집과 같은 설정을 사용합니다. block이 true인 옵션이 차단 대상입니다."
-  },
   "ui_verify_status": {
     "message": "상태 확인"
   },
@@ -1804,7 +1798,7 @@
     "message": "지원하지 않는 표시 언어입니다."
   },
   "observer_content_marker": {
-    "message": "스팸 의심 $v0$%",
+    "message": "의심 확률 $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1812,7 +1806,7 @@
     }
   },
   "observer_content_mask": {
-    "message": "스팸 의심 · $v0$%",
+    "message": "의심되는 콘텐츠 · $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1862,9 +1856,6 @@
   },
   "ui_api_model": {
     "message": "API 엔드포인트 및 모델"
-  },
-  "ui_shared_allowlist": {
-    "message": "두 기능에서 공통으로 사용"
   },
   "ui_manage_allowlist": {
     "message": "허용 목록 관리"
@@ -1980,7 +1971,7 @@
     "message": "아직 관찰 기록이 없습니다"
   },
   "ui_observer_empty_hint": {
-    "message": "자동 관찰을 켜면 탐색 중 본 댓글의 판정이 여기에 쌓입니다."
+    "message": "자동 관찰을 켜면 탐색 중 기록이 쌓입니다."
   },
   "ui_observer_no_matches": {
     "message": "일치하는 계정이 없습니다"
@@ -2032,6 +2023,12 @@
         "content": "$2"
       }
     }
+  },
+  "observer_category_ai_generated": {
+    "message": "AI 생성 의심"
+  },
+  "observer_category_human_like": {
+    "message": "자연스러운 대화에 가까움"
   },
   "observer_category_spam": {
     "message": "상투적 스팸"
@@ -2102,7 +2099,7 @@
     }
   },
   "ui_observer_probability_note": {
-    "message": "표시된 확률은 선택한 범주의 확률을 합산한 값입니다. 근거 집계에는 개별 범주의 확률과 신뢰도 기준을, 차단에는 계정별 누적 조건도 충족해야 합니다."
+    "message": "배지는 선택한 범주의 합산 확률입니다. 차단에는 개별 확률, 신뢰도, 누적 조건을 모두 충족해야 합니다."
   },
   "variable_ancestors": {
     "message": "상위 답글 맥락"
@@ -2111,12 +2108,187 @@
     "message": "의심 근거로 집계"
   },
   "ui_observer_rule_selection": {
-    "message": "여러 범주를 선택할 수 있습니다. 모델이 선택한 범주의 확률과 신뢰도가 기준을 충족하면 근거로 집계하며, 계정별 누적 조건까지 충족해야 차단합니다."
+    "message": "여러 항목을 선택할 수 있으며, 누적 조건 충족 시 차단합니다."
   },
   "ui_observer_beta_notice": {
-    "message": "이 기능은 현재 베타 버전으로, 정상적인 답글을 잘못 판단하거나 스팸을 놓칠 수 있습니다. 더 나은 프롬프트가 있다면 PR로 제안해 주세요. 함께 탐지 품질을 개선할 수 있습니다."
+    "message": "오탐이나 누락이 발생할 수 있습니다."
   },
   "ui_observer_beta_contribute": {
-    "message": "프롬프트 개선 제안"
+    "message": "PR로 프롬프트 개선"
+  },
+  "ui_name_rules": {
+    "message": "사용자 지정 필터"
+  },
+  "ui_name_rule_bnb": {
+    "message": "이름에 BNB가 포함된 계정 차단"
+  },
+  "ui_name_rule_ai": {
+    "message": "이름에 한자와 독립된 AI 표기가 있음"
+  },
+  "ui_name_rules_hint": {
+    "message": "보고 있는 답글에만 적용됩니다. 허용 목록, 팔로우 중인 계정, @grok는 제외됩니다."
+  },
+  "ui_name_records": {
+    "message": "일치 기록"
+  },
+  "ui_name_rules_count": {
+    "message": "$v0$개 사용 중",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_hit": {
+    "message": "일치: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_undo": {
+    "message": "이 규칙의 처리 취소"
+  },
+  "ui_name_empty": {
+    "message": "아직 기록이 없습니다"
+  },
+  "ui_filter_invalid": {
+    "message": "잘못된 규칙: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_add": {
+    "message": "＋ 규칙 추가"
+  },
+  "ui_filter_enabled": {
+    "message": "규칙 활성화"
+  },
+  "ui_filter_hits": {
+    "message": "일치: $v0$개",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_rule_name": {
+    "message": "규칙 이름"
+  },
+  "ui_filter_match": {
+    "message": "일치 방식"
+  },
+  "ui_filter_all": {
+    "message": "모든 조건 충족"
+  },
+  "ui_filter_any": {
+    "message": "하나 이상의 조건 충족"
+  },
+  "ui_filter_field": {
+    "message": "대상"
+  },
+  "ui_filter_name": {
+    "message": "표시 이름"
+  },
+  "ui_filter_handle": {
+    "message": "@사용자 아이디"
+  },
+  "ui_filter_text": {
+    "message": "답글 본문"
+  },
+  "ui_filter_blue_verified": {
+    "message": "파란색 인증 배지"
+  },
+  "ui_filter_has_link": {
+    "message": "링크 포함"
+  },
+  "ui_filter_has_media": {
+    "message": "이미지 또는 동영상 포함"
+  },
+  "ui_filter_yes": {
+    "message": "예"
+  },
+  "ui_filter_no": {
+    "message": "아니요"
+  },
+  "ui_filter_contains": {
+    "message": "포함"
+  },
+  "ui_filter_not_contains": {
+    "message": "포함하지 않음"
+  },
+  "ui_filter_equals": {
+    "message": "완전히 일치"
+  },
+  "ui_filter_regex": {
+    "message": "정규 표현식"
+  },
+  "ui_filter_value": {
+    "message": "키워드 또는 표현식"
+  },
+  "ui_filter_ignore_case": {
+    "message": "대소문자 구분 안 함"
+  },
+  "ui_filter_remove": {
+    "message": "제거"
+  },
+  "ui_filter_add_condition": {
+    "message": "＋ 조건 추가"
+  },
+  "ui_filter_action": {
+    "message": "일치 시 동작"
+  },
+  "ui_filter_mask": {
+    "message": "답글 숨김 · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_block": {
+    "message": "계정 차단"
+  },
+  "ui_filter_hide_action": {
+    "message": "답글 숨기기"
+  },
+  "ui_filter_paused_error": {
+    "message": "시간 초과 또는 오류로 규칙이 일시 중지되었습니다. 수정 후 다시 켤 수 있습니다."
+  },
+  "ui_filter_preview": {
+    "message": "일치 미리 보기"
+  },
+  "ui_filter_try": {
+    "message": "일치 확인"
+  },
+  "ui_filter_matched": {
+    "message": "규칙과 일치"
+  },
+  "ui_filter_not_matched": {
+    "message": "일치하지 않음"
+  },
+  "ui_filter_delete": {
+    "message": "규칙 삭제"
+  },
+  "ui_filter_limit": {
+    "message": "규칙은 최대 50개까지 추가할 수 있습니다."
+  },
+  "ui_filter_new": {
+    "message": "새 규칙"
+  },
+  "ui_filter_history": {
+    "message": "규칙별 기록 필터링"
+  },
+  "ui_filter_undo_all": {
+    "message": "이 규칙의 차단 취소"
+  },
+  "ui_filter_view_reply": {
+    "message": "답글 보기"
+  },
+  "ui_filter_preview_error": {
+    "message": "표현식이 잘못되었거나 실행 시간이 초과되었습니다."
   }
 }

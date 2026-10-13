@@ -152,17 +152,23 @@
     while (records.size > 2500) records.delete(records.keys().next().value);
     for (let i = 0; i < found.length; i += 40) publish(found.slice(i, i + 40), "network");
   }
+  const captureReaders = new Set();
   async function capture(response, url, startedAt, account) {
-    let reader, complete = false;
+    let reader, timer, complete = false, expired = false;
     try {
       if (!response.ok) { timeline(url, null, response.status, startedAt); void response.body?.cancel().catch(() => {}); return; }
       if (Number(response.headers.get("content-length")) > 6_000_000) { void response.body?.cancel().catch(() => {}); return; }
       reader = response.body?.getReader();
       if (!reader) return;
+      captureReaders.add(reader);
+      // A byte cap alone does not release a stalled stream. Cancel only our cloned
+      // branch, never X's original request or response reader.
+      timer = setTimeout(() => { expired = true; void reader.cancel().catch(() => {}); }, 15000);
       const decoder = new TextDecoder();
       let body = "", size = 0;
       for (;;) {
         const { value, done } = await reader.read();
+        if (expired) return;
         if (done) { complete = true; break; }
         size += value.byteLength;
         if (size > 6_000_000) return;
@@ -173,6 +179,8 @@
       timeline(url, data, response.status, startedAt);
     } catch { /* X responses and stream cancellation must not affect the page. */ }
     finally {
+      clearTimeout(timer);
+      captureReaders.delete(reader);
       // Do not await cancellation of a cloned response: its other branch belongs to X.
       if (reader) { if (!complete) void reader.cancel().catch(() => {}); reader.releaseLock(); }
     }
@@ -182,7 +190,10 @@
     const url = args[0] instanceof Request ? args[0].url : String(args[0]);
     const observe = eligible(url), startedAt = Date.now(), account = observe ? viewer() : "";
     const result = Reflect.apply(originalFetch, this, args);
-    if (observe) result.then(response => capture(response.clone(), url, startedAt, account)).catch(() => timeline(url, null, 0, startedAt));
+    if (observe) result.then(response => {
+      // Rendered-card capture can still recover visible replies when this budget is busy.
+      if (captureReaders.size < 4) return capture(response.clone(), url, startedAt, account);
+    }).catch(() => timeline(url, null, 0, startedAt));
     return result;
   };
   const originalOpen = XMLHttpRequest.prototype.open;
@@ -214,4 +225,5 @@
     // Cached responses can supply missing parents, but are not newly arrived comments.
     for (let i = 0; i < all.length; i += 40) publish(all.slice(i, i + 40), "cache");
   });
+  window.addEventListener("pagehide", () => { for (const reader of captureReaders) void reader.cancel().catch(() => {}); });
 })();

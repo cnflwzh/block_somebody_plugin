@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { DEFAULTS } from "../src/lib/core.js";
 
 test("passive observer persists distinct evidence, queues independently, and honors cancellation and dry-run", async t => {
-  let receive, jevCalls = 0, blockCalls = 0, modelChoice = "spam", serviceFailure = false;
+  let receive, jevCalls = 0, blockCalls = 0, modelChoice = "ai_generated", serviceFailure = false;
   const data = { jevKey: "fixture-key-not-a-secret", state: { settings: { ...DEFAULTS, observer: { ...DEFAULTS.observer, enabled: true } }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: Date.now() + 3600000, queueError: "", modelError: "" } };
   const originalFetch = globalThis.fetch;
   const origin = "chrome-extension://observer-fixture/";
@@ -25,7 +25,7 @@ test("passive observer persists distinct evidence, queues independently, and hon
     if (serviceFailure) return new Response("Unavailable", { status: 503 });
     const body = JSON.parse(options.body);
     assert.equal(JSON.stringify(body).includes("900001"), false);
-    return Response.json({ answers: { stance: { type: "choice", choice: modelChoice, confidence: .99, probabilities: { spam: modelChoice === "spam" ? .97 : .01, useful: .01, normal: modelChoice === "normal" ? .97 : .01, uncertain: .01 } } } });
+    return Response.json({ answers: { stance: { type: "choice", choice: modelChoice, confidence: .99, probabilities: { ai_generated: modelChoice === "ai_generated" ? .98 : .01, human_like: modelChoice === "human_like" ? .98 : .01, uncertain: .01 } } } });
   };
   const observation = (index, userId = "900001", extra = {}) => {
     const rootId = index === 1 ? "100000" : "200000", id = String(100000 + index);
@@ -33,6 +33,9 @@ test("passive observer persists distinct evidence, queues independently, and hon
   };
   try {
     await import("../src/background.js");
+    const beforeGrok = jevCalls;
+    assert.equal((await rpc("OBSERVE_REPLY", observation(90, "900090", { handle: "grok" }))).action, "skip");
+    assert.equal(jevCalls, beforeGrok, "official Grok is excluded before paid analysis");
     const one = observation(1);
     await Promise.all([rpc("OBSERVE_REPLY", one), rpc("OBSERVE_REPLY", one)]);
     assert.equal(jevCalls, 1, "duplicate page messages share one paid analysis");
@@ -64,11 +67,11 @@ test("passive observer persists distinct evidence, queues independently, and hon
       const prior = await rpc("OBSERVER_DECISIONS", { account: "viewer", replyIds: ["100011", "100012", "100013"] });
       assert.equal(prior.some(result => result.status === "simulated"), true, "stored evidence restores preview eligibility");
       await rpc("OBSERVER_FORGET", { account: "viewer", userId: "900002" }, ui);
-      modelChoice = "normal";
+      modelChoice = "human_like";
       const next = await rpc("OBSERVE_REPLY", observation(15, "900002"));
-      assert.equal(next.label, "normal"); assert.equal(next.status, "observing"); assert.equal(next.action, "keep");
+      assert.equal(next.label, "human_like"); assert.equal(next.status, "observing"); assert.equal(next.action, "keep");
       assert.equal((await rpc("OBSERVER_DECISIONS", { account: "viewer", replyIds: ["100011", "100012", "100013"] })).length, 0);
-      modelChoice = "spam";
+      modelChoice = "ai_generated";
       await rpc("DEBUG_DRY_RUN", { enabled: false });
     });
 
@@ -185,6 +188,16 @@ test("passive observer persists distinct evidence, queues independently, and hon
       await rpc("SAVE_SETTINGS", { value: { observer: { preset: "careful" } } }, ui);
     });
 
+    await t.test("older queued Grok observation is cancelled while manual stance ownership remains independent", async () => {
+      const fixture = await seedObserverJob("50");
+      await change(db => {
+        db.jobs.find(j => j.id === fixture.jobId).target.handle = "grok";
+        db.history.find(h => h.id === fixture.historyId).target.handle = "grok";
+      });
+      await rpc("SAVE_SETTINGS", { value: {} }, ui);
+      assert.equal(job(fixture).status, "cancelled");
+    });
+
     await t.test("an author record transferred to observer ownership loses the author following exemption", async () => {
       const fixture = await seedObserverJob("4", "author");
       await rpc("OBSERVER_RELATIONSHIPS", { account: "viewer", posts: [{ ...fixture.target, id: "810004", following: true, followingAt: Date.now() + 1 }] });
@@ -198,7 +211,7 @@ test("passive observer persists distinct evidence, queues independently, and hon
       serviceFailure = false;
       await rpc("RESUME_SERVICES", {}, ui);
       const result = await rpc("OBSERVE_REPLY", input);
-      assert.equal(result.label, "spam");
+      assert.equal(result.label, "ai_generated");
       assert.equal(result.status, "observing");
     });
     assert.equal(blockCalls, 0);

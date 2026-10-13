@@ -8,6 +8,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = JSON.parse(readFileSync(resolve(root, "manifest.json"), "utf8"));
 const messages = JSON.parse(readFileSync(resolve(root, `_locales/${manifest.default_locale}/messages.json`), "utf8"));
 const files = extensionFiles.filter(file => file.endsWith(".js"));
+// Syntax checks alone cannot catch an imported name missing from another module.
+const linked = spawnSync(process.execPath, ["--experimental-vm-modules", resolve(root, "scripts/check-modules.mjs")], { encoding: "utf8" });
+if (linked.status !== 0) throw new Error(`Extension module linking failed:\n${linked.error?.message || linked.stderr}`);
+process.stdout.write(linked.stdout);
 for (const file of files) {
   const result = spawnSync(process.execPath, ["--check", resolve(root, file)], { encoding: "utf8" });
   if (result.status !== 0) throw new Error(`Invalid JavaScript: ${file}\n${result.stderr}`);

@@ -1,21 +1,21 @@
 import "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { OBSERVER_DEFAULTS, normalizeObserverSettings, buildObserverRequest, parseObserverDecision, summarizeObserverEvidence } from "../src/lib/observer-core.js";
+import { OBSERVER_DEFAULTS, normalizeObserverSettings, observerExempt, buildObserverRequest, parseObserverDecision, summarizeObserverEvidence } from "../src/lib/observer-core.js";
 import { observerEvidenceKey, observerUserKey, saveObserverEvidence, readObserverUser, readObserverReplies, observerEpoch, forgetObserverUser, reserveObserverBudget, readObserverBudget, cleanObserverEvidence } from "../src/lib/observer-store.js";
 
 const config = { ...OBSERVER_DEFAULTS };
 const now = Date.now();
-const evidence = (replyId, rootId, extra = {}) => ({ replyId, rootId, observedAt: now, fingerprint: "rule-a", label: "spam", score: .96, confidence: .97, ...extra });
+const evidence = (replyId, rootId, extra = {}) => ({ replyId, rootId, observedAt: now, fingerprint: "rule-a", label: "ai_generated", score: .96, confidence: .97, ...extra });
 
 test("observer requires independent comments, multiple threads and recent normal evidence", () => {
   const first = evidence("100001", "100000");
   assert.equal(summarizeObserverEvidence([first, first, first], config, "rule-a", now).eligible, false);
   const rows = [first, evidence("100002", "100000"), evidence("200001", "200000")];
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).eligible, true);
-  rows.push(evidence("300001", "300000", { label: "normal", observedAt: now + 1 }));
+  rows.push(evidence("300001", "300000", { label: "human_like", observedAt: now + 1 }));
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).hitRate, .75);
-  rows.push(evidence("300002", "300000", { label: "normal", observedAt: now + 2 }));
+  rows.push(evidence("300002", "300000", { label: "human_like", observedAt: now + 2 }));
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).eligible, false);
 });
 
@@ -28,12 +28,12 @@ test("observer isolates rule versions, expired evidence, withdrawals and simulat
 });
 
 test("observer validates choices and does not label normal winner probability as spam", () => {
-  const probabilities = { spam: .01, useful: .01, normal: .97, uncertain: .01 };
-  const answer = { answers: { stance: { type: "choice", choice: "normal", confidence: .99, probabilities } } };
+  const probabilities = { ai_generated: .01, human_like: .98, uncertain: .01 };
+  const answer = { answers: { stance: { type: "choice", choice: "human_like", confidence: .99, probabilities } } };
   const result = parseObserverDecision(answer, config);
   assert.equal(result.suspicious, false); assert.equal(result.spamScore, .01);
-  assert.throws(() => parseObserverDecision({ answers: { stance: { ...answer.answers.stance, choice: "spam" } } }, config));
-  assert.throws(() => parseObserverDecision({ answers: { stance: { ...answer.answers.stance, probabilities: { ...probabilities, normal: NaN } } } }, config));
+  assert.throws(() => parseObserverDecision({ answers: { stance: { ...answer.answers.stance, choice: "ai_generated" } } }, config));
+  assert.throws(() => parseObserverDecision({ answers: { stance: { ...answer.answers.stance, probabilities: { ...probabilities, human_like: NaN } } } }, config));
   const request = buildObserverRequest({ text: "root", handle: "private-name" }, { text: "reply" }, [], "model", config);
   assert.equal(JSON.stringify(request).includes("private-name"), false);
 });
@@ -65,4 +65,10 @@ test("observer budget reservations remain atomic and roll over on a new UTC day"
   assert.equal(await readObserverBudget(day), 7);
   assert.equal(await reserveObserverBudget(7, day + 86400000), true);
   assert.equal(await readObserverBudget(day + 86400000), 1);
+});
+
+test("official Grok exemption matches the handle, not display names or lookalikes", () => {
+  assert.equal(observerExempt({ handle: "Grok" }), true);
+  assert.equal(observerExempt({ handle: "@grok" }), true);
+  assert.equal(observerExempt({ handle: "grok_helper", name: "Grok" }), false);
 });

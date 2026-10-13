@@ -6,10 +6,16 @@ export const OBSERVER_VERSION = "observer-v1";
 export const OBSERVER_DEFAULTS = Object.freeze({ enabled: false, scope: "blue", minHits: 3, minThreads: 2, hitRate: 0.75, retentionDays: 30, dailyLimit: 200, skipFollowing: true, showMarkers: false, mask: false, preset: "careful", threshold: 0.9, confidence: 0.8, prompt: "", analysisRule: null });
 // Presets adjust single-reply evidence only; cumulative account conditions stay independent.
 export const OBSERVER_PRESETS = Object.freeze({ careful: Object.freeze({ threshold: 0.9, confidence: 0.8 }), balanced: Object.freeze({ threshold: 0.85, confidence: 0.75 }), active: Object.freeze({ threshold: 0.8, confidence: 0.7 }) });
-export const OBSERVER_PROMPT = `只判当前回复是否低质模板灌水，不推断AI身份。结合原帖与父回复：机械复述、万能夸赞、通用感慨且未具体回应为灌水；有信息、经历、问题、反驳、幽默或正常礼貌互动应保留，AI风格有用内容也保留。短句、文风不能单独定性；依赖缺失语境或图片时选uncertain。`;
-// One actionable category avoids splitting spam probability across overlapping subtypes.
-export const OBSERVER_CRITERIA = Object.freeze({ spam: "模板灌水：机械复述、万能夸赞或通用感慨，缺少具体回应", useful: "有用：有实质帮助，包括AI风格", normal: "正常：具体交流或正常社交、礼貌、幽默", uncertain: "不确定：缺少语境或依赖未读媒体" });
-const suspect = new Set(["spam"]);
+// General guidance stays in instructions; category-specific boundaries live in criteria.
+export const OBSERVER_PROMPT = `判断当前评论是否疑似AI代写，原帖与父回复仅作语境。切题、有用也可能是AI。不要依据账号、观点或单一文体判断；条列、术语、礼貌不证明AI，口语、错字、经历不证明真人。`;
+export const OBSERVER_CRITERIA = Object.freeze({
+  "ai_generated": "疑似AI生成：有组合生成证据：通用助手式重述、均衡展开和总结；泛泛赞同后升华；无必要百科解释与服务式追问；误读调侃而机械纠错。切题不豁免，但专业格式、人工模板或摘录本身不足以归因。",
+  "human_like": "更像自然交流：自然参与具体交流、表达立场或经验，无明显组合生成证据；不是身份认证。",
+  "uncertain": "来源不明：AI与人工解释同样合理，或文本太短、通用、引用、翻译、缺少语境。不要仅因工整专业而判AI，也不要因来源不可证明而一律不确定。"
+});
+const suspect = new Set(["ai_generated"]);
+/** Return whether a target handle is the allowed platform AI; display names never grant exemption. */
+export const observerExempt = target => String(target?.handle || "").replace(/^@/, "").toLowerCase() === "grok";
 export const OBSERVER_VARIABLES = Object.freeze({ ...RULE_VARIABLES, ancestors: "variable_ancestors" });
 const OBSERVER_INPUT = "原帖：{{original_post}}\n父回复链：{{ancestors}}\n当前回复：{{reply}}\n未读媒体：{{unseen_media}}";
 
@@ -71,7 +77,7 @@ export function normalizeObserverSettings(value = {}, current = OBSERVER_DEFAULT
 
 /** Build a text-only Jev choice request; source material is never executable instruction. */
 export function buildObserverRequest(root, reply, ancestors, model, config) {
-  // Keep default and editable requests identical to the evaluated compact four-choice rule.
+  // Default and editable rules share one request shape; rubric changes also change cache identity.
   const rule = getObserverRule(config), posts = [root, reply, ...ancestors];
   const parent = ancestors.find(p => p.id === reply.parentId);
   const values = { original_post: root.text || "", reply: reply.text || "", parent_reply: parent?.text || "", ancestors: JSON.stringify(ancestors.map(p => p.text)),

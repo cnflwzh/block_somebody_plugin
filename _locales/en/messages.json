@@ -656,7 +656,7 @@
     "message": "Expanded request too large. Reduce repeated variables or shorten the template."
   },
   "ui_expands_variables_locally_without_calling_an_api": {
-    "message": "Expands variables locally without calling an API."
+    "message": "Local preview. No API call."
   },
   "ui_export": {
     "message": "Export"
@@ -1305,9 +1305,6 @@
   "ui_set_between_2_and_255_output_options": {
     "message": "Set between 2 and 255 output options."
   },
-  "ui_set_inputs_instructions_and_blocking_options": {
-    "message": "Set inputs, instructions, and blocking options."
-  },
   "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
     "message": "Settings changed in another window. Copy your draft, then load the latest settings."
   },
@@ -1609,9 +1606,6 @@
   "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
     "message": "Usernames must be 1–15 letters, digits, or underscores."
   },
-  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
-    "message": "Uses the same configuration as the visual editor. Options with block set to true may trigger blocking."
-  },
   "ui_verify_status": {
     "message": "Verify status"
   },
@@ -1804,7 +1798,7 @@
     "message": "Unsupported interface language."
   },
   "observer_content_marker": {
-    "message": "Suspected spam $v0$%",
+    "message": "Suspicion score $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1812,7 +1806,7 @@
     }
   },
   "observer_content_mask": {
-    "message": "Suspected spam · $v0$%",
+    "message": "Suspected content · $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1862,9 +1856,6 @@
   },
   "ui_api_model": {
     "message": "API endpoint and model"
-  },
-  "ui_shared_allowlist": {
-    "message": "Shared by both filters"
   },
   "ui_manage_allowlist": {
     "message": "Manage allowlist"
@@ -1980,7 +1971,7 @@
     "message": "No observations yet"
   },
   "ui_observer_empty_hint": {
-    "message": "Turn on automatic observation to collect judgments as you browse replies."
+    "message": "Enable automatic observation to collect records as you browse."
   },
   "ui_observer_no_matches": {
     "message": "No matching accounts"
@@ -2032,6 +2023,12 @@
         "content": "$2"
       }
     }
+  },
+  "observer_category_ai_generated": {
+    "message": "Likely AI-generated"
+  },
+  "observer_category_human_like": {
+    "message": "More like natural conversation"
   },
   "observer_category_spam": {
     "message": "Template spam"
@@ -2102,7 +2099,7 @@
     }
   },
   "ui_observer_probability_note": {
-    "message": "The badge shows the combined probability of the selected categories. Evidence requires the individual category probability and confidence thresholds; blocking also requires the cumulative account criteria."
+    "message": "The badge sums selected categories. Blocking still requires per-option, confidence and cumulative thresholds."
   },
   "variable_ancestors": {
     "message": "Parent reply chain"
@@ -2111,12 +2108,187 @@
     "message": "Count as suspicious evidence"
   },
   "ui_observer_rule_selection": {
-    "message": "Select one or more categories. A selected category counts as evidence only when its probability and confidence meet the thresholds. Blocking also requires the cumulative account criteria."
+    "message": "Select one or more. Blocking requires cumulative evidence."
   },
   "ui_observer_beta_notice": {
-    "message": "This feature is in beta and may flag genuine replies or miss spam. Have a better prompt? Contributions via pull request are welcome."
+    "message": "False positives and missed detections are still possible."
   },
   "ui_observer_beta_contribute": {
-    "message": "Contribute a prompt"
+    "message": "Improve prompts via PR"
+  },
+  "ui_name_rules": {
+    "message": "Custom filters"
+  },
+  "ui_name_rule_bnb": {
+    "message": "Block names containing BNB"
+  },
+  "ui_name_rule_ai": {
+    "message": "Name contains Han characters and a separate AI label"
+  },
+  "ui_name_rules_hint": {
+    "message": "Applies to replies you browse. Allowlisted accounts, followed accounts and @grok are protected."
+  },
+  "ui_name_records": {
+    "message": "Matched accounts"
+  },
+  "ui_name_rules_count": {
+    "message": "$v0$ enabled",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_hit": {
+    "message": "Matched: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_undo": {
+    "message": "Undo this rule’s action"
+  },
+  "ui_name_empty": {
+    "message": "No records yet"
+  },
+  "ui_filter_invalid": {
+    "message": "Invalid filter: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_add": {
+    "message": "＋ Add rule"
+  },
+  "ui_filter_enabled": {
+    "message": "Enable rule"
+  },
+  "ui_filter_hits": {
+    "message": "Matches: $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_rule_name": {
+    "message": "Rule name"
+  },
+  "ui_filter_match": {
+    "message": "Match"
+  },
+  "ui_filter_all": {
+    "message": "All conditions"
+  },
+  "ui_filter_any": {
+    "message": "Any condition"
+  },
+  "ui_filter_field": {
+    "message": "Field"
+  },
+  "ui_filter_name": {
+    "message": "Display name"
+  },
+  "ui_filter_handle": {
+    "message": "@handle"
+  },
+  "ui_filter_text": {
+    "message": "Reply text"
+  },
+  "ui_filter_blue_verified": {
+    "message": "Blue verified"
+  },
+  "ui_filter_has_link": {
+    "message": "Contains a link"
+  },
+  "ui_filter_has_media": {
+    "message": "Contains images or video"
+  },
+  "ui_filter_yes": {
+    "message": "Yes"
+  },
+  "ui_filter_no": {
+    "message": "No"
+  },
+  "ui_filter_contains": {
+    "message": "Contains"
+  },
+  "ui_filter_not_contains": {
+    "message": "Does not contain"
+  },
+  "ui_filter_equals": {
+    "message": "Equals"
+  },
+  "ui_filter_regex": {
+    "message": "Regular expression"
+  },
+  "ui_filter_value": {
+    "message": "Keyword or expression"
+  },
+  "ui_filter_ignore_case": {
+    "message": "Ignore case"
+  },
+  "ui_filter_remove": {
+    "message": "Remove"
+  },
+  "ui_filter_add_condition": {
+    "message": "＋ Add condition"
+  },
+  "ui_filter_action": {
+    "message": "On match"
+  },
+  "ui_filter_mask": {
+    "message": "Hidden reply · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_block": {
+    "message": "Block account"
+  },
+  "ui_filter_hide_action": {
+    "message": "Hide reply"
+  },
+  "ui_filter_paused_error": {
+    "message": "Rule paused after a timeout or error. Edit it to re-enable."
+  },
+  "ui_filter_preview": {
+    "message": "Preview match"
+  },
+  "ui_filter_try": {
+    "message": "Check match"
+  },
+  "ui_filter_matched": {
+    "message": "Rule matched"
+  },
+  "ui_filter_not_matched": {
+    "message": "No match"
+  },
+  "ui_filter_delete": {
+    "message": "Delete rule"
+  },
+  "ui_filter_limit": {
+    "message": "You can add up to 50 rules."
+  },
+  "ui_filter_new": {
+    "message": "New rule"
+  },
+  "ui_filter_history": {
+    "message": "Filter records by rule"
+  },
+  "ui_filter_undo_all": {
+    "message": "Undo blocks for this rule"
+  },
+  "ui_filter_view_reply": {
+    "message": "View reply"
+  },
+  "ui_filter_preview_error": {
+    "message": "Expression invalid or timed out."
   }
 }

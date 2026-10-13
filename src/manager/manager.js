@@ -2,7 +2,8 @@ import "../lib/i18n.js";
 const { t, localizeDocument } = globalThis.BlockSBI18n;
 await globalThis.BlockSBI18n.ready;
 import { OBSERVER_PRESETS, normalizeObserverSettings } from "../lib/observer-core.js";
-import { DEFAULT_ENDPOINT, normalizeEndpoint, endpointPermission, updateSettings, getAnalysisRule, customRuleEnabled } from "../lib/core.js";
+import { DEFAULT_ENDPOINT, normalizeEndpoint, endpointPermission, matchingNameRules, updateSettings, getAnalysisRule, customRuleEnabled } from "../lib/core.js";
+import { mountFilterEditor } from "./filter-editor.js";
 localizeDocument(document);
 
 /* Extension-owned manager: never expose the key in snapshots, exports, or page messages. */
@@ -13,15 +14,16 @@ localizeDocument(document);
   if (params.has("embedded")) document.body.classList.add("embedded");
   // Reuse the manager in Chrome's toolbar popup without changing the in-page drawer or options page.
   if (params.has("popup")) { document.documentElement.classList.add("popup"); document.body.classList.add("popup"); }
-  let state, currentTab = ["observer", "history", "whitelist", "settings"].includes(params.get("tab")) ? params.get("tab") : "observer";
+  let state, currentTab = ["observer", "history", "whitelist", "name-rules", "settings"].includes(params.get("tab")) ? params.get("tab") : "observer";
   const expandedTasks = new Set(), taskLimits = new Map(), expandedObservers = new Set();
-  let observerListSignature = "";
+  let observerListSignature = "", nameLimit = 20, nameListSignature = "";
   let settingTab = "general", observerFilter = "all", observerLimit = 30, observerDirty = false, generalDirty = false;
   let filter = "all", limit = 20, settingsDirty = false, settingsLoaded = false, modelDirty = false, modelLoaded = false, loading = false, reloadAgain = false, toastTimer, refreshTimer;
   let account = params.get("account") || "";
+  let loadedView = "", localizedLocale = "", historySignature = "", whitelistSignature = "", whiteLimit = 50;
   const statusLabels = () => ({ pending: t("ui_pending"), running: t("ui_submitting"), submitted: t("ui_submitted"), blocked: t("ui_blocked"), preexisting: t("ui_already_blocked"), failed: t("ui_submission_failed"), uncertain: t("ui_needs_verification"), undo_pending: t("ui_unblock_pending"), undo_running: t("ui_unblocking"), undo_failed: t("ui_unblock_failed"), unblocked: t("ui_unblocked"), cancelled: t("ui_task_canceled") });
-  const stanceHistory = h => h.module !== "observer" || h.stanceOwner === true;
-  const observerCategory = entry => !entry?.customRule && ["spam", "template", "empty", "repetitive", "useful", "normal", "uncertain"].includes(entry?.label)
+  const stanceHistory = h => !["observer", "name"].includes(h.module) || h.stanceOwner === true;
+  const observerCategory = entry => !entry?.customRule && ["ai_generated", "human_like", "spam", "template", "empty", "repetitive", "useful", "normal", "uncertain"].includes(entry?.label)
     ? t(`observer_category_${entry.label}`) : entry?.labelName || entry?.label || t("observer_category_uncertain");
   const pending = h => ["pending", "running", "undo_pending", "undo_running"].includes(h.status);
   const failed = h => ["failed", "undo_failed", "uncertain"].includes(h.status);
@@ -37,9 +39,10 @@ localizeDocument(document);
   async function run(button, fn) { button.disabled = true; try { await fn(); } catch (e) { toast(e.message); } finally { button.disabled = false; } }
   function tab(value) {
     currentTab = value;
-    for (const name of ["history", "observer", "whitelist", "settings"]) $("view-" + name).hidden = name !== value;
-    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === (value === "whitelist" ? "settings" : value))));
-    if (state) $("onboarding").hidden = state.settings.configured || value === "settings";
+    if (state && loadedView !== value) void refresh();
+    for (const name of ["history", "observer", "whitelist", "name-rules", "settings"]) $("view-" + name).hidden = name !== value;
+    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === (["whitelist", "name-rules"].includes(value) ? "settings" : value))));
+    if (state) $("onboarding").hidden = state.settings.configured || ["settings", "name-rules"].includes(value);
   }
   document.querySelectorAll("[data-tab]").forEach(b => { b.onclick = () => tab(b.dataset.tab); });
   function settingsTab(value) {
@@ -50,6 +53,63 @@ localizeDocument(document);
   }
   document.querySelectorAll("[data-setting-tab]").forEach(button => { button.onclick = () => settingsTab(button.dataset.settingTab); });
   $("connect-now").onclick = () => { tab("settings"); settingsTab("general"); };
+  $("manage-name-rules").onclick = () => tab("name-rules");
+  $("name-back").onclick = () => { tab("settings"); settingsTab("general"); };
+  const updateFilterEditor = mountFilterEditor(send, toast, refresh);
+  let selectedFilter = "";
+  $("filter-history-select").onchange = () => { selectedFilter = $("filter-history-select").value; nameListSignature = ""; renderNameRules(); };
+  $("filter-undo-all").onclick = () => run($("filter-undo-all"), async () => {
+    const records = state.history.filter(h => selectedFilter && h.nameRuleIds?.includes(selectedFilter) && h.nameOwner && !h.nameRuleWithdrawn
+      && ["pending", "running", "submitted", "blocked", "undo_failed", "failed"].includes(h.status));
+    for (const h of records) await send("UNDO", { id: h.id, module: "name", ruleId: selectedFilter });
+    await refresh();
+  });
+  $("name-more").onclick = () => { nameLimit += 20; renderNameRules(); };
+  function renderNameRules() {
+    if (currentTab !== "name-rules" || loadedView !== "name-rules") return;
+    const rules = state.settings;
+    updateFilterEditor(state);
+    // Deleted rules remain addressable in history so their submitted blocks can be undone.
+    const choices = new Map((rules.filterRules || []).map(r => [r.id, r.name]));
+    for (const h of state.history) for (const id of h.nameRuleIds || []) if (!choices.has(id)) choices.set(id, h.nameRuleNames?.[id] || id);
+    for (const e of state.filterEvents || []) e.ruleIds.forEach((id, i) => { if (!choices.has(id)) choices.set(id, e.names[i] || id); });
+    const selector = $("filter-history-select"), choiceSignature = JSON.stringify([...choices]);
+    if (selector.dataset.signature !== choiceSignature) {
+      selector.dataset.signature = choiceSignature; selector.replaceChildren();
+      const allOption = el("option", "", t("ui_all")); allOption.value = ""; selector.append(allOption);
+      for (const [id, name] of choices) { const option = el("option", "", name); option.value = id; selector.append(option); }
+      selector.value = selectedFilter;
+      if (selector.value !== selectedFilter) { selectedFilter = ""; selector.value = ""; }
+    }
+    $("filter-undo-all").disabled = !selectedFilter;
+    const all = state.history.filter(h => h.nameRuleIds?.length && (!selectedFilter || h.nameRuleIds.includes(selectedFilter))), visible = all.slice(0, nameLimit);
+    const maskEvents = (state.filterEvents || []).filter(e => e.action === "mask" && (!selectedFilter || e.ruleIds.includes(selectedFilter)));
+    $("name-more").hidden = all.length <= nameLimit && maskEvents.length <= nameLimit;
+    const signature = JSON.stringify([globalThis.BlockSBI18n.locale, rules.filterRules, selectedFilter, visible, state.filterEvents]);
+    if (nameListSignature === signature) return; nameListSignature = signature;
+    const list = $("name-records"); list.replaceChildren();
+    for (const h of visible) {
+      const card = el("article", "record"); card.append(profileHead(h.target, h.status));
+      card.append(el("p", "record-meta", t("ui_name_hit", h.nameRuleIds.map(id => h.nameRuleNames?.[id] || rules.filterRules?.find(r => r.id === id)?.name || id).join(" / "))), el("p", "record-meta", t("ui_observer_actor", h.account)));
+      if (h.error) card.append(el("p", "record-error", h.error));
+      const actions = el("div", "record-actions"), attached = h.nameOwner || h.module === "name";
+      if (!h.nameRuleWithdrawn && attached && (["pending", "running"].includes(h.status) || h.owned && ["submitted", "blocked", "undo_failed"].includes(h.status))) actions.append(actionButton(t("ui_name_undo"), async () => {
+        await send("UNDO", { id: h.id, module: "name" }); await refresh();
+      }));
+      if (h.status === "failed" && !h.nameRuleWithdrawn && attached && matchingNameRules(rules, h.target).length) actions.append(actionButton(t("ui_retry"), async () => { await send("RETRY_JOB", { id: h.id }); await refresh(); }));
+      if (h.status === "uncertain") actions.append(actionButton(t("ui_verify_status"), async () => { await send("RECONCILE", { id: h.id }); await refresh(); }));
+      actions.append(actionButton(t("ui_add_to_allowlist"), async () => { await send("WHITELIST_ADD", h.target); await refresh(); }, "text-button"));
+      card.append(actions); list.append(card);
+    }
+    const masks = maskEvents.slice(-nameLimit).reverse();
+    for (const entry of masks) {
+      const card = el("article", "record");
+      card.append(el("strong", "", `@${entry.target.handle}`), el("p", "record-meta", t("ui_filter_mask", entry.names.join(" / "))), el("p", "record-meta", t("ui_observer_actor", entry.account)));
+      const link = el("a", "text-button", t("ui_filter_view_reply")); link.href = `https://x.com/${entry.target.handle}/status/${entry.replyId}`; link.target = "_blank"; link.rel = "noopener noreferrer";
+      card.append(link); list.append(card);
+    }
+    if (!all.length && !masks.length) empty(list, t("ui_name_empty"));
+  }
   $("manage-white").onclick = () => tab("whitelist");
   $("white-back").onclick = () => { tab("settings"); settingsTab("general"); };
   $("observer-settings-link").onclick = () => { tab("settings"); settingsTab("observer"); };
@@ -90,7 +150,8 @@ localizeDocument(document);
   };
   document.querySelectorAll("[data-filter]").forEach(b => { b.onclick = () => { filter = b.dataset.filter; limit = 20; document.querySelectorAll("[data-filter]").forEach(n => n.classList.toggle("selected", n === b)); renderHistory(); }; });
   $("history-search").oninput = () => { limit = 20; renderHistory(); };
-  $("white-search").oninput = renderWhitelist;
+  $("white-search").oninput = () => { whiteLimit = 50; renderWhitelist(); };
+  $("whitelist-more").onclick = () => { whiteLimit += 50; renderWhitelist(); };
   $("account-filter").onchange = e => { account = e.target.value; limit = 20; renderHistory(); };
   $("show-more").onclick = () => { limit += 20; renderHistory(); };
   $("global-pause").onclick = () => run($("global-pause"), async () => { await send("TOGGLE_PAUSE"); await refresh(); });
@@ -151,7 +212,7 @@ localizeDocument(document);
     }, t("ui_undo_task"));
   }
   function renderHistory() {
-    if (!state) return;
+    if (!state || currentTab !== "history" || loadedView !== "history") return;
     const rows = state.history.filter(h => stanceHistory(h) && (!account || h.account === account)), groups = historyTasks();
 
     $("stat-blocked").textContent = String(rows.filter(h => ["blocked", "submitted"].includes(h.status)).length);
@@ -162,6 +223,9 @@ localizeDocument(document);
       const rootMatch = [group.root.text, group.root.handle, group.root.name, group.account].join(" ").toLowerCase().includes(query);
       return { ...group, matching: group.rows.filter(h => matchesStatus(h) && (rootMatch || [h.target.handle, h.target.name, h.reply?.text].join(" ").toLowerCase().includes(query))), rootMatch };
     }).filter(group => group.matching.length || filter === "all" && group.rootMatch && !group.rows.length);
+    const signature = JSON.stringify([globalThis.BlockSBI18n.locale, account, filter, query, [...expandedTasks], [...taskLimits], selected.slice(0, limit)]);
+    $("show-more").hidden = selected.length <= limit;
+    if (historySignature === signature) return; historySignature = signature;
     const list = $("history-list"); list.replaceChildren();
     $("session-list").replaceChildren();
     for (const group of selected.slice(0, limit)) {
@@ -202,6 +266,7 @@ localizeDocument(document);
   }
   /** Account cards intentionally use local initials: no avatar URLs or image data are retained. */
   function renderObservers() {
+    if (currentTab !== "observer" || loadedView !== "observer") return;
     if (!state) return;
     const config = state.settings.observer, rows = state.observer?.accounts || [], list = $("observer-list");
     const done = row => ["submitted", "blocked", "preexisting"].includes(row.status);
@@ -274,11 +339,15 @@ localizeDocument(document);
     $("observer-more").hidden = matching.length <= observerLimit;
   }
   function renderWhitelist() {
-    if (!state) return;
+    if (!state || currentTab !== "whitelist" || loadedView !== "whitelist") return;
     $("white-count").textContent = String(state.whitelist.length);
-    const list = $("whitelist-list"); list.replaceChildren(); const query = $("white-search").value.toLowerCase().trim();
+    const list = $("whitelist-list"); const query = $("white-search").value.toLowerCase().trim();
     const records = state.whitelist.filter(w => [w.handle, w.name, w.note].join(" ").toLowerCase().includes(query));
-    for (const w of records) {
+    $("whitelist-more").hidden = records.length <= whiteLimit;
+    const signature = JSON.stringify([globalThis.BlockSBI18n.locale, query, records.slice(0, whiteLimit)]);
+    if (whitelistSignature === signature) return; whitelistSignature = signature;
+    list.replaceChildren();
+    for (const w of records.slice(0, whiteLimit)) {
       const row = el("article", "record"); row.append(profileHead(w));
       row.append(el("p", "record-meta", w.note || t("ui_no_analysis_no_automatic_blocking")));
       const actions = el("div", "record-actions");
@@ -426,9 +495,19 @@ localizeDocument(document);
     loading = true;
     try {
       const previousRevision = state?.settings.analysisRevision;
-      state = await send("SNAPSHOT");
+      const requestedView = currentTab;
+      const boot = globalThis.blockSBInitialSnapshot;
+      delete globalThis.blockSBInitialSnapshot;
+      const initial = boot ? await boot : null;
+      state = initial?.ok ? initial.data : await send("SNAPSHOT", { view: requestedView });
+      loadedView = initial?.ok ? "settings" : requestedView;
+      if (loadedView !== currentTab) reloadAgain = true;
       await globalThis.BlockSBI18n.setLanguage(state.settings.language || "auto");
-      localizeDocument(document);
+      if (localizedLocale !== globalThis.BlockSBI18n.locale) {
+        localizeDocument(document); localizedLocale = globalThis.BlockSBI18n.locale;
+      }
+      $("white-count").textContent = String(state.whitelist.length);
+      $("name-rules-summary").textContent = t("ui_name_rules_count", (state.settings.filterRules || []).filter(r => r.enabled).length);
       // Draft values survive locale changes; their status text should follow the new locale.
       for (const [id, dirty] of [["settings-feedback", settingsDirty], ["general-feedback", generalDirty], ["observer-feedback", observerDirty], ["model-feedback", modelDirty]]) {
         if (dirty) $(id).textContent = t("ui_unsaved_changes");
@@ -436,7 +515,7 @@ localizeDocument(document);
       $("reveal-key").textContent = $("api-key").type === "password" ? t("ui_show") : t("ui_hide");
       if (previousRevision !== state.settings.analysisRevision) modelLoaded = false;
       $("global-pause").textContent = state.settings.paused ? t("resume") : t("pause");
-      $("onboarding").hidden = state.settings.configured || currentTab === "settings";
+      $("onboarding").hidden = state.settings.configured || ["settings", "name-rules"].includes(currentTab);
       $("service-error").hidden = !(state.queueError || state.queueNotice || state.modelError);
       $("service-error-text").textContent = [state.modelError, state.queueError, state.queueNotice].filter(Boolean).map(value => String(value)).join(" ");
       $("key-status").textContent = state.settings.configured ? t("ui_observer_connected") : t("ui_not_connected");
@@ -453,8 +532,10 @@ localizeDocument(document);
       document.querySelectorAll(".probability-label").forEach(n => { n.textContent = probabilityLabel; });
       updateMaskRange();
       updateKeyRequirement();
+      if (currentTab === "history") {
       const accounts = [...new Set([...state.history.filter(stanceHistory).map(h => h.account), ...state.sessions.map(s => s.account), ...(account ? [account] : [])])].sort();
       const options = $("account-filter"); options.replaceChildren(new Option(t("ui_all_accounts"), ""), ...accounts.map(a => new Option(`@${a}`, a))); options.value = account;
+      }
       if (!settingsDirty) {
         $("maskThreshold").max = 100;
         for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; }
@@ -479,9 +560,9 @@ localizeDocument(document);
         $("observer-hitRate").value = Math.round(config.hitRate * 100);
         for (const key of ["skipFollowing", "showMarkers", "mask"]) $("observer-" + key).checked = !!config[key];
       }
-      renderHistory(); renderWhitelist(); renderObservers();
+      renderHistory(); renderWhitelist(); renderObservers(); renderNameRules();
     } catch (e) { toast(e.message); }
-    finally { loading = false; if (reloadAgain) { reloadAgain = false; void refresh(); } }
+    finally { loading = false; if (reloadAgain) { reloadAgain = false; clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 0); } }
   }
   chrome.runtime.onMessage.addListener(m => { if (m?.type === "STATE_CHANGED") { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 150); } });
   tab(currentTab); settingsTab(["general", "observer", "support"].includes(params.get("section")) ? params.get("section") : "general"); void refresh();
