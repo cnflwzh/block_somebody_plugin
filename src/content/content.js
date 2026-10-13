@@ -23,7 +23,7 @@
     hideProbabilityPanel(); menuTarget = null; menuTrigger = null;
     for (const article of new Set([...movingRows, ...document.querySelectorAll(".blocksb-removed,.blocksb-exiting,.blocksb-masked,.blocksb-folded")])) { clearMask(article); restore(article); }
     document.querySelectorAll(".blocksb-comment-tools,.blocksb-observer-marker,.blocksb-menu-item").forEach(node => node.remove());
-    drawerOpen = false; iframe.removeAttribute("src"); host.remove();
+    drawerOpen = false; iframe.removeAttribute("src"); host.remove(); delete document.documentElement.dataset.blocksbTheme;
     try { chrome.runtime.onMessage.removeListener(onStateChanged); } catch { /* Already detached by Chrome. */ }
   }
   let locale = globalThis.BlockSBI18n.locale;
@@ -57,6 +57,9 @@
   const openedSpam = new WeakSet();
   let state = null, menuTarget = null, menuTrigger = null, timer, refreshTimer, refreshing = false, refreshAgain = false, lastLocation = "", sessionId = "", failure = "", drawerOpen = false;
   let locationSending = false, locationRetryAt = 0, locationError = "";
+  let themeReadAt = 0, dockReadAt = 0, dockSignature = "";
+  let drawerTab = "";
+  const setText = (node, value) => { const text = String(value); if (node.textContent !== text) node.textContent = text; };
   const route = () => location.pathname.match(/^\/\w+\/status\/(\d+)/)?.[1] || "";
   const viewer = () => globalThis.BlockSBX.viewer();
   // A saved, unfinished task proves explicit activation in this tab; pause retains its controls.
@@ -279,6 +282,7 @@
     // A persisted guard stays visible after refresh or in another X tab; hiding it must not
     // silently resume real block jobs. Page messages can only reveal this panel.
     debugPanel.hidden = !debugVisible && !state?.settings.debugDryRun;
+    if (debugPanel.hidden) return;
     dryToggle.input.checked = !!state?.settings.debugDryRun;
     previewToggle.input.checked = animationDebug;
     debugSelect.value = debugEffect;
@@ -417,10 +421,13 @@
   function toast(text) { if (invalidated) return; toastEl.textContent = String(text); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
   function openDrawer(tab) {
     if (!contextAlive()) return;
+    themeReadAt = 0; updateOverlay();
     hideProbabilityPanel();
     // An empty srcdoc injected by another page script takes precedence over src and leaves the drawer blank.
     iframe.removeAttribute("srcdoc");
-    iframe.src = `${extensionBase}src/manager/manager.html?embedded=1&tab=${tab}&account=${encodeURIComponent(viewer())}`;
+    const source = `${extensionBase}src/manager/manager.html?embedded=1&tab=${tab}&theme=${host.dataset.theme || "light"}&account=${encodeURIComponent(viewer())}`;
+    // Closing only hides this iframe; reuse it when reopening the same view/account/theme.
+    if (iframe.getAttribute("src") !== source || drawerTab !== tab) { iframe.src = source; drawerTab = tab; }
     drawerOpen = true; drawer.hidden = backdrop.hidden = false; close.focus();
   }
   function closeDrawer() { drawerOpen = false; drawer.hidden = backdrop.hidden = true; trash.focus(); }
@@ -450,6 +457,8 @@
       return;
     }
     if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:close") closeDrawer();
+    if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:view"
+      && ["observer", "history", "settings", "whitelist", "name-rules"].includes(e.data.tab)) drawerTab = e.data.tab;
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:timeline:v1") {
       const event = e.data;
       if (!/^\d{5,25}$/.test(event.rootId || "") || typeof event.recent !== "boolean" || !Number.isFinite(event.observedAt)) return;
@@ -1047,33 +1056,44 @@
   }
   function updateOverlay() {
     if (!contextAlive()) return;
+    // Read theme before mutating overlay text. Multiple scan phases call this function.
+    if (Date.now() - themeReadAt >= 750) {
+      themeReadAt = Date.now();
+      const rgb = getComputedStyle(document.body).backgroundColor.match(/\d+/g)?.map(Number);
+      const light = rgb ? rgb.slice(0, 3).reduce((a, b) => a + b, 0) : 765;
+      const theme = light < 30 ? "dark" : light < 330 ? "dim" : "light";
+      if (host.dataset.theme !== theme) host.dataset.theme = document.documentElement.dataset.blocksbTheme = theme;
+    }
     renderDebugPanel();
     trash.hidden = !featureEnabled() && !observerEnabled() && !nameEnabled() && !(animationDebug && debugRows.size);
     alignTrash();
     const s = state?.session;
     const count = state?.account === viewer() ? state.history.filter(h => h.trashUnread && !trashReadPending.has(h.id) && ["blocked", "submitted"].includes(h.status)).length : 0;
-    badge.textContent = count > 99 ? "99+" : String(count); badge.hidden = !count;
+    setText(badge, count > 99 ? "99+" : count); badge.hidden = !count;
     status.hidden = !featureEnabled();
     if (!status.hidden) {
       const paused = state.settings.paused || s.paused;
-      statusText.textContent = state.modelError || state.queueError || state.queueNotice ? t("ui_needs_attention_open_trash") : paused ? t("ui_paused")
+      const text = state.modelError || state.queueError || state.queueNotice ? t("ui_needs_attention_open_trash") : paused ? t("ui_paused")
         : !threadEnabled() ? t("ui_left_thread_queued_blocks_continue_in_background")
         : contextError ? contextError
         : !pageReady ? loadNote || t("ui_waiting_for_the_first_page_of_recent_replies")
         : !s.active ? locationError || t("ui_replies_ready_syncing_task_status")
         : loadNote || t("ui_checked", s.count, Object.values(s.results).some(r => r.error) ? t("ui_invalid_results", Object.values(s.results).filter(r => r.error).length) : "", s.autoLoad ? t("ui_auto_loading") : "", failure ? t("ui_some_replies_lack_context") : "");
-      pause.textContent = state.settings.paused ? t("resume") : t("pause");
-      autoLoad.textContent = s.autoLoad ? t("auto_load_on") : t("auto_load_off");
-      autoLoad.setAttribute("aria-pressed", String(!!s.autoLoad));
+      setText(statusText, text);
+      setText(pause, state.settings.paused ? t("resume") : t("pause"));
+      setText(autoLoad, s.autoLoad ? t("auto_load_on") : t("auto_load_off"));
+      if (autoLoad.getAttribute("aria-pressed") !== String(!!s.autoLoad)) autoLoad.setAttribute("aria-pressed", String(!!s.autoLoad));
       autoLoad.hidden = !threadEnabled();
     }
-    const bg = getComputedStyle(document.body).backgroundColor;
-    const rgb = bg.match(/\d+/g)?.map(Number);
-    host.dataset.dark = rgb && rgb.slice(0, 3).reduce((a, b) => a + b, 0) < 330 ? "true" : "false";
   }
   /** Follow X's own dock geometry, including browser zoom and responsive layout. */
   function alignTrash() {
     if (trash.hidden) return;
+    // X's dock is fixed. Coalesce scroll/mutation/refresh bursts instead of forcing
+    // the same geometry reads and inline-style writes several times per scan.
+    const now = Date.now();
+    if (now - dockReadAt < 200) return;
+    dockReadAt = now;
     const candidates = [...document.querySelectorAll('button[aria-label="Grok"],[role="button"][aria-label="Grok"]')];
     const grok = candidates.map(e => ({ e, r: e.getBoundingClientRect() })).find(({ r }) => r.width > 25 && r.width < 100 && r.left > innerWidth * .65 && r.top > innerHeight * .4);
     if (!grok) return;
@@ -1081,7 +1101,11 @@
       .map(e => e.getBoundingClientRect()).find(r => r.top > grok.r.bottom && Math.abs(r.left - grok.r.left) < 10);
     const gap = chat ? Math.max(6, Math.min(28, chat.top - grok.r.bottom)) : 12;
     const rect = grok.r, top = rect.top - rect.height - gap;
-    Object.assign(trash.style, { left: `${rect.left}px`, right: "auto", top: `${top}px`, bottom: "auto", width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: getComputedStyle(grok.e).borderRadius });
+    const radius = getComputedStyle(grok.e).borderRadius;
+    const signature = [rect.left, top, rect.width, rect.height, radius, innerWidth, innerHeight].join(":");
+    if (signature === dockSignature) return;
+    dockSignature = signature;
+    Object.assign(trash.style, { left: `${rect.left}px`, right: "auto", top: `${top}px`, bottom: "auto", width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: radius });
     Object.assign(status.style, { right: `${innerWidth - rect.left + 12}px`, bottom: `${innerHeight - top - rect.height / 2 - 21}px` });
   }
   function localizeOverlay() {

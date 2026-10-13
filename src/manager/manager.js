@@ -9,7 +9,9 @@ localizeDocument(document);
 /* Extension-owned manager: never expose the key in snapshots, exports, or page messages. */
 (() => {
   const $ = id => document.getElementById(id);
-  $("extension-version").textContent = `v${chrome.runtime.getManifest().version}`;
+  const setNodeText = (node, value) => { const text = String(value); if (node.textContent !== text) node.textContent = text; };
+  const setLabel = (id, value) => setNodeText($(id), value);
+  setLabel("extension-version", `v${chrome.runtime.getManifest().version}`);
   const params = new URLSearchParams(location.search);
   if (params.has("embedded")) document.body.classList.add("embedded");
   // Reuse the manager in Chrome's toolbar popup without changing the in-page drawer or options page.
@@ -35,10 +37,11 @@ localizeDocument(document);
     return dateFormatter.format(Number(value) || 0);
   };
   async function send(type, payload = {}) { const r = await chrome.runtime.sendMessage({ type, ...payload }); if (!r?.ok) throw new Error(r?.error || t("ui_cannot_connect_to_the_extension")); return r.data; }
-  function toast(text) { $("toast").textContent = String(text); $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 5500); }
+  function toast(text) { setLabel("toast", String(text)); $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 5500); }
   async function run(button, fn) { button.disabled = true; try { await fn(); } catch (e) { toast(e.message); } finally { button.disabled = false; } }
   function tab(value) {
     currentTab = value;
+    if (params.has("embedded")) parent.postMessage({ type: "blocksb:view", tab: value }, "*");
     if (state && loadedView !== value) void refresh();
     for (const name of ["history", "observer", "whitelist", "name-rules", "settings"]) $("view-" + name).hidden = name !== value;
     document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === (["whitelist", "name-rules"].includes(value) ? "settings" : value))));
@@ -215,9 +218,9 @@ localizeDocument(document);
     if (!state || currentTab !== "history" || loadedView !== "history") return;
     const rows = state.history.filter(h => stanceHistory(h) && (!account || h.account === account)), groups = historyTasks();
 
-    $("stat-blocked").textContent = String(rows.filter(h => ["blocked", "submitted"].includes(h.status)).length);
-    $("stat-pending").textContent = String(rows.filter(pending).length);
-    $("stat-review").textContent = String(rows.filter(failed).length);
+    setLabel("stat-blocked", String(rows.filter(h => ["blocked", "submitted"].includes(h.status)).length));
+    setLabel("stat-pending", String(rows.filter(pending).length));
+    setLabel("stat-review", String(rows.filter(failed).length));
     const query = $("history-search").value.trim().toLowerCase();
     const selected = groups.map(group => {
       const rootMatch = [group.root.text, group.root.handle, group.root.name, group.account].join(" ").toLowerCase().includes(query);
@@ -274,11 +277,11 @@ localizeDocument(document);
     $("observer-quick-enable").checked = !!config.enabled;
     const dailyUsed = typeof state.observer?.dailyUsed === "number" ? state.observer.dailyUsed : 0;
     const status = !config.enabled ? "off" : state.settings.paused ? "paused" : !state.settings.configured ? "unconfigured" : state.modelError || state.queueError || state.queueNotice ? "error" : dailyUsed >= config.dailyLimit ? "limited" : state.settings.debugDryRun ? "debug" : "active";
-    $("observer-state").textContent = t(`ui_observer_state_${status}`);
+    setLabel("observer-state", t(`ui_observer_state_${status}`));
     $("observer-dot").className = "state-dot " + status;
-    $("observer-watching-count").textContent = rows.filter(row => !done(row) && !queued(row)).length;
-    $("observer-queued-count").textContent = rows.filter(queued).length;
-    $("observer-blocked-count").textContent = rows.filter(done).length;
+    setLabel("observer-watching-count", rows.filter(row => !done(row) && !queued(row)).length);
+    setLabel("observer-queued-count", rows.filter(queued).length);
+    setLabel("observer-blocked-count", rows.filter(done).length);
     const query = $("observer-search").value.trim().toLowerCase();
     const matching = rows.filter(row => (!query || [row.name, row.handle, row.userId].join(" ").toLowerCase().includes(query)) && (observerFilter === "all" || observerFilter === "blocked" && done(row) || observerFilter === "watching" && !done(row) && !queued(row)));
     const visible = matching.slice(0, observerLimit), signature = JSON.stringify([globalThis.BlockSBI18n.locale, observerFilter, query, [...expandedObservers], visible]);
@@ -340,7 +343,7 @@ localizeDocument(document);
   }
   function renderWhitelist() {
     if (!state || currentTab !== "whitelist" || loadedView !== "whitelist") return;
-    $("white-count").textContent = String(state.whitelist.length);
+    setLabel("white-count", String(state.whitelist.length));
     const list = $("whitelist-list"); const query = $("white-search").value.toLowerCase().trim();
     const records = state.whitelist.filter(w => [w.handle, w.name, w.note].join(" ").toLowerCase().includes(query));
     $("whitelist-more").hidden = records.length <= whiteLimit;
@@ -358,7 +361,7 @@ localizeDocument(document);
     if (!records.length) empty(list, query ? t("ui_no_matching_users") : t("ui_allowlist_is_empty"));
   }
   function modal(title, copy, confirm, confirmLabel = t("ui_confirm")) {
-    $("modal-title").textContent = title; $("modal-body").replaceChildren(); $("modal-actions").replaceChildren();
+    setLabel("modal-title", title); $("modal-body").replaceChildren(); $("modal-actions").replaceChildren();
     if (typeof copy === "string") $("modal-body").append(el("p", "modal-copy", copy)); else if (copy) $("modal-body").append(copy);
     $("modal-actions").append(actionButton(t("ui_back"), () => $("modal").close(), "subtle"));
     if (confirm) $("modal-actions").append(actionButton(confirmLabel, async () => { await confirm(); $("modal").close(); }, "primary"));
@@ -403,7 +406,7 @@ localizeDocument(document);
     $("api-key").required = !state?.settings.configured || changedOrigin;
     $("api-key").placeholder = changedOrigin ? t("ui_enter_this_service_s_api_key") : state?.settings.configured ? t("ui_leave_blank_to_keep_the_saved_key") : t("ui_enter_api_key");
   }
-  $("key-form").oninput = () => { modelDirty = true; $("model-feedback").textContent = t("ui_unsaved_changes"); updateKeyRequirement(); };
+  $("key-form").oninput = () => { modelDirty = true; setLabel("model-feedback", t("ui_unsaved_changes")); updateKeyRequirement(); };
   $("edit-rules").onclick = () => run($("edit-rules"), () => send("OPEN_RULE_EDITOR"));
   $("key-form").onsubmit = e => { e.preventDefault(); run($("save-key"), async () => {
     const next = updateSettings(state.settings, { endpoint: $("api-endpoint").value, model: $("model").value });
@@ -411,53 +414,53 @@ localizeDocument(document);
     const secret = $("api-key").value;
     // Request only the chosen host, directly within this user gesture (before any await).
     const permission = chrome.permissions.request({ origins: [endpointPermission(config.endpoint)] });
-    $("save-key").textContent = t("ui_connecting");
+    setLabel("save-key", t("ui_connecting"));
     const fields = [...$("key-form").querySelectorAll("input, textarea, button")].filter(n => n.id !== "save-key");
     fields.forEach(n => { n.disabled = true; });
     try {
       if (!await permission) throw new Error(t("ui_access_to_this_api_endpoint_was_not_granted_settings_were"));
       await send("SAVE_MODEL_CONFIG", { value: secret, config });
-      $("api-key").value = ""; $("api-key").type = "password"; $("reveal-key").textContent = t("ui_show");
-      modelDirty = false; modelLoaded = false; toggleModel(false); await refresh(); $("model-feedback").textContent = t("ui_saved_and_connected");
-    } finally { fields.forEach(n => { n.disabled = false; }); $("save-key").textContent = t("ui_save_and_connect"); }
+      $("api-key").value = ""; $("api-key").type = "password"; setLabel("reveal-key", t("ui_show"));
+      modelDirty = false; modelLoaded = false; toggleModel(false); await refresh(); setLabel("model-feedback", t("ui_saved_and_connected"));
+    } finally { fields.forEach(n => { n.disabled = false; }); setLabel("save-key", t("ui_save_and_connect")); }
   }); };
-  $("reveal-key").onclick = () => { const reveal = $("api-key").type === "password"; $("api-key").type = reveal ? "text" : "password"; $("reveal-key").textContent = reveal ? t("ui_hide") : t("ui_show"); };
+  $("reveal-key").onclick = () => { const reveal = $("api-key").type === "password"; $("api-key").type = reveal ? "text" : "password"; setLabel("reveal-key", reveal ? t("ui_hide") : t("ui_show")); };
   $("remove-key").onclick = () => modal(t("ui_remove_jev_api_key"), t("ui_new_analysis_will_stop_block_history_and_the_allowlist_will"), async () => { await send("REMOVE_KEY"); await refresh(); }, t("ui_remove_key"));
-  $("settings-form").oninput = () => { settingsDirty = true; $("settings-feedback").textContent = t("ui_unsaved_changes"); };
-  $("general-form").oninput = () => { generalDirty = true; $("general-feedback").textContent = t("ui_unsaved_changes"); };
-  $("observer-form").oninput = () => { $("observer-minThreads").setCustomValidity(Number($("observer-minThreads").value) > Number($("observer-minHits").value) ? t("observer_error_threads") : ""); observerDirty = true; $("observer-feedback").textContent = t("ui_unsaved_changes"); };
+  $("settings-form").oninput = () => { settingsDirty = true; setLabel("settings-feedback", t("ui_unsaved_changes")); };
+  $("general-form").oninput = () => { generalDirty = true; setLabel("general-feedback", t("ui_unsaved_changes")); };
+  $("observer-form").oninput = () => { $("observer-minThreads").setCustomValidity(Number($("observer-minThreads").value) > Number($("observer-minHits").value) ? t("observer_error_threads") : ""); observerDirty = true; setLabel("observer-feedback", t("ui_unsaved_changes")); };
   function updateMaskRange() {
     const high = Number($("high").value);
     $("maskThreshold").max = 100;
     $("maskThreshold").value = Math.min(Number($("maskThreshold").value), high - 1);
     $("maskUpper").min = 0;
     $("maskUpper").value = high;
-    $("maskThreshold-out").textContent = `${$("maskThreshold").value}%`;
+    setLabel("maskThreshold-out", `${$("maskThreshold").value}%`);
     $("maskThreshold").disabled = $("maskUpper").disabled = !$("mask-enabled").checked;
-    $("mask-range").textContent = `${$("maskThreshold").value}%–${high}%`;
+    setLabel("mask-range", `${$("maskThreshold").value}%–${high}%`);
     for (const key of ["high", "confidence"]) $(key).style.setProperty("--range-value", `${($(key).value - $(key).min) / ($(key).max - $(key).min) * 100}%`);
     const track = $("maskThreshold").parentElement; track.style.setProperty("--lower", `${$("maskThreshold").value}%`); track.style.setProperty("--upper", `${high}%`);
   }
   $("mask-enabled").onchange = updateMaskRange;
   $("maskUpper").oninput = () => {
-    $("high").value = Math.max(50, Number($("maskThreshold").value) + 1, Number($("maskUpper").value)); $("high-out").textContent = `${$("high").value}%`;
+    $("high").value = Math.max(50, Number($("maskThreshold").value) + 1, Number($("maskUpper").value)); setLabel("high-out", `${$("high").value}%`);
     document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange();
   };
   for (const key of ["high", "confidence", "maskThreshold"]) $(key).oninput = () => { $(key + "-out").textContent = `${$(key).value}%`; if (key !== "maskThreshold") document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange(); };
   document.querySelectorAll('[name="preset"]').forEach(input => { input.onchange = () => { const p = state.presets[input.value]; if (p) for (const key of ["high", "confidence"]) { $(key).value = Math.round(p[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; } updateMaskRange(); }; });
   $("settings-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     await send("SAVE_SETTINGS", { value: { preset: document.querySelector('[name="preset"]:checked').value, high: Number($("high").value) / 100, confidence: Number($("confidence").value) / 100, skipFollowing: $("skip-following").checked, maskEnabled: $("mask-enabled").checked, maskThreshold: Number($("maskThreshold").value) / 100, autoLoadDefault: $("auto-load-default").checked } });
-    settingsDirty = false; settingsLoaded = false; await refresh(); $("settings-feedback").textContent = t("ui_saved");
+    settingsDirty = false; settingsLoaded = false; await refresh(); setLabel("settings-feedback", t("ui_saved"));
   }); };
   $("general-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     await send("SAVE_SETTINGS", { value: { language: $("language").value, cacheLimit: Number($("cache-limit").value), animation: true, animationEffect: document.querySelector('[name="animation-effect"]:checked').value, reducedMotion: $("reduced-motion").checked } });
-    generalDirty = false; await refresh(); $("general-feedback").textContent = t("ui_saved");
+    generalDirty = false; await refresh(); setLabel("general-feedback", t("ui_saved"));
   }); };
   /** Match the group-blocking sliders' percentage labels and track fill. */
   function updateObserverRanges() {
     for (const key of ["threshold", "confidence"]) {
       const input = $("observer-" + key);
-      $("observer-" + key + "-out").textContent = `${input.value}%`;
+      setLabel("observer-" + key + "-out", `${input.value}%`);
       input.style.setProperty("--range-value", `${(input.value - input.min) / (input.max - input.min) * 100}%`);
     }
   }
@@ -484,7 +487,7 @@ localizeDocument(document);
   }
   $("observer-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     await send("SAVE_SETTINGS", { value: { observer: collectObserver() } });
-    observerDirty = false; await refresh(); $("observer-feedback").textContent = t("ui_saved");
+    observerDirty = false; await refresh(); setLabel("observer-feedback", t("ui_saved"));
   }); };
   $("observer-advanced").onclick = () => run($("observer-advanced"), () => send("OPEN_RULE_EDITOR", { module: "observer" }));
   $("export").onclick = () => run($("export"), async () => { const data = await send("EXPORT"); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const link = el("a"); link.href = url; link.download = `block-sb-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 2000); });
@@ -506,30 +509,30 @@ localizeDocument(document);
       if (localizedLocale !== globalThis.BlockSBI18n.locale) {
         localizeDocument(document); localizedLocale = globalThis.BlockSBI18n.locale;
       }
-      $("white-count").textContent = String(state.whitelist.length);
-      $("name-rules-summary").textContent = t("ui_name_rules_count", (state.settings.filterRules || []).filter(r => r.enabled).length);
+      setLabel("white-count", String(state.whitelist.length));
+      setLabel("name-rules-summary", t("ui_name_rules_count", (state.settings.filterRules || []).filter(r => r.enabled).length));
       // Draft values survive locale changes; their status text should follow the new locale.
       for (const [id, dirty] of [["settings-feedback", settingsDirty], ["general-feedback", generalDirty], ["observer-feedback", observerDirty], ["model-feedback", modelDirty]]) {
         if (dirty) $(id).textContent = t("ui_unsaved_changes");
       }
-      $("reveal-key").textContent = $("api-key").type === "password" ? t("ui_show") : t("ui_hide");
+      setLabel("reveal-key", $("api-key").type === "password" ? t("ui_show") : t("ui_hide"));
       if (previousRevision !== state.settings.analysisRevision) modelLoaded = false;
-      $("global-pause").textContent = state.settings.paused ? t("resume") : t("pause");
+      setLabel("global-pause", state.settings.paused ? t("resume") : t("pause"));
       $("onboarding").hidden = state.settings.configured || ["settings", "name-rules"].includes(currentTab);
       $("service-error").hidden = !(state.queueError || state.queueNotice || state.modelError);
-      $("service-error-text").textContent = [state.modelError, state.queueError, state.queueNotice].filter(Boolean).map(value => String(value)).join(" ");
-      $("key-status").textContent = state.settings.configured ? t("ui_observer_connected") : t("ui_not_connected");
+      setLabel("service-error-text", [state.modelError, state.queueError, state.queueNotice].filter(Boolean).map(value => String(value)).join(" "));
+      setLabel("key-status", state.settings.configured ? t("ui_observer_connected") : t("ui_not_connected"));
       $("key-status").className = `status ${state.settings.configured ? "connected" : ""}`;
       $("remove-key").hidden = !state.settings.configured;
-      $("key-mask").textContent = state.settings.configured ? "••••••••••••••••" : "—";
+      setLabel("key-mask", state.settings.configured ? "••••••••••••••••" : "—");
       if (!modelLoaded && !modelDirty) {
         $("api-endpoint").value = state.settings.endpoint || DEFAULT_ENDPOINT;
         $("model").value = state.settings.model;
         modelLoaded = true;
       }
       const rule = getAnalysisRule(state.settings), probabilityLabel = customRuleEnabled(state.settings) ? t("match_probability") : t("support_probability");
-      $("rule-summary").textContent = t("ui_options_blocking_options", rule.options.length, rule.options.filter(o => o.block).length);
-      document.querySelectorAll(".probability-label").forEach(n => { n.textContent = probabilityLabel; });
+      setLabel("rule-summary", t("ui_options_blocking_options", rule.options.length, rule.options.filter(o => o.block).length));
+      document.querySelectorAll(".probability-label").forEach(n => setNodeText(n, probabilityLabel));
       updateMaskRange();
       updateKeyRequirement();
       if (currentTab === "history") {
@@ -538,7 +541,7 @@ localizeDocument(document);
       }
       if (!settingsDirty) {
         $("maskThreshold").max = 100;
-        for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; }
+        for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); setLabel(key + "-out", `${$(key).value}%`); }
         $("skip-following").checked = state.settings.skipFollowing; $("mask-enabled").checked = state.settings.maskEnabled; $("auto-load-default").checked = !!state.settings.autoLoadDefault; updateMaskRange();
         document.querySelector(`[name="preset"][value="${state.settings.preset}"]`).checked = true;
         settingsLoaded = true;
@@ -548,7 +551,7 @@ localizeDocument(document);
         document.querySelector(`[name="animation-effect"][value="${state.settings.animationEffect === "particles" ? "particles" : "fly"}"]`).checked = true;
       }
       $("observer-minThreads").setCustomValidity(Number($("observer-minThreads").value) > Number($("observer-minHits").value) ? t("observer_error_threads") : "");
-      $("cache-summary").textContent = t("ui_cache_summary", state.settings.cacheLimit, 30);
+      setLabel("cache-summary", t("ui_cache_summary", state.settings.cacheLimit, 30));
       if (!observerDirty) {
         const config = state.settings.observer;
         document.querySelector(`[name="observer-preset"][value="${config.preset}"]`).checked = true;
