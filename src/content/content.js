@@ -81,7 +81,7 @@
   const nameEnabled = () => !!state?.settings.filterRules?.some(r => r.enabled) && observerSurface() && state.account === viewer();
   // Filter first, then allow model analysis only for replies that did not match.
   const nameMatches = p => nameEnabled() && !nameProtected(p) && ((nameResults.get(p.id)?.pendingUntil || 0) > Date.now()
-    || nameRemoval(p) || !!route() && !!nameContext(p) && nameResults.get(p.id)?.result?.action === "mask");
+    || nameAuthorization(p) || !!route() && !!nameContext(p) && nameResults.get(p.id)?.result?.action === "mask");
   const nameProtected = p => white(p) || p.handle === viewer() || p.handle?.toLowerCase() === "grok" || followingStatus(p) !== false;
   const observerEnabled = () => !!state?.settings.observer?.enabled && observerSurface() && state.account === viewer();
   const observerProtected = p => p.handle?.toLowerCase() === "grok" || white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
@@ -629,8 +629,11 @@
     const chain = ancestors(post, root);
     return chain ? { root, ancestors: chain } : null;
   }
-  function nameRemoval(post) {
-    if (!route() || !nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
+  // Filtering suppresses redundant model requests on every observation surface;
+  // hiding remains separately limited to the corresponding comment thread.
+  function nameRemoval(post) { return route() ? nameAuthorization(post) : null; }
+  function nameAuthorization(post) {
+    if (!nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
     const h = nameHistory.get(post.userId), local = nameResults.get(post.id)?.result;
     if (h) return (h.nameRootIds || [h.rootId]).includes(nameContext(post).root.id) && h.nameOwner && !h.nameRuleWithdrawn && (isBlocked(h) || ["pending", "running"].includes(h.status)) ? h : null;
     // Real removals require the current history authorization. A cached enqueue reply
@@ -676,7 +679,12 @@
         if (epoch !== nameEpoch) return;
         nameResults.set(p.id, { result, retryAt: result?.action === "skip" ? Date.now() + 30000 : Infinity });
         while (nameResults.size > 1000) nameResults.delete(nameResults.keys().next().value);
-        if (result?.action === "block" && result.status !== "simulated") void refresh();
+        if (result?.action === "block" && result.status !== "simulated") {
+          // Keep the analysis gate closed until the queued authorization arrives
+          // in a fresh snapshot; do not use the enqueue result as hiding authority.
+          nameResults.get(p.id).pendingUntil = Date.now() + 30000;
+          void refresh();
+        }
       }).catch(() => { if (epoch === nameEpoch) nameResults.set(p.id, { retryAt: Date.now() + 5000 }); })
         .finally(() => { if (nameFlight === token) nameFlight = null; schedule(); });
       return;
