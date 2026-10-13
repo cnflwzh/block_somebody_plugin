@@ -2,6 +2,7 @@ import "./i18n.js";
 const { t } = globalThis.BlockSBI18n;
 // Separate from request cache: deleting a model cache must never count a reply twice.
 let opening;
+let retainedRows;
 function open() {
   if (!opening) opening = new Promise((resolve, reject) => {
     const request = indexedDB.open("blocksb-observer", 1);
@@ -12,16 +13,18 @@ function open() {
       evidence.createIndex("user", "userKey"); evidence.createIndex("reply", "replyKey"); evidence.createIndex("time", "observedAt");
       request.result.createObjectStore("meta", { keyPath: "key" });
     };
-    request.onsuccess = () => { clearTimeout(timer); if (expired) return request.result.close(); const db = request.result; db.onversionchange = () => { db.close(); opening = null; }; resolve(db); };
+    request.onsuccess = () => { clearTimeout(timer); if (expired) return request.result.close(); const db = request.result; db.onversionchange = () => { db.close(); opening = null; retainedRows = null; }; resolve(db); };
     request.onerror = request.onblocked = () => { clearTimeout(timer); expired = true; reject(request.error || new Error(t("observer_error_database_unavailable"))); };
   }).catch(error => { opening = null; throw error; });
   return opening;
 }
 async function transaction(mode, work) {
   const db = await open();
+  if (mode === "readwrite") retainedRows = null;
   return new Promise((resolve, reject) => {
     const tx = db.transaction(["evidence", "meta"], mode); let result;
-    tx.oncomplete = () => resolve(result); tx.onerror = tx.onabort = () => reject(tx.error || new Error(t("observer_error_database_transaction")));
+    tx.oncomplete = () => { if (mode === "readwrite") retainedRows = null; resolve(result); };
+    tx.onerror = tx.onabort = () => { if (mode === "readwrite") retainedRows = null; reject(tx.error || new Error(t("observer_error_database_transaction"))); };
     try { work(tx.objectStore("evidence"), tx.objectStore("meta"), value => { result = value; }); } catch (error) { tx.abort(); reject(error); }
   });
 }
@@ -34,7 +37,16 @@ export function readObserverEvidence(key) { return transaction("readonly", (stor
 /** Return this acting account's observations of one stable user, including withdrawn rows. */
 export function readObserverUser(account, userId) { return transaction("readonly", (store, meta, done) => { const r = store.index("user").getAll(observerUserKey(account, userId)); r.onsuccess = () => done(r.result); }); }
 /** Return all retained records for the trusted management panel; never expose this to a page. */
-export function readObserverAll() { return transaction("readonly", (store, meta, done) => { const r = store.getAll(); r.onsuccess = () => done(r.result); }); }
+export function readObserverAll() {
+  // Read-only consumers group rows without mutating them. Share concurrent full reads;
+  // every write invalidates the cache at both transaction boundaries.
+  if (!retainedRows) {
+    const current = transaction("readonly", (store, meta, done) => { const r = store.getAll(); r.onsuccess = () => done(Object.freeze(r.result.map(Object.freeze))); });
+    retainedRows = current;
+    current.catch(() => { if (retainedRows === current) retainedRows = null; });
+  }
+  return retainedRows;
+}
 /** Indexed batch lookup returns all rule versions; the caller filters the current fingerprint. */
 export function readObserverReplies(account, replyIds) { return transaction("readonly", (store, meta, done) => {
   const result = []; done(result);

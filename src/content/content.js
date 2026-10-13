@@ -19,10 +19,11 @@
     if (invalidated) return;
     invalidated = true; listeners.abort(); pageObserver?.disconnect(); clearInterval(pollTimer);
     for (const handle of [timer, refreshTimer, probabilityHideTimer, toastTimer]) clearTimeout(handle);
-    observerEpoch++;
+    observerEpoch++; nameEpoch++;
+    hideProbabilityPanel(); menuTarget = null; menuTrigger = null;
     for (const article of new Set([...movingRows, ...document.querySelectorAll(".blocksb-removed,.blocksb-exiting,.blocksb-masked,.blocksb-folded")])) { clearMask(article); restore(article); }
     document.querySelectorAll(".blocksb-comment-tools,.blocksb-observer-marker,.blocksb-menu-item").forEach(node => node.remove());
-    drawerOpen = false; iframe.removeAttribute("src"); host.remove();
+    drawerOpen = false; iframe.removeAttribute("src"); host.remove(); delete document.documentElement.dataset.blocksbTheme;
     try { chrome.runtime.onMessage.removeListener(onStateChanged); } catch { /* Already detached by Chrome. */ }
   }
   let locale = globalThis.BlockSBI18n.locale;
@@ -30,6 +31,7 @@
   const contextPosts = new Map(), savedContext = new Map(), requestedContext = new Set();
   let contextFlight = null, contextRetryAt = 0, contextError = "";
   let contextRevision = 0, syncedContextRevision = -1;
+  let scanPosts = null, scanRects = null;
   const maskState = new WeakMap(), revealedMasks = new Set();
   const timelineState = new Map();
   const whiteHandles = new Set(), whiteIds = new Set(), historyHandles = new Map(), historyIds = new Map();
@@ -41,7 +43,9 @@
   // Browser-local observation is independent of an explicitly armed agreement task.
   // Only reply IDs and decisions live here; the worker owns durable evidence/limits.
   const observerDecisions = new Map(), observerLoaded = new Set(), observerRetries = new Map();
-  const observerHistory = new Map();
+  const observerHistory = new Map(), nameHistory = new Map(), nameResults = new Map();
+  const nameSeen = new WeakMap();
+  let nameFlight = null, nameEpoch = 0, nameConfig = "";
   const observerSimulated = new Map();
   const observerRelationships = new Map();
   const observerSeen = new WeakMap();
@@ -53,6 +57,9 @@
   const openedSpam = new WeakSet();
   let state = null, menuTarget = null, menuTrigger = null, timer, refreshTimer, refreshing = false, refreshAgain = false, lastLocation = "", sessionId = "", failure = "", drawerOpen = false;
   let locationSending = false, locationRetryAt = 0, locationError = "";
+  let themeReadAt = 0, dockReadAt = 0, dockSignature = "";
+  let drawerTab = "";
+  const setText = (node, value) => { const text = String(value); if (node.textContent !== text) node.textContent = text; };
   const route = () => location.pathname.match(/^\/\w+\/status\/(\d+)/)?.[1] || "";
   const viewer = () => globalThis.BlockSBX.viewer();
   // A saved, unfinished task proves explicit activation in this tab; pause retains its controls.
@@ -71,8 +78,13 @@
   const followingStatus = p => followingObservation(p)?.following ?? null;
   const skipFollowing = p => state?.settings.skipFollowing && followingStatus(p) !== false;
   const observerSurface = () => !!route() || /^\/home\/?$/.test(location.pathname);
+  const nameEnabled = () => !!state?.settings.filterRules?.some(r => r.enabled) && observerSurface() && state.account === viewer();
+  // Filter first, then allow model analysis only for replies that did not match.
+  const nameMatches = p => nameEnabled() && !nameProtected(p) && ((nameResults.get(p.id)?.pendingUntil || 0) > Date.now()
+    || nameAuthorization(p) || !!route() && !!nameContext(p) && nameResults.get(p.id)?.result?.action === "mask");
+  const nameProtected = p => white(p) || p.handle === viewer() || p.handle?.toLowerCase() === "grok" || followingStatus(p) !== false;
   const observerEnabled = () => !!state?.settings.observer?.enabled && observerSurface() && state.account === viewer();
-  const observerProtected = p => white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
+  const observerProtected = p => p.handle?.toLowerCase() === "grok" || white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
   const hasDecision = p => {
     const result = state?.session?.results[p.id];
     return result && (result.error || !state.decisionVersion || result.decisionVersion === state.decisionVersion);
@@ -93,12 +105,13 @@
       if (result.dryRun && result.action === "block" && result.handle) simulatedHandles.set(result.handle,
         { id: `debug:${state.session.id}:${postId}`, status: "blocked", rootId: state.session.root.id, updated: result.simulatedAt || Date.now() });
     }
-    whiteHandles.clear(); whiteIds.clear(); historyHandles.clear(); historyIds.clear(); observerHistory.clear();
+    whiteHandles.clear(); whiteIds.clear(); historyHandles.clear(); historyIds.clear(); observerHistory.clear(); nameHistory.clear();
     for (const w of state.whitelist) { whiteHandles.add(w.handle); if (w.userId) whiteIds.add(w.userId); }
     state.history.forEach((entry, order) => {
       const value = { entry, order };
       historyHandles.set(entry.target.handle, value);
       if (entry.target.userId) historyIds.set(entry.target.userId, value);
+      if ((entry.module === "name" || entry.nameOwner || entry.nameRuleIds?.length) && entry.target.userId) nameHistory.set(entry.target.userId, entry);
       if ((entry.module === "observer" || entry.observerOwner) && entry.target.userId) observerHistory.set(entry.target.userId, entry);
     });
   }
@@ -106,7 +119,7 @@
   const send = async (type, payload = {}) => {
     if (!contextAlive()) throw new Error(t("ui_extension_disconnected_refresh_this_page"));
     // Animation preview is local only, including clicks on normal controls while enabled.
-    if ((animationDebug || debugBusy) && ["ARM", "CLASSIFY", "OBSERVE_REPLY", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
+    if ((animationDebug || debugBusy) && ["ARM", "CLASSIFY", "OBSERVE_REPLY", "MATCH_NAME_RULES", "MANUAL_BLOCK", "LOCATION", "AUTO_LOAD"].includes(type)) throw new Error(t("ui_animation_preview_analysis_and_new_blocks_are_disabled_exit_with"));
     let r;
     try { r = await chrome.runtime.sendMessage({ type, ...payload }); }
     catch (e) {
@@ -189,7 +202,10 @@
   const button = (text, action, className = "") => {
     const b = element("button", className, text); b.type = "button";
     b.addEventListener("click", e => {
-      e.preventDefault(); e.stopPropagation(); if (!contextAlive()) return;
+      e.preventDefault(); e.stopPropagation();
+      // Shared-page DOM is not an authorization boundary. MAIN-world .click() must
+      // not spend the user's model quota or modify extension-private policy.
+      if (!e.isTrusted || !contextAlive()) return;
       // An extension reload may reject a pending click handler's message promise.
       const failed = error => { if (contextAlive()) toast(error?.message || String(error)); };
       try { Promise.resolve(action(e)).catch(failed); } catch (error) { failed(error); }
@@ -199,7 +215,7 @@
   const host = element("div"); host.id = "blocksb-overlay"; host.lang = locale;
   const shadow = host.attachShadow({ mode: "closed" });
   const css = element("link"); css.rel = "stylesheet"; css.href = `${extensionBase}src/content/overlay.css`; shadow.append(css);
-  const trash = button("", () => { openDrawer(featureEnabled() ? "history" : "observer"); void readTrash(); }, "trash"); trash.title = t("ui_block_s_b_block_history"); trash.setAttribute("aria-label", trash.title);
+  const trash = button("", () => { openDrawer(featureEnabled() ? "history" : observerEnabled() ? "observer" : "name-rules"); void readTrash(); }, "trash"); trash.title = t("ui_block_s_b_block_history"); trash.setAttribute("aria-label", trash.title);
   trash.hidden = true;
   // Static SVG only. All page-derived strings use textContent.
   trash.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7M14 10v7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -267,6 +283,7 @@
     // A persisted guard stays visible after refresh or in another X tab; hiding it must not
     // silently resume real block jobs. Page messages can only reveal this panel.
     debugPanel.hidden = !debugVisible && !state?.settings.debugDryRun;
+    if (debugPanel.hidden) return;
     dryToggle.input.checked = !!state?.settings.debugDryRun;
     previewToggle.input.checked = animationDebug;
     debugSelect.value = debugEffect;
@@ -287,7 +304,7 @@
   }
   function resetDebugPreview() {
     debugRows.clear();
-    for (const article of movingRows) if (rowState.get(article)?.debug) restore(article);
+    for (const article of new Set([...movingRows, ...document.querySelectorAll(".blocksb-removed,.blocksb-exiting")])) if (rowState.get(article)?.debug) restore(article);
   }
   function playDebugPreview(postId = "") {
     if (!animationDebug || !route() || debugBusy) return;
@@ -297,7 +314,7 @@
         && (postId ? p.id === postId : r.bottom > 0 && r.top < innerHeight);
     });
     const post = article && readPost(article);
-    if (post) { debugRows.set(post.id, post.handle); updateOverlay(); removeCard(article, post, true, true); }
+    if (post) { debugRows.set(post.id, post.handle); while (debugRows.size > 1000) debugRows.delete(debugRows.keys().next().value); updateOverlay(); removeCard(article, post, true, true); }
     else toast(t("ui_block_s_b_no_reply_to_preview_scroll_to_the"));
   }
   let probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
@@ -400,15 +417,18 @@
   probabilityPanel.addEventListener("pointerleave", deferProbabilityHide);
   listen(document, "keydown", e => { if (e.key === "Escape") hideProbabilityPanel(); }, true);
   listen(document, "pointerdown", e => { if (e.target !== probabilityAnchor && !e.composedPath().includes(host)) hideProbabilityPanel(); }, true);
-  listen(document, "visibilitychange", () => { if (document.hidden) hideProbabilityPanel(); });
+  listen(document, "visibilitychange", () => { if (document.hidden) hideProbabilityPanel(); else { schedule(); void refresh(); } });
   let toastTimer;
   function toast(text) { if (invalidated) return; toastEl.textContent = String(text); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
   function openDrawer(tab) {
     if (!contextAlive()) return;
+    themeReadAt = 0; updateOverlay();
     hideProbabilityPanel();
     // An empty srcdoc injected by another page script takes precedence over src and leaves the drawer blank.
     iframe.removeAttribute("srcdoc");
-    iframe.src = `${extensionBase}src/manager/manager.html?embedded=1&tab=${tab}&account=${encodeURIComponent(viewer())}`;
+    const source = `${extensionBase}src/manager/manager.html?embedded=1&tab=${tab}&theme=${host.dataset.theme || "light"}&account=${encodeURIComponent(viewer())}`;
+    // Closing only hides this iframe; reuse it when reopening the same view/account/theme.
+    if (iframe.getAttribute("src") !== source || drawerTab !== tab) { iframe.src = source; drawerTab = tab; }
     drawerOpen = true; drawer.hidden = backdrop.hidden = false; close.focus();
   }
   function closeDrawer() { drawerOpen = false; drawer.hidden = backdrop.hidden = true; trash.focus(); }
@@ -438,11 +458,19 @@
       return;
     }
     if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:close") closeDrawer();
+    if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:view"
+      && ["observer", "history", "settings", "whitelist", "name-rules"].includes(e.data.tab)) drawerTab = e.data.tab;
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:timeline:v1") {
       const event = e.data;
       if (!/^\d{5,25}$/.test(event.rootId || "") || typeof event.recent !== "boolean" || !Number.isFinite(event.observedAt)) return;
       const previous = timelineState.get(event.rootId);
-      if (!previous || event.observedAt > previous.observedAt) timelineState.set(event.rootId, event);
+      if (!previous || event.observedAt > previous.observedAt) timelineState.set(event.rootId, {
+        rootId: event.rootId, recent: event.recent, observedAt: Math.min(Date.now(), event.observedAt),
+        startedAt: Number.isFinite(event.startedAt) ? Math.min(Date.now(), event.startedAt) : 0,
+        firstStartedAt: Number.isFinite(event.firstStartedAt) ? Math.min(Date.now(), event.firstStartedAt) : 0,
+        firstPage: event.firstPage === true, firstReady: event.firstReady === true,
+        ok: event.ok === true, ended: event.ended === true, status: Number.isInteger(event.status) ? event.status : 0
+      });
       while (timelineState.size > 20) timelineState.delete(timelineState.keys().next().value);
       schedule(); return;
     }
@@ -451,22 +479,23 @@
     for (const p of e.data.posts.slice(0, 40)) {
       if (!p || !/^\d{5,25}$/.test(p.id) || !/^[a-z0-9_]{1,15}$/.test(p.handle)) continue;
       const previous = metadata.get(p.id);
+      const userId = /^\d{5,25}$/.test(p.userId || "") ? String(p.userId) : "";
       const observedAt = Number.isFinite(e.data.observedAt) ? Math.min(Date.now(), e.data.observedAt) : 0;
       const relation = { following: typeof p.following === "boolean" ? p.following : null,
         followingAccount: p.followingAccount === followingAccount ? followingAccount : "",
         followingAt: Number.isFinite(p.followingAt) ? Math.max(0, Math.min(Date.now(), p.followingAt)) : 0 };
       if (relation.followingAccount && typeof relation.following === "boolean" && relation.followingAt) {
-        for (const key of [p.userId && `id:${p.userId}`, `handle:${p.handle}`].filter(Boolean)) {
-          if ((followingUsers.get(key)?.followingAt || 0) <= relation.followingAt) followingUsers.set(key, { ...relation, userId: p.userId });
+        for (const key of [userId && `id:${userId}`, `handle:${p.handle}`].filter(Boolean)) {
+          if ((followingUsers.get(key)?.followingAt || 0) <= relation.followingAt) followingUsers.set(key, { ...relation, userId });
         }
         skipped.delete(`${state?.session?.id}:${p.id}`);
         if (/^\d{5,25}$/.test(p.userId || "") && relation.followingAt > (observerRelationships.get(p.userId)?.followingAt || 0)) {
           observerRelationships.set(p.userId, { id: p.id, userId: p.userId, handle: p.handle, name: String(p.name || p.handle).slice(0, 80), ...relation });
         }
       }
-      metadata.set(p.id, mergeContext(previous, { id: p.id, handle: p.handle, userId: /^\d{5,25}$/.test(p.userId) ? p.userId : "", name: String(p.name || p.handle).slice(0, 80),
+      metadata.set(p.id, mergeContext(previous, { id: p.id, handle: p.handle, userId, name: String(p.name || p.handle).slice(0, 80),
         ...relation, blueVerified: typeof p.blueVerified === "boolean" ? p.blueVerified : null,
-        text: String(p.text || "").slice(0, 14000), conversationId: String(p.conversationId || ""), parentId: String(p.parentId || ""), hasMedia: !!p.hasMedia, incomplete: !!p.incomplete,
+        text: String(p.text || "").slice(0, 14000), conversationId: /^\d{5,25}$/.test(p.conversationId || "") ? String(p.conversationId) : "", parentId: /^\d{5,25}$/.test(p.parentId || "") ? String(p.parentId) : "", hasMedia: !!p.hasMedia, incomplete: !!p.incomplete,
         domSeen: e.data.source === "dom" || !!previous?.domSeen,
         networkAt: e.data.source === "network" ? Math.max(previous?.networkAt || 0, observedAt) : previous?.networkAt || 0 }));
     }
@@ -480,6 +509,7 @@
 
   /** Read the card's own permalink, excluding quotes; merge DOM/network context by ID and author. */
   function readPost(article) {
+    if (scanPosts?.has(article)) return scanPosts.get(article);
     const time = article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time");
     const href = time?.closest("a")?.getAttribute("href") || "";
     const match = href.match(/^\/(\w{1,15})\/status\/(\d+)/);
@@ -490,7 +520,8 @@
     const p = { id, handle, name: article.querySelector('[data-testid="User-Name"] a')?.textContent || handle, text,
       userId: "", conversationId: "", parentId: "", hasMedia: !!article.querySelector('[data-testid="tweetPhoto"],video,[data-testid="card.wrapper"]'),
       incomplete: !!article.querySelector('[data-testid="tweet-text-show-more-link"]'), url: `https://x.com/${handle}/status/${id}` };
-    return meta?.handle === handle ? Object.assign(p, mergeContext(p, mergeContext(contextPosts.get(id), meta))) : p;
+    const result = meta?.handle === handle ? Object.assign(p, mergeContext(p, mergeContext(contextPosts.get(id), meta))) : p;
+    scanPosts?.set(article, result); return result;
   }
   const articles = () => [...document.querySelectorAll('[data-testid="primaryColumn"] article[data-testid="tweet"]')];
   /** Prove descent to the selected post, not merely membership of a larger conversation. */
@@ -591,12 +622,80 @@
   /** Observe only replies that remain in the viewport. The worker deduplicates across
    * tabs/restarts, enforces daily allowance and rechecks every protection before Jev/X.
    */
+  function nameContext(post) {
+    if (!post?.userId || !post.parentId || post.id === post.conversationId || post.id === route()) return null;
+    const root = contextFor(route() || post.conversationId);
+    if (!root || root.conversationId !== post.conversationId) return null;
+    const chain = ancestors(post, root);
+    return chain ? { root, ancestors: chain } : null;
+  }
+  // Filtering suppresses redundant model requests on every observation surface;
+  // hiding remains separately limited to the corresponding comment thread.
+  function nameRemoval(post) { return route() ? nameAuthorization(post) : null; }
+  function nameAuthorization(post) {
+    if (!nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
+    const h = nameHistory.get(post.userId), local = nameResults.get(post.id)?.result;
+    if (h) return (h.nameRootIds || [h.rootId]).includes(nameContext(post).root.id) && h.nameOwner && !h.nameRuleWithdrawn && (isBlocked(h) || ["pending", "running"].includes(h.status)) ? h : null;
+    // Real removals require the current history authorization. A cached enqueue reply
+    // must not resurrect a withdrawn block after its history record is cleared.
+    return local?.status === "simulated" && state.settings.debugDryRun ? local : null;
+  }
+  // Quote cards can contain their own tweetText/media. Never attribute that text to the reply.
+  function filterOwnNode(article, selector) {
+    return [...article.querySelectorAll(selector)].find(node => {
+      const quote = node.closest('[data-testid="quoteTweet"], [role="link"][tabindex="0"]');
+      return !quote || quote === article || !article.contains(quote)
+        || !quote.matches('[data-testid="quoteTweet"]') && !quote.querySelector('time,[data-testid="User-Name"]');
+    });
+  }
+  /** Name rules need no Jev key and are separate from both model-driven modules. */
+  function scanNameRules(rows) {
+    if (!nameEnabled() || state.settings.paused || document.hidden || animationDebug || debugBusy || nameFlight) return;
+    for (const article of rows) {
+      const p = readPost(article), rect = scanRect(article);
+      // A missing display name must never fall back to matching the @handle.
+      const displayName = article.querySelector('[data-testid="User-Name"] a')?.textContent?.trim();
+      if (!p || !displayName || rect.bottom <= 0 || rect.top >= innerHeight || rect.width <= 0 || nameProtected(p)) continue;
+      const context = nameContext(p); if (!context) continue;
+      const textNode = filterOwnNode(article, '[data-testid="tweetText"]');
+      const own = metadata.get(p.id);
+      const filterText = own?.handle === p.handle ? own.text : textNode?.textContent || "";
+      const filterMedia = !!filterOwnNode(article, '[data-testid="tweetPhoto"],video');
+      const hasLink = !!textNode?.querySelector('a[href^="https://t.co/"],a[target="_blank"]') || /https?:\/\//i.test(filterText);
+      const signature = JSON.stringify([p.id, displayName, filterText, p.incomplete, filterMedia, hasLink, p.blueVerified]), previous = nameSeen.get(article);
+      if (!previous || previous.signature !== signature) {
+        // A card may leave the viewport before its dwell time completes. Never let
+        // an unstarted check permanently hold the model/automatic loading pipeline.
+        nameResults.set(p.id, { pendingUntil: Date.now() + 900 });
+        while (nameResults.size > 1000) nameResults.delete(nameResults.keys().next().value);
+        nameSeen.set(article, { signature, at: Date.now() }); continue;
+      }
+      if (Date.now() - previous.at < 900 || (nameResults.get(p.id)?.retryAt || 0) > Date.now() || nameRemoval(p)) continue;
+      const relation = followingObservation(p), epoch = nameEpoch, token = {};
+      nameResults.set(p.id, { pendingUntil: Date.now() + 30000 });
+      nameFlight = token;
+      send("MATCH_NAME_RULES", { account: viewer(), root: context.root, ancestors: context.ancestors, displayName, hasLink,
+        reply: { ...p, name: displayName, text: filterText, hasMedia: filterMedia, following: relation?.following ?? null, followingAccount: relation?.followingAccount || "", followingAt: relation?.followingAt || 0 } }).then(result => {
+        if (epoch !== nameEpoch) return;
+        nameResults.set(p.id, { result, retryAt: result?.action === "skip" ? Date.now() + 30000 : Infinity });
+        while (nameResults.size > 1000) nameResults.delete(nameResults.keys().next().value);
+        if (result?.action === "block" && result.status !== "simulated") {
+          // Keep the analysis gate closed until the queued authorization arrives
+          // in a fresh snapshot; do not use the enqueue result as hiding authority.
+          nameResults.get(p.id).pendingUntil = Date.now() + 30000;
+          void refresh();
+        }
+      }).catch(() => { if (epoch === nameEpoch) nameResults.set(p.id, { retryAt: Date.now() + 5000 }); })
+        .finally(() => { if (nameFlight === token) nameFlight = null; schedule(); });
+      return;
+    }
+  }
   function scanObserver(rows) {
     if (!observerEnabled()) return;
     const config = state.settings.observer, account = viewer(), now = Date.now();
     const posts = [], candidates = [];
     for (const article of rows) {
-      const post = readPost(article), rect = article.getBoundingClientRect();
+      const post = readPost(article), rect = scanRect(article);
       if (post) posts.push(post);
       if (!post || document.hidden || rect.bottom <= 0 || rect.top >= innerHeight || rect.width <= 0 || rect.height <= 0) { observerSeen.delete(article); continue; }
       const seen = observerSeen.get(article);
@@ -607,7 +706,7 @@
     if (syncObserverRelationships()) return;
     if (observerFlight || document.hidden || animationDebug || debugBusy || state.settings.paused || state.modelError || !state.settings.configured) return;
     for (const post of candidates) {
-      if (!observerLoaded.has(post.id) || observerDecision(post) || observerProtected(post)
+      if (nameMatches(post) || !observerLoaded.has(post.id) || observerDecision(post) || observerProtected(post)
         || config.scope === "blue" && post.blueVerified !== true || (observerRetries.get(post.id) || 0) > now
         || observerRemoval(post)) continue;
       const context = observerContext(post);
@@ -662,17 +761,18 @@
    * A selected nested post also requires a proven parent chain within that branch.
    */
   function taskMayHide(post, history) {
-    if (!threadEnabled() || !pageReady || history?.rootId !== state.session.root.id) return false;
+    if (history?.module === "name" || !threadEnabled() || !pageReady || history?.rootId !== state.session.root.id) return false;
     const root = state.session.root;
     if (post.id === root.id || !root.conversationId || post.conversationId !== root.conversationId) return false;
     return root.id === root.conversationId || ancestors(post, root) !== null;
   }
   listen(document, "pointerdown", e => {
+    if (!e.isTrusted) return;
     const trigger = e.target.closest?.('[data-testid="caret"]');
     if (trigger) { menuTrigger = trigger; menuTarget = readPost(trigger.closest('article[data-testid="tweet"]') || trigger); }
   }, true);
   listen(document, "keydown", e => {
-    if (["Enter", " "].includes(e.key) && e.target.matches?.('[data-testid="caret"]')) { menuTrigger = e.target; menuTarget = readPost(e.target.closest("article")); }
+    if (e.isTrusted && ["Enter", " "].includes(e.key) && e.target.matches?.('[data-testid="caret"]')) { menuTrigger = e.target; menuTarget = readPost(e.target.closest("article")); }
   }, true);
   /** Dismiss through X's own toggle so its focus trap and backdrop are cleaned up together. */
   function dismissMenu(entry) {
@@ -709,15 +809,21 @@
     allow.setAttribute("role", "menuitem"); entry.after(allow);
   }
 
+  /** A finished/cancelled animation must not keep detached card clones alive through rowState. */
+  function releaseRowResources(info) {
+    for (const animation of info.animations || []) animation.cancel();
+    info.animations = [];
+    info.releaseAnchor?.(); info.releaseAnchor = null;
+    info.clone?.remove(); info.clone = null;
+    for (const fragment of info.fragments || []) fragment.remove();
+    info.fragments = [];
+  }
   function restore(article) {
     clearMask(article);
     const info = rowState.get(article);
     if (!info) return;
     info.cancelled = true;
-    for (const animation of info.animations || []) animation.cancel();
-    info.releaseAnchor?.();
-    info.clone?.remove();
-    for (const fragment of info.fragments || []) fragment.remove();
+    releaseRowResources(info);
     if (info.opacity && article.style.getPropertyValue("opacity") === "0") {
       if (info.opacity.value) article.style.setProperty("opacity", info.opacity.value, info.opacity.priority);
       else article.style.removeProperty("opacity");
@@ -780,6 +886,9 @@
     }
     if (info.cover.firstElementChild.textContent !== label) info.cover.firstElementChild.textContent = label;
     // X may replace child nodes while the card remains mounted. Protect new children too.
+    for (const [child, inert] of info.children) if (child.parentElement !== article) {
+      child.inert = inert; info.children.delete(child);
+    }
     for (const child of article.children) if (child !== info.cover && !info.children.has(child)) {
       info.children.set(child, child.inert); child.inert = true;
     }
@@ -909,11 +1018,11 @@
     const motion = animate && (debug || !played.has(key)) && !trash.hidden && (debug || state.settings.animation) && !(state?.settings.reducedMotion && matchMedia("(prefers-reduced-motion: reduce)").matches) && rect.bottom > 0 && rect.top < innerHeight && rect.width > 0;
     const valid = () => !info.cancelled && article.isConnected && rowState.get(article) === info && readPost(article)?.id === post.id;
     const finish = () => {
-      if (!valid()) return;
-      article.classList.add("blocksb-removed");
-      article.classList.remove("blocksb-exiting");
-      for (const animation of info.animations) animation.cancel();
-      info.releaseAnchor?.();
+      if (!valid()) { restore(article); return; }
+      article.classList.add("blocksb-removed"); article.classList.remove("blocksb-exiting");
+      releaseRowResources(info);
+      // Completed rows remain in a WeakMap for undo, not a strong global Set.
+      movingRows.delete(article);
     };
     if (motion) {
       if (!debug) { played.add(key); while (played.size > 5000) played.delete(played.values().next().value); }
@@ -960,33 +1069,44 @@
   }
   function updateOverlay() {
     if (!contextAlive()) return;
+    // Read theme before mutating overlay text. Multiple scan phases call this function.
+    if (Date.now() - themeReadAt >= 750) {
+      themeReadAt = Date.now();
+      const rgb = getComputedStyle(document.body).backgroundColor.match(/\d+/g)?.map(Number);
+      const light = rgb ? rgb.slice(0, 3).reduce((a, b) => a + b, 0) : 765;
+      const theme = light < 30 ? "dark" : light < 330 ? "dim" : "light";
+      if (host.dataset.theme !== theme) host.dataset.theme = document.documentElement.dataset.blocksbTheme = theme;
+    }
     renderDebugPanel();
-    trash.hidden = !featureEnabled() && !observerEnabled() && !(animationDebug && debugRows.size);
+    trash.hidden = !featureEnabled() && !observerEnabled() && !nameEnabled() && !(animationDebug && debugRows.size);
     alignTrash();
     const s = state?.session;
     const count = state?.account === viewer() ? state.history.filter(h => h.trashUnread && !trashReadPending.has(h.id) && ["blocked", "submitted"].includes(h.status)).length : 0;
-    badge.textContent = count > 99 ? "99+" : String(count); badge.hidden = !count;
+    setText(badge, count > 99 ? "99+" : count); badge.hidden = !count;
     status.hidden = !featureEnabled();
     if (!status.hidden) {
       const paused = state.settings.paused || s.paused;
-      statusText.textContent = state.modelError || state.queueError || state.queueNotice ? t("ui_needs_attention_open_trash") : paused ? t("ui_paused")
+      const text = state.modelError || state.queueError || state.queueNotice ? t("ui_needs_attention_open_trash") : paused ? t("ui_paused")
         : !threadEnabled() ? t("ui_left_thread_queued_blocks_continue_in_background")
         : contextError ? contextError
         : !pageReady ? loadNote || t("ui_waiting_for_the_first_page_of_recent_replies")
         : !s.active ? locationError || t("ui_replies_ready_syncing_task_status")
         : loadNote || t("ui_checked", s.count, Object.values(s.results).some(r => r.error) ? t("ui_invalid_results", Object.values(s.results).filter(r => r.error).length) : "", s.autoLoad ? t("ui_auto_loading") : "", failure ? t("ui_some_replies_lack_context") : "");
-      pause.textContent = state.settings.paused ? t("resume") : t("pause");
-      autoLoad.textContent = s.autoLoad ? t("auto_load_on") : t("auto_load_off");
-      autoLoad.setAttribute("aria-pressed", String(!!s.autoLoad));
+      setText(statusText, text);
+      setText(pause, state.settings.paused ? t("resume") : t("pause"));
+      setText(autoLoad, s.autoLoad ? t("auto_load_on") : t("auto_load_off"));
+      if (autoLoad.getAttribute("aria-pressed") !== String(!!s.autoLoad)) autoLoad.setAttribute("aria-pressed", String(!!s.autoLoad));
       autoLoad.hidden = !threadEnabled();
     }
-    const bg = getComputedStyle(document.body).backgroundColor;
-    const rgb = bg.match(/\d+/g)?.map(Number);
-    host.dataset.dark = rgb && rgb.slice(0, 3).reduce((a, b) => a + b, 0) < 330 ? "true" : "false";
   }
   /** Follow X's own dock geometry, including browser zoom and responsive layout. */
   function alignTrash() {
     if (trash.hidden) return;
+    // X's dock is fixed. Coalesce scroll/mutation/refresh bursts instead of forcing
+    // the same geometry reads and inline-style writes several times per scan.
+    const now = Date.now();
+    if (now - dockReadAt < 200) return;
+    dockReadAt = now;
     const candidates = [...document.querySelectorAll('button[aria-label="Grok"],[role="button"][aria-label="Grok"]')];
     const grok = candidates.map(e => ({ e, r: e.getBoundingClientRect() })).find(({ r }) => r.width > 25 && r.width < 100 && r.left > innerWidth * .65 && r.top > innerHeight * .4);
     if (!grok) return;
@@ -994,7 +1114,11 @@
       .map(e => e.getBoundingClientRect()).find(r => r.top > grok.r.bottom && Math.abs(r.left - grok.r.left) < 10);
     const gap = chat ? Math.max(6, Math.min(28, chat.top - grok.r.bottom)) : 12;
     const rect = grok.r, top = rect.top - rect.height - gap;
-    Object.assign(trash.style, { left: `${rect.left}px`, right: "auto", top: `${top}px`, bottom: "auto", width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: getComputedStyle(grok.e).borderRadius });
+    const radius = getComputedStyle(grok.e).borderRadius;
+    const signature = [rect.left, top, rect.width, rect.height, radius, innerWidth, innerHeight].join(":");
+    if (signature === dockSignature) return;
+    dockSignature = signature;
+    Object.assign(trash.style, { left: `${rect.left}px`, right: "auto", top: `${top}px`, bottom: "auto", width: `${rect.width}px`, height: `${rect.height}px`, borderRadius: radius });
     Object.assign(status.style, { right: `${innerWidth - rect.left + 12}px`, bottom: `${innerHeight - top - rect.height / 2 - 21}px` });
   }
   function localizeOverlay() {
@@ -1029,6 +1153,8 @@
         await globalThis.BlockSBI18n.setLanguage(state.settings.language);
         localizeOverlay();
       }
+      const nextNames = JSON.stringify([viewer(), state.settings.filterRules, state.settings.debugDryRun, state.settings.paused, state.whitelist]);
+      if (nameConfig !== nextNames) { nameConfig = nextNames; nameEpoch++; nameResults.clear(); }
       const nextObserverConfig = JSON.stringify([state.settings.observer, state.settings.analysisRevision, state.settings.debugDryRun]);
       if (observerAccount !== viewer() || observerConfig !== nextObserverConfig) {
         if (observerAccount !== viewer()) {
@@ -1055,7 +1181,15 @@
     } catch (e) { statusText.textContent = String(e.message); }
     finally { refreshing = false; if (refreshAgain) { refreshAgain = false; void refresh(); } }
   }
-  function schedule() { if (contextAlive() && !timer) timer = setTimeout(() => { timer = null; scan(); }, 160); }
+  function scanRect(article) {
+    if (!scanRects) return article.getBoundingClientRect();
+    if (!scanRects.has(article)) scanRects.set(article, article.getBoundingClientRect());
+    return scanRects.get(article);
+  }
+  function schedule() { if (contextAlive() && !timer && !document.hidden) timer = setTimeout(() => {
+    timer = null; scanPosts = new WeakMap(); scanRects = new WeakMap();
+    try { scan(); } finally { scanPosts = null; scanRects = null; }
+  }, 160); }
   /** Drive X's native sort menu without changing location or reloading the document.
    * A selected label is not readiness: wait for a matching response or settled replacement rows.
    */
@@ -1154,13 +1288,14 @@
     window.scrollBy({ top: Math.max(240, innerHeight * .8), behavior: "instant" });
   }
   function scan() {
-    if (!contextAlive()) return;
+    if (!contextAlive() || document.hidden) return;
     if (probabilityAnchor) refreshProbabilityPanel();
+    if (menuTrigger && !menuTrigger.isConnected) { menuTarget = null; menuTrigger = null; }
     injectMenu();
-    if (debugRoute !== route()) { debugRows.clear(); debugRoute = route(); }
+    if (debugRoute !== route()) { resetDebugPreview(); debugRoute = route(); }
     for (const article of movingRows) {
       const info = rowState.get(article), post = readPost(article);
-      if (!article.isConnected || post?.id !== info.id || info.debug && (!animationDebug || !debugRows.has(info.id)) || info.module === "observer" && !observerEnabled()) restore(article);
+      if (!article.isConnected || post?.id !== info.id || info.debug && (!animationDebug || !debugRows.has(info.id)) || info.module === "observer" && !observerEnabled() || info.module === "name" && !nameEnabled()) restore(article);
     }
     if (!observerEnabled()) document.querySelectorAll(".blocksb-observer-marker,.blocksb-masked").forEach(node => {
       if (node.classList.contains("blocksb-observer-marker")) node.remove();
@@ -1171,7 +1306,7 @@
       document.querySelectorAll(".blocksb-comment-tools").forEach(node => node.remove());
       document.querySelectorAll(".blocksb-masked,.blocksb-removed,.blocksb-exiting").forEach(article => {
         const owner = rowState.get(article)?.module || maskState.get(article)?.module;
-        if (owner !== "observer" && !(animationDebug && debugRows.has(readPost(article)?.id))) restore(article);
+        if (owner !== "observer" && owner !== "name" && !(animationDebug && debugRows.has(readPost(article)?.id))) restore(article);
       });
     }
     updateOverlay();
@@ -1182,6 +1317,7 @@
     const rows = articles();
     prepareThread(rows);
     if (state.account !== account) { void refresh(); return; }
+    scanNameRules(rows);
     scanObserver(rows);
     const candidateRoot = rows.map(readPost).find(p => p?.id === s?.root.id) || metadata.get(s?.root.id);
     const focal = candidateRoot?.handle === s?.root.handle ? candidateRoot : null;
@@ -1219,24 +1355,32 @@
       const queued = ["pending", "running"].includes(h?.status) && !h?.waitingFollowing;
       const manualHide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
       const observedRemoval = observerRemoval(p);
-      const hide = manualHide || !!observedRemoval;
+      const namedRemoval = nameRemoval(p);
+      const hide = manualHide || !!observedRemoval || !!namedRemoval;
       if (old && !hide && ["failed", "uncertain"].includes(h?.status) && !reportedFailures.has(h.id)) {
-        reportedFailures.add(h.id); toast(t("ui_block_for_did_not_complete_replies_restored_check_the_trash", p.handle));
+        reportedFailures.add(h.id);
+        while (reportedFailures.size > 5000) reportedFailures.delete(reportedFailures.values().next().value);
+        toast(t("ui_block_for_did_not_complete_replies_restored_check_the_trash", p.handle));
       }
       if (old && (old.id !== p.id || !hide || old.mode !== "removed")) restore(article);
       if (hide) {
-        const removal = manualHide ? h : observedRemoval;
+        const removal = manualHide ? h : observedRemoval || namedRemoval;
         const recent = ["pending", "running", "simulated"].includes(removal.status) || ["blocked", "submitted"].includes(removal.status) && Date.now() - removal.updated < 6000;
-        removeCard(article, p, recent, false, manualHide ? "agreement" : "observer"); continue;
+        removeCard(article, p, recent, false, manualHide ? "agreement" : observedRemoval ? "observer" : "name"); continue;
       }
       commentTools(article, p, decision, h, rootId);
-      if (!observerMask(article, p)) maskCard(article, p, decision);
+      const filtered = nameResults.get(p.id)?.result;
+      const maskKey = `filter:${viewer()}:${p.id}:${nameEpoch}`;
+      if (rootId && nameEnabled() && !state.settings.paused && !nameProtected(p) && nameContext(p) && filtered?.action === "mask" && !revealedMasks.has(maskKey)) {
+        applyMask(article, maskKey, t("ui_filter_mask", (filtered.names || []).join(" / ")), "name");
+      } else if (!observerMask(article, p)) maskCard(article, p, decision);
     }
     // Existing candidates come from DOM scans. New responses may add candidates after activation;
     // replayed old network data supplies context only. Both paths share deduplication and ancestry checks.
     failure = "";
     if (active && !state.modelError && state.settings.configured) for (const raw of metadata.values()) {
       const p = mergeContext(contextPosts.get(raw.id), raw);
+      if (nameMatches(p)) continue;
       if (busy.size >= 2) break;
       if (!p.domSeen && !(p.networkAt > 0 && p.networkAt >= s.created)) continue;
       if (hasDecision(p) || busy.has(`${s.id}:${p.id}`) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || skipFollowing(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account))) continue;
@@ -1251,16 +1395,21 @@
         if (state.settings.analysisRevision !== analysisRevision) return;
         if (state.session?.id === s.id && result.action !== "skip") { state.session.results[p.id] = result; indexSnapshot(); }
         schedule();
-        if (result.action === "skip" && result.why !== "config-changed") skipped.set(token, fingerprint);
+        if (result.action === "skip" && result.why !== "config-changed") rememberSkipped(token, fingerprint);
       }).catch(e => {
         if (state.settings.analysisRevision !== analysisRevision) return;
         // A storage/validation failure must not resubmit the same comment and consume more credit.
         // Explicit service recovery or pause/resume clears this local latch.
-        skipped.set(token, fingerprint);
+        rememberSkipped(token, fingerprint);
         if (!state.modelError && state.session?.id === s.id) toast(e.message);
       }).finally(() => { busy.delete(token); clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 150); });
     }
     advanceComments(active); updateOverlay();
+  }
+  function rememberSkipped(token, fingerprint) {
+    skipped.delete(token); skipped.set(token, fingerprint);
+    // Larger than the live metadata window; old offscreen replies must not grow this forever.
+    while (skipped.size > 5000) skipped.delete(skipped.keys().next().value);
   }
   pageObserver = new MutationObserver(records => {
     if (records.some(r => {
@@ -1276,7 +1425,7 @@
   listen(window, "resize", () => { hideProbabilityPanel(); schedule(); }, { passive: true });
   let previous = "";
   // Restore rows immediately on route/account changes, even while a background snapshot is pending.
-  pollTimer = setInterval(() => { if (!contextAlive()) return; alignTrash(); const key = `${location.href}|${viewer()}`; if (key !== previous) { previous = key; schedule(); void refresh(); } else if (featureEnabled() || observerEnabled()) schedule(); }, 900);
+  pollTimer = setInterval(() => { if (!contextAlive() || document.hidden) return; alignTrash(); const key = `${location.href}|${viewer()}`; if (key !== previous) { previous = key; schedule(); void refresh(); } else if (featureEnabled() || observerEnabled() || nameEnabled()) schedule(); }, 900);
   function onStateChanged(message) { if (contextAlive() && message?.type === "STATE_CHANGED") { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 100); } }
   chrome.runtime.onMessage.addListener(onStateChanged);
   void refresh();

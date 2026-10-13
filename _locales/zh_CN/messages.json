@@ -656,7 +656,7 @@
     "message": "变量展开后的请求过大，请减少重复变量或缩短模板。"
   },
   "ui_expands_variables_locally_without_calling_an_api": {
-    "message": "本地展开变量，不调用 API。"
+    "message": "本地预览，不调用 API。"
   },
   "ui_export": {
     "message": "导出"
@@ -1305,9 +1305,6 @@
   "ui_set_between_2_and_255_output_options": {
     "message": "请设置 2～255 个输出选项。"
   },
-  "ui_set_inputs_instructions_and_blocking_options": {
-    "message": "配置输入、判断方式和屏蔽选项。"
-  },
   "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
     "message": "配置已在其他窗口更改。请复制当前草稿，再重新加载最新配置。"
   },
@@ -1609,9 +1606,6 @@
   "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
     "message": "用户名应为 1～15 位字母、数字或下划线。"
   },
-  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
-    "message": "与可视化编辑使用同一份配置。block 为 true 的选项可触发屏蔽。"
-  },
   "ui_verify_status": {
     "message": "核对状态"
   },
@@ -1804,7 +1798,7 @@
     "message": "不支持的界面语言"
   },
   "observer_content_marker": {
-    "message": "疑似灌水 $v0$%",
+    "message": "可疑概率 $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1812,7 +1806,7 @@
     }
   },
   "observer_content_mask": {
-    "message": "疑似灌水 · $v0$%",
+    "message": "可疑内容 · $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1862,9 +1856,6 @@
   },
   "ui_api_model": {
     "message": "API 端点与模型"
-  },
-  "ui_shared_allowlist": {
-    "message": "两个模块共用"
   },
   "ui_manage_allowlist": {
     "message": "管理白名单"
@@ -1980,7 +1971,7 @@
     "message": "暂无观察记录"
   },
   "ui_observer_empty_hint": {
-    "message": "开启自动观察后，浏览到的评论会在这里累计。"
+    "message": "开启自动观察后，随浏览积累记录。"
   },
   "ui_observer_no_matches": {
     "message": "没有匹配的账号"
@@ -2032,6 +2023,12 @@
         "content": "$2"
       }
     }
+  },
+  "observer_category_ai_generated": {
+    "message": "疑似 AI 生成"
+  },
+  "observer_category_human_like": {
+    "message": "更像自然交流"
   },
   "observer_category_spam": {
     "message": "模板灌水"
@@ -2102,7 +2099,7 @@
     }
   },
   "ui_observer_probability_note": {
-    "message": "标记显示勾选类别的合计概率。单项概率及置信度需达标，屏蔽还需满足账号累计条件。"
+    "message": "标记为所选类别的合计概率；屏蔽仍需单项概率、置信度及累计条件达标。"
   },
   "variable_ancestors": {
     "message": "父级回复链"
@@ -2111,12 +2108,187 @@
     "message": "计入可疑证据"
   },
   "ui_observer_rule_selection": {
-    "message": "可勾选多个类别。选中类别的概率及置信度达标后计入证据，达到账号累计条件才屏蔽。"
+    "message": "可多选，累计达标后屏蔽。"
   },
   "ui_observer_beta_notice": {
-    "message": "“屏蔽伪人”目前处于 Beta 阶段，仍可能出现误判或漏判。如果你有更好的提示词，欢迎通过 PR 贡献，一起改进识别效果。"
+    "message": "仍可能出现误判或漏判。"
   },
   "ui_observer_beta_contribute": {
-    "message": "贡献提示词"
+    "message": "通过 PR 改进提示词"
+  },
+  "ui_name_rules": {
+    "message": "自定义过滤"
+  },
+  "ui_name_rule_bnb": {
+    "message": "屏蔽昵称含 BNB 的账号"
+  },
+  "ui_name_rule_ai": {
+    "message": "昵称含汉字和独立 AI 标记"
+  },
+  "ui_name_rules_hint": {
+    "message": "仅处理浏览到的评论；白名单、已关注账号和 @grok 保留。"
+  },
+  "ui_name_records": {
+    "message": "命中记录"
+  },
+  "ui_name_rules_count": {
+    "message": "已开启 $v0$ 条",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_hit": {
+    "message": "命中：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_undo": {
+    "message": "撤回本规则"
+  },
+  "ui_name_empty": {
+    "message": "暂无记录"
+  },
+  "ui_filter_invalid": {
+    "message": "规则无效：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_add": {
+    "message": "＋ 添加规则"
+  },
+  "ui_filter_enabled": {
+    "message": "启用规则"
+  },
+  "ui_filter_hits": {
+    "message": "命中 $v0$ 条",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_rule_name": {
+    "message": "规则名称"
+  },
+  "ui_filter_match": {
+    "message": "匹配方式"
+  },
+  "ui_filter_all": {
+    "message": "满足全部条件"
+  },
+  "ui_filter_any": {
+    "message": "满足任意条件"
+  },
+  "ui_filter_field": {
+    "message": "匹配位置"
+  },
+  "ui_filter_name": {
+    "message": "显示昵称"
+  },
+  "ui_filter_handle": {
+    "message": "@账号"
+  },
+  "ui_filter_text": {
+    "message": "评论正文"
+  },
+  "ui_filter_blue_verified": {
+    "message": "蓝 V"
+  },
+  "ui_filter_has_link": {
+    "message": "含链接"
+  },
+  "ui_filter_has_media": {
+    "message": "含图片或视频"
+  },
+  "ui_filter_yes": {
+    "message": "是"
+  },
+  "ui_filter_no": {
+    "message": "否"
+  },
+  "ui_filter_contains": {
+    "message": "包含"
+  },
+  "ui_filter_not_contains": {
+    "message": "不包含"
+  },
+  "ui_filter_equals": {
+    "message": "完全相同"
+  },
+  "ui_filter_regex": {
+    "message": "正则表达式"
+  },
+  "ui_filter_value": {
+    "message": "关键词或表达式"
+  },
+  "ui_filter_ignore_case": {
+    "message": "忽略大小写"
+  },
+  "ui_filter_remove": {
+    "message": "移除"
+  },
+  "ui_filter_add_condition": {
+    "message": "＋ 添加条件"
+  },
+  "ui_filter_action": {
+    "message": "命中后操作"
+  },
+  "ui_filter_mask": {
+    "message": "隐藏评论 · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_block": {
+    "message": "屏蔽账号"
+  },
+  "ui_filter_hide_action": {
+    "message": "隐藏评论"
+  },
+  "ui_filter_paused_error": {
+    "message": "规则运行超时或出错，已暂停。修改后可重新启用。"
+  },
+  "ui_filter_preview": {
+    "message": "试匹配"
+  },
+  "ui_filter_try": {
+    "message": "检查匹配"
+  },
+  "ui_filter_matched": {
+    "message": "命中规则"
+  },
+  "ui_filter_not_matched": {
+    "message": "未命中规则"
+  },
+  "ui_filter_delete": {
+    "message": "删除规则"
+  },
+  "ui_filter_limit": {
+    "message": "最多添加 50 条规则。"
+  },
+  "ui_filter_new": {
+    "message": "新规则"
+  },
+  "ui_filter_history": {
+    "message": "按规则筛选记录"
+  },
+  "ui_filter_undo_all": {
+    "message": "撤回此规则的屏蔽"
+  },
+  "ui_filter_view_reply": {
+    "message": "查看评论"
+  },
+  "ui_filter_preview_error": {
+    "message": "表达式无效或运行超时。"
   }
 }

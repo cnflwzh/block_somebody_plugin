@@ -49,6 +49,7 @@ export async function askJev(request, apiKey, signal, endpoint = DEFAULT_ENDPOIN
     throw new Error(e.name === "TimeoutError" ? t("ui_jev_timed_out_reply_left_unchanged") : t("ui_cannot_connect_to_jev_right_now_reply_left_unchanged"));
   }
   if (!response.ok) {
+    void response.body?.cancel().catch(() => {});
     const messages = { 401: t("ui_invalid_jev_key_update_it_in_settings"), 402: t("ui_insufficient_jev_balance_check_your_account"), 403: t("ui_jev_denied_access_check_your_permissions"), 429: t("ui_jev_rate_limit_reached_analysis_paused_retry_later") };
     throw new Error(messages[response.status] || t("ui_jev_returned_http_reply_left_unchanged", response.status));
   }

@@ -656,7 +656,7 @@
     "message": "變數展開後的請求過大，請減少重複變數或縮短範本。"
   },
   "ui_expands_variables_locally_without_calling_an_api": {
-    "message": "僅在本機展開變數，不呼叫 API。"
+    "message": "本機預覽，不呼叫 API。"
   },
   "ui_export": {
     "message": "匯出"
@@ -1305,9 +1305,6 @@
   "ui_set_between_2_and_255_output_options": {
     "message": "請設定 2～255 個輸出選項。"
   },
-  "ui_set_inputs_instructions_and_blocking_options": {
-    "message": "設定輸入內容、判斷方式與封鎖選項。"
-  },
   "ui_settings_changed_in_another_window_copy_your_draft_then_load": {
     "message": "設定已在其他視窗變更，請先複製草稿，再載入最新設定。"
   },
@@ -1609,9 +1606,6 @@
   "ui_usernames_must_be_1_15_letters_digits_or_underscores": {
     "message": "使用者名稱須為 1～15 位英文字母、數字或底線。"
   },
-  "ui_uses_the_same_configuration_as_the_visual_editor_options_with": {
-    "message": "與視覺化編輯共用同一份設定。block 為 true 的選項可觸發封鎖。"
-  },
   "ui_verify_status": {
     "message": "確認狀態"
   },
@@ -1804,7 +1798,7 @@
     "message": "不支援的介面語言"
   },
   "observer_content_marker": {
-    "message": "疑似灌水 $v0$%",
+    "message": "可疑機率 $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1812,7 +1806,7 @@
     }
   },
   "observer_content_mask": {
-    "message": "疑似灌水 · $v0$%",
+    "message": "可疑內容 · $v0$%",
     "placeholders": {
       "v0": {
         "content": "$1"
@@ -1862,9 +1856,6 @@
   },
   "ui_api_model": {
     "message": "API 端點與模型"
-  },
-  "ui_shared_allowlist": {
-    "message": "兩個模組共用"
   },
   "ui_manage_allowlist": {
     "message": "管理允許清單"
@@ -1980,7 +1971,7 @@
     "message": "尚無觀察紀錄"
   },
   "ui_observer_empty_hint": {
-    "message": "開啟自動觀察後，瀏覽到的回覆會在這裡累計。"
+    "message": "開啟自動觀察後，隨瀏覽累積紀錄。"
   },
   "ui_observer_no_matches": {
     "message": "找不到符合的帳號"
@@ -2032,6 +2023,12 @@
         "content": "$2"
       }
     }
+  },
+  "observer_category_ai_generated": {
+    "message": "疑似 AI 生成"
+  },
+  "observer_category_human_like": {
+    "message": "較像自然互動"
   },
   "observer_category_spam": {
     "message": "模板灌水"
@@ -2102,7 +2099,7 @@
     }
   },
   "ui_observer_probability_note": {
-    "message": "標記顯示勾選類別的合計機率。單一類別機率與信心分數須達標，封鎖還須符合帳號累計條件。"
+    "message": "標記為所選類別的合計機率；封鎖仍須單項機率、信心度及累計條件達標。"
   },
   "variable_ancestors": {
     "message": "上層回覆串"
@@ -2111,12 +2108,187 @@
     "message": "列入可疑紀錄"
   },
   "ui_observer_rule_selection": {
-    "message": "可勾選多個類別。模型選中的類別機率與信心分數達標後，才列入紀錄；符合帳號累計條件後才會封鎖。"
+    "message": "可複選，累計達標後封鎖。"
   },
   "ui_observer_beta_notice": {
-    "message": "「封鎖偽人」目前仍在 Beta 測試階段，辨識結果可能出現誤判或漏判。如果你有更好的提示詞，歡迎提交 PR，一起改善辨識效果。"
+    "message": "仍可能出現誤判或漏判。"
   },
   "ui_observer_beta_contribute": {
-    "message": "貢獻提示詞"
+    "message": "透過 PR 改進提示詞"
+  },
+  "ui_name_rules": {
+    "message": "自訂篩選"
+  },
+  "ui_name_rule_bnb": {
+    "message": "封鎖暱稱含 BNB 的帳號"
+  },
+  "ui_name_rule_ai": {
+    "message": "暱稱含漢字與獨立 AI 標記"
+  },
+  "ui_name_rules_hint": {
+    "message": "只處理瀏覽到的回覆；白名單、已跟隨帳號和 @grok 不受影響。"
+  },
+  "ui_name_records": {
+    "message": "符合紀錄"
+  },
+  "ui_name_rules_count": {
+    "message": "已啟用 $v0$ 條",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_hit": {
+    "message": "符合：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_name_undo": {
+    "message": "撤銷此規則的處理"
+  },
+  "ui_name_empty": {
+    "message": "尚無紀錄"
+  },
+  "ui_filter_invalid": {
+    "message": "規則無效：$v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_add": {
+    "message": "＋ 新增規則"
+  },
+  "ui_filter_enabled": {
+    "message": "啟用規則"
+  },
+  "ui_filter_hits": {
+    "message": "符合 $v0$ 則",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_rule_name": {
+    "message": "規則名稱"
+  },
+  "ui_filter_match": {
+    "message": "比對方式"
+  },
+  "ui_filter_all": {
+    "message": "符合所有條件"
+  },
+  "ui_filter_any": {
+    "message": "符合任一條件"
+  },
+  "ui_filter_field": {
+    "message": "比對欄位"
+  },
+  "ui_filter_name": {
+    "message": "顯示名稱"
+  },
+  "ui_filter_handle": {
+    "message": "@帳號"
+  },
+  "ui_filter_text": {
+    "message": "回覆內文"
+  },
+  "ui_filter_blue_verified": {
+    "message": "藍勾勾"
+  },
+  "ui_filter_has_link": {
+    "message": "含連結"
+  },
+  "ui_filter_has_media": {
+    "message": "含圖片或影片"
+  },
+  "ui_filter_yes": {
+    "message": "是"
+  },
+  "ui_filter_no": {
+    "message": "否"
+  },
+  "ui_filter_contains": {
+    "message": "包含"
+  },
+  "ui_filter_not_contains": {
+    "message": "不包含"
+  },
+  "ui_filter_equals": {
+    "message": "完全相同"
+  },
+  "ui_filter_regex": {
+    "message": "正規表示式"
+  },
+  "ui_filter_value": {
+    "message": "關鍵字或表示式"
+  },
+  "ui_filter_ignore_case": {
+    "message": "不區分大小寫"
+  },
+  "ui_filter_remove": {
+    "message": "移除"
+  },
+  "ui_filter_add_condition": {
+    "message": "＋ 新增條件"
+  },
+  "ui_filter_action": {
+    "message": "符合時的動作"
+  },
+  "ui_filter_mask": {
+    "message": "隱藏回覆 · $v0$",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_filter_block": {
+    "message": "封鎖帳號"
+  },
+  "ui_filter_hide_action": {
+    "message": "隱藏回覆"
+  },
+  "ui_filter_paused_error": {
+    "message": "規則執行逾時或發生錯誤，已暫停。修改後可重新啟用。"
+  },
+  "ui_filter_preview": {
+    "message": "試用比對"
+  },
+  "ui_filter_try": {
+    "message": "檢查比對"
+  },
+  "ui_filter_matched": {
+    "message": "符合規則"
+  },
+  "ui_filter_not_matched": {
+    "message": "不符合規則"
+  },
+  "ui_filter_delete": {
+    "message": "刪除規則"
+  },
+  "ui_filter_limit": {
+    "message": "最多可新增 50 條規則。"
+  },
+  "ui_filter_new": {
+    "message": "新規則"
+  },
+  "ui_filter_history": {
+    "message": "依規則篩選紀錄"
+  },
+  "ui_filter_undo_all": {
+    "message": "撤回此規則的封鎖"
+  },
+  "ui_filter_view_reply": {
+    "message": "查看回覆"
+  },
+  "ui_filter_preview_error": {
+    "message": "表示式無效或執行逾時。"
   }
 }
