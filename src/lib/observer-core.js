@@ -62,7 +62,7 @@ export function normalizeObserverSettings(value = {}, current = OBSERVER_DEFAULT
     next[field] = value[field];
   }
   if (value.scope !== undefined) { if (!["blue", "all"].includes(value.scope)) throw new Error(t("observer_error_settings")); next.scope = value.scope; }
-  for (const [field, min, max] of [["minHits", 2, 100], ["minThreads", 1, 100], ["retentionDays", 1, 90], ["dailyLimit", 1, 10000], ["hitRate", 0.5, 1], ["threshold", 0.5, 1], ["confidence", 0.5, 1]]) if (value[field] !== undefined) {
+  for (const [field, min, max] of [["minHits", 2, 100], ["minThreads", 1, 100], ["retentionDays", 1, 90], ["dailyLimit", 1, 10000], ["hitRate", 0.5, 1], ["threshold", 0.01, 1], ["confidence", 0.01, 1]]) if (value[field] !== undefined) {
     const n = value[field];
     if (typeof n !== "number" || !Number.isFinite(n) || n < min || n > max || (max > 1 && !Number.isInteger(n))) throw new Error(t("observer_error_settings"));
     next[field] = n;

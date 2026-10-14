@@ -68,7 +68,7 @@ test("handles and stored links are normalized, hostile URLs rejected", () => {
   assert.equal(sanitizePost({ ...reply, url: "javascript:alert(1)" }).url, "https://x.com/reader/status/100001");
 });
 test("threshold preferences reject impossible or non-finite combinations", () => {
-  assert.throws(() => updateSettings(DEFAULTS, { high: .49 }));
+  assert.throws(() => updateSettings(DEFAULTS, { high: .009, maskEnabled: false }));
   assert.throws(() => updateSettings(DEFAULTS, { high: NaN }));
   assert.throws(() => updateSettings(DEFAULTS, { model: "https://evil.example" }));
   assert.equal(updateSettings(DEFAULTS, { preset: "balanced" }).high, .87);

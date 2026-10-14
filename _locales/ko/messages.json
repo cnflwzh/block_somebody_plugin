@@ -370,8 +370,8 @@
       }
     }
   },
-  "ui_block_threshold_cannot_be_below_0_5": {
-    "message": "차단 기준은 0.5 이상이어야 합니다."
+  "ui_probability_threshold_range": {
+    "message": "확률 및 모델 신뢰도 임계값은 1%~100%여야 합니다."
   },
   "ui_block_threshold_confidence_must_be": {
     "message": "차단 기준 $v0$ · 확신도 ≥ $v1$",

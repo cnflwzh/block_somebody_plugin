@@ -370,8 +370,8 @@
       }
     }
   },
-  "ui_block_threshold_cannot_be_below_0_5": {
-    "message": "Block threshold cannot be below 0.5."
+  "ui_probability_threshold_range": {
+    "message": "Probability and model confidence thresholds must be between 1% and 100%."
   },
   "ui_block_threshold_confidence_must_be": {
     "message": "Block threshold $v0$ · Confidence must be ≥ $v1$",
