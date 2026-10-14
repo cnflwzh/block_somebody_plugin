@@ -370,8 +370,8 @@
       }
     }
   },
-  "ui_block_threshold_cannot_be_below_0_5": {
-    "message": "屏蔽阈值不能低于 0.5。"
+  "ui_probability_threshold_range": {
+    "message": "概率和模型置信度阈值须在 1%～100% 之间。"
   },
   "ui_block_threshold_confidence_must_be": {
     "message": "屏蔽阈值 $v0$ · 置信度须 ≥ $v1$",

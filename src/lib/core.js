@@ -106,9 +106,10 @@ export function updateSettings(old, input) {
   for (const k of ["high", "medium", "confidence", "maskThreshold"]) if (input[k] !== undefined) {
     const n = Number(input[k]);
     if (!Number.isFinite(n) || n < 0 || n > 1) throw new Error(t("ui_threshold_must_be_between_0_and_1"));
+    if (["high", "confidence"].includes(k) && n < 0.01) throw new Error(t("ui_probability_threshold_range"));
     next[k] = n;
   }
-  if (next.high < 0.5) throw new Error(t("ui_block_threshold_cannot_be_below_0_5"));
+  if (next.high < 0.01) throw new Error(t("ui_probability_threshold_range"));
   if (input.model !== undefined) {
     const model = String(input.model).trim();
     if (!/^[a-z0-9][a-z0-9._:/-]{0,99}$/i.test(model) || model.includes("://")) throw new Error(t("ui_invalid_model_name"));

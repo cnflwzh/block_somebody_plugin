@@ -370,8 +370,8 @@
       }
     }
   },
-  "ui_block_threshold_cannot_be_below_0_5": {
-    "message": "封鎖門檻不可低於 0.5。"
+  "ui_probability_threshold_range": {
+    "message": "機率與模型信心度門檻須介於 1%～100%。"
   },
   "ui_block_threshold_confidence_must_be": {
     "message": "封鎖門檻 $v0$・信心分數須 ≥ $v1$",

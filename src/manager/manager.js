@@ -443,7 +443,7 @@ localizeDocument(document);
   }
   $("mask-enabled").onchange = updateMaskRange;
   $("maskUpper").oninput = () => {
-    $("high").value = Math.max(50, Number($("maskThreshold").value) + 1, Number($("maskUpper").value)); setLabel("high-out", `${$("high").value}%`);
+    $("high").value = Math.max(1, Number($("maskThreshold").value) + 1, Number($("maskUpper").value)); setLabel("high-out", `${$("high").value}%`);
     document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange();
   };
   for (const key of ["high", "confidence", "maskThreshold"]) $(key).oninput = () => { $(key + "-out").textContent = `${$(key).value}%`; if (key !== "maskThreshold") document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange(); };

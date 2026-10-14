@@ -93,8 +93,8 @@
         </section>
         <section class="card compact-settings">
           <div class="compact-row policy-row"><h3 data-i18n="ui_detection_policy"></h3><div class="segments"><label><input type="radio" name="observer-preset" value="careful" checked><span data-i18n="ui_cautious"></span></label><label><input type="radio" name="observer-preset" value="balanced"><span data-i18n="ui_balanced"></span></label><label><input type="radio" name="observer-preset" value="active"><span data-i18n="ui_aggressive"></span></label><label><input type="radio" name="observer-preset" value="custom"><span data-i18n="ui_custom"></span></label></div></div>
-          <div class="threshold"><label for="observer-threshold" data-i18n="ui_observer_single_threshold"></label><input id="observer-threshold" type="range" min="50" max="100" step="1" value="90"><output id="observer-threshold-out" for="observer-threshold">90%</output></div>
-          <div class="threshold"><label for="observer-confidence" data-i18n="model_confidence"></label><input id="observer-confidence" type="range" min="50" max="100" step="1" value="80"><output id="observer-confidence-out" for="observer-confidence">80%</output></div>
+          <div class="threshold"><label for="observer-threshold" data-i18n="ui_observer_single_threshold"></label><input id="observer-threshold" type="range" min="1" max="100" step="1" value="90"><output id="observer-threshold-out" for="observer-threshold">90%</output></div>
+          <div class="threshold"><label for="observer-confidence" data-i18n="model_confidence"></label><input id="observer-confidence" type="range" min="1" max="100" step="1" value="80"><output id="observer-confidence-out" for="observer-confidence">80%</output></div>
         </section>
         <section class="card compact-settings">
           <h3 data-i18n="ui_observer_conditions"></h3>
@@ -116,12 +116,12 @@
       <form id="settings-form" class="settings-panel" hidden>
         <section class="card compact-settings">
           <div class="compact-row policy-row"><h3 data-i18n="ui_detection_policy"></h3><div class="segments"><label><input type="radio" name="preset" value="careful"><span data-i18n="ui_cautious"></span></label><label><input type="radio" name="preset" value="balanced"><span data-i18n="ui_balanced"></span></label><label><input type="radio" name="preset" value="active"><span data-i18n="ui_aggressive"></span></label><label><input type="radio" name="preset" value="custom"><span data-i18n="ui_custom"></span></label></div></div>
-          <div class="threshold"><label for="high"><span data-i18n="ui_auto_block"></span><span class="probability-label" data-i18n="support_probability"></span></label><input id="high" type="range" min="50" max="100" step="1"><output id="high-out">92%</output></div>
-          <div class="threshold"><label for="confidence" data-i18n="ui_auto_block_model_confidence"></label><input id="confidence" type="range" min="0" max="100" step="1"><output id="confidence-out">80%</output></div>
+          <div class="threshold"><label for="high"><span data-i18n="ui_auto_block"></span><span class="probability-label" data-i18n="support_probability"></span></label><input id="high" type="range" min="1" max="100" step="1"><output id="high-out">92%</output></div>
+          <div class="threshold"><label for="confidence" data-i18n="ui_auto_block_model_confidence"></label><input id="confidence" type="range" min="1" max="100" step="1"><output id="confidence-out">80%</output></div>
         </section>
         <section class="card compact-settings">
           <label class="switch-row"><strong data-i18n="ui_auto_hide_heading"></strong><input id="mask-enabled" type="checkbox" role="switch"></label>
-          <div class="threshold mask-threshold"><span class="threshold-label" data-i18n="ui_probability_range"></span><div class="dual-range"><input id="maskThreshold" type="range" min="0" max="91" step="1" data-i18n-aria-label="ui_hide_lower"><input id="maskUpper" type="range" min="50" max="100" step="1" data-i18n-aria-label="ui_hide_upper"></div><output id="mask-range"></output><output id="maskThreshold-out" hidden></output></div>
+          <div class="threshold mask-threshold"><span class="threshold-label" data-i18n="ui_probability_range"></span><div class="dual-range"><input id="maskThreshold" type="range" min="0" max="91" step="1" data-i18n-aria-label="ui_hide_lower"><input id="maskUpper" type="range" min="0" max="100" step="1" data-i18n-aria-label="ui_hide_upper"></div><output id="mask-range"></output><output id="maskThreshold-out" hidden></output></div>
         </section>
         <section class="card compact-settings">
           <label class="switch-row"><span data-i18n="ui_skip_following"></span><input id="skip-following" type="checkbox" role="switch" checked></label>

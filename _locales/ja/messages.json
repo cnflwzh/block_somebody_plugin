@@ -370,8 +370,8 @@
       }
     }
   },
-  "ui_block_threshold_cannot_be_below_0_5": {
-    "message": "ブロックのしきい値は0.5以上にしてください。"
+  "ui_probability_threshold_range": {
+    "message": "確率とモデルの信頼度のしきい値は、1%～100%で指定してください。"
   },
   "ui_block_threshold_confidence_must_be": {
     "message": "ブロックのしきい値 $v0$・確信度 ≥ $v1$",
