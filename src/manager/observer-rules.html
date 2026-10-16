@@ -17,7 +17,7 @@
       <div id="visual-panel">
         <section class="card"><div class="section-heading"><h2 data-i18n="ui_input"></h2><span class="section-number">01</span></div><label class="sr-only" for="input-template" data-i18n="ui_input_template"></label><textarea id="input-template" rows="8" maxlength="12000" spellcheck="false"></textarea><div id="input-variables" class="variables" aria-label="" data-i18n-aria-label="ui_insert_input_variable"></div></section>
         <section class="card"><div class="section-heading"><h2 data-i18n="ui_prompt"></h2><span class="section-number">02</span></div><label class="sr-only" for="prompt-template" data-i18n="ui_classification_prompt"></label><textarea id="prompt-template" rows="10" maxlength="12000" spellcheck="false"></textarea><div id="prompt-variables" class="variables" aria-label="" data-i18n-aria-label="ui_insert_prompt_variable"></div></section>
-        <section class="card"><div class="section-heading"><h2 data-i18n="ui_output_options"></h2><span class="section-number">03</span></div><p class="muted compact" data-i18n="ui_observer_rule_selection"></p><div id="options-list"></div><button type="button" id="add-option" class="add-option" data-i18n="ui_add_option"></button></section>
+        <section class="card"><div class="section-heading"><h2 data-i18n="ui_output_options"></h2><span class="section-number">03</span></div><div id="options-list"></div><button type="button" id="add-option" class="add-option" data-i18n="ui_add_option"></button></section>
       </div>
       <section id="raw-panel" class="card" hidden><div class="section-heading"><h2 data-i18n="ui_raw_configuration"></h2><span class="muted">JSON</span></div><label class="sr-only" for="raw-editor" data-i18n="ui_rule_json"></label><textarea id="raw-editor" rows="30" maxlength="200000" spellcheck="false"></textarea></section>
     </fieldset>
@@ -25,7 +25,7 @@
   </main>
   <dialog id="preview-dialog">
     <div class="section-heading"><h2 data-i18n="ui_request_preview"></h2><button type="button" id="close-preview" aria-label="" data-i18n-aria-label="ui_close_preview"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <p class="muted compact" data-i18n="ui_expands_variables_locally_without_calling_an_api"></p>
+
     <div class="preview-grid"><div class="sample-fields">
       <label for="sample-root" data-i18n="ui_sample_original_post"></label><textarea id="sample-root" rows="3" maxlength="14000" data-i18n-value="ui_if_you_agree_to_meet_you_should_be_on_time"></textarea>
       <label for="sample-parent" data-i18n="ui_sample_parent_reply_leave_blank_for_direct_replies"></label><textarea id="sample-parent" rows="2" maxlength="14000"></textarea>

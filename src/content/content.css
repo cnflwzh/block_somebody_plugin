@@ -46,3 +46,23 @@ article[data-testid="tweet"].blocksb-masked>:not(.blocksb-comment-mask){visibili
 .blocksb-observer-marker:hover{background:rgba(29,155,240,.1);color:#1d9bf0}
 .blocksb-observer-marker:focus-visible{outline:2px solid #1d9bf0;outline-offset:2px}
 .blocksb-observer-marker[data-suspicious="true"]{color:var(--blocksb-amber);background:var(--blocksb-amber-soft);font-weight:700}
+
+/* Reserve inline space so revealing controls cannot reflow a comment's header.
+ * Keyboard focus and touch retain access without requiring a mouse hover. */
+.blocksb-comment-tools,.blocksb-observer-marker{opacity:0;pointer-events:none;transition:opacity .15s}
+article[data-testid="tweet"]:hover .blocksb-comment-tools,
+article[data-testid="tweet"]:focus-within .blocksb-comment-tools,
+.blocksb-comment-tools:has([aria-expanded="true"]),
+article[data-testid="tweet"]:hover .blocksb-observer-marker,
+article[data-testid="tweet"]:focus-within .blocksb-observer-marker,
+.blocksb-observer-marker[aria-expanded="true"]{opacity:1;pointer-events:auto}
+@media(hover:none){.blocksb-comment-tools,.blocksb-observer-marker{opacity:1;pointer-events:auto}}
+@media(prefers-reduced-motion:reduce){.blocksb-comment-tools,.blocksb-observer-marker{transition:none}}
+
+.blocksb-comment-actions{display:inline-flex;align-items:center;margin-inline-start:4px;opacity:0;pointer-events:none;transition:opacity .15s}
+article[data-testid="tweet"]:hover .blocksb-comment-actions,article[data-testid="tweet"]:focus-within .blocksb-comment-actions,.blocksb-comment-actions:has([aria-expanded="true"]){opacity:1;pointer-events:auto}
+.blocksb-more-button{appearance:none;border:0;border-radius:9999px;background:transparent;color:var(--blocksb-muted);font:700 16px/20px var(--blocksb-font);padding:2px 7px;cursor:pointer}
+.blocksb-more-button:hover{background:rgba(29,155,240,.1);color:#1d9bf0}
+.blocksb-more-button:focus-visible{outline:2px solid #1d9bf0}
+@media(hover:none){.blocksb-comment-actions{opacity:1;pointer-events:auto}}
+@media(prefers-reduced-motion:reduce){.blocksb-comment-actions{transition:none}}

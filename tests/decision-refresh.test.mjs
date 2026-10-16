@@ -21,7 +21,7 @@ test("saved media-vetoed score is re-evaluated once without Jev or duplicate job
     storage: { local: { setAccessLevel: async () => {}, get: async k => ({ [k]: structuredClone(data[k]) }), set: async x => Object.assign(data, structuredClone(x)) } },
     runtime: { id: "fixture", getURL: p => "chrome-extension://fixture/" + p, onMessage: { addListener: fn => { receive = fn; } }, sendMessage: async () => {} },
     cookies: { onChanged: { addListener: () => {} } },
-    alarms: { create: async () => {}, onAlarm: { addListener: () => {} } },
+    alarms: { get: async () => ({}), create: async () => {}, onAlarm: { addListener: () => {} } },
     tabs: { get: async () => ({ url: "https://x.com/author/status/100000" }), query: async () => [], sendMessage: async () => {}, onRemoved: { addListener: () => {} } }
   };
   const sender = { id: "fixture", url: "https://x.com/home", tab: { id: 1 } };

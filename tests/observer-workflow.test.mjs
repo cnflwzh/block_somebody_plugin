@@ -4,17 +4,19 @@ import assert from "node:assert/strict";
 import { DEFAULTS } from "../src/lib/core.js";
 
 test("passive observer persists distinct evidence, queues independently, and honors cancellation and dry-run", async t => {
-  let receive, jevCalls = 0, blockCalls = 0, modelChoice = "ai_generated", serviceFailure = false;
-  const data = { jevKey: "fixture-key-not-a-secret", state: { settings: { ...DEFAULTS, observer: { ...DEFAULTS.observer, enabled: true } }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: Date.now() + 3600000, queueError: "", modelError: "" } };
-  const originalFetch = globalThis.fetch;
+  let receive, jevCalls = 0, blockCalls = 0, modelChoice = "ai_generated", serviceFailure = false, reviewCalls = 0;
+  const data = { jevKey: "fixture-key-not-a-secret", state: { settings: { ...DEFAULTS, observer: { ...DEFAULTS.observer, enabled: true, minThreads: 2 } }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: Date.now() + 3600000, queueError: "", modelError: "" } };
+  const originalFetch = globalThis.fetch, originalNow = Date.now;
+  let clockOffset = 0;
+  Date.now = () => originalNow() + clockOffset;
   const origin = "chrome-extension://observer-fixture/";
-  const web = { id: "observer-fixture", url: "https://x.com/home", tab: { id: 1 } }, ui = { id: "observer-fixture", url: `${origin}src/manager/manager.html` };
+  const web = { id: "observer-fixture", url: "https://x.com/home", frameId: 0, tab: { id: 1 } }, ui = { id: "observer-fixture", url: `${origin}src/manager/manager.html` };
   let tabUrl = web.url;
   globalThis.chrome = {
     runtime: { id: "observer-fixture", getURL: path => origin + path, onMessage: { addListener: fn => { receive = fn; } }, sendMessage: async () => {} },
     storage: { local: { setAccessLevel: async () => {}, get: async key => ({ [key]: structuredClone(data[key]) }), set: async value => Object.assign(data, structuredClone(value)) } },
     cookies: { get: async ({ name }) => ({ value: name === "ct0" ? "fixture-csrf" : "u%3D990000" }), onChanged: { addListener: () => {} } },
-    alarms: { create: async () => {}, onAlarm: { addListener: () => {} } },
+    alarms: { get: async () => ({}), create: async () => {}, onAlarm: { addListener: () => {} } },
     tabs: { get: async () => ({ id: 1, url: tabUrl }), query: async () => [], create: async () => {}, onRemoved: { addListener: () => {} }, sendMessage: async (id, message) => message.type === "GET_VIEWER" ? { account: "viewer" } : undefined }
   };
   const rpc = (type, payload = {}, sender = web) => new Promise((resolve, reject) => receive({ type, ...payload }, sender, answer => answer.ok ? resolve(answer.data) : reject(new Error(answer.error))));
@@ -25,9 +27,12 @@ test("passive observer persists distinct evidence, queues independently, and hon
     if (serviceFailure) return new Response("Unavailable", { status: 503 });
     const body = JSON.parse(options.body);
     assert.equal(JSON.stringify(body).includes("900001"), false);
-    return Response.json({ answers: { stance: { type: "choice", choice: modelChoice, confidence: .99, probabilities: { ai_generated: modelChoice === "ai_generated" ? .98 : .01, human_like: modelChoice === "human_like" ? .98 : .01, uncertain: .01 } } } });
+    const review = body.questions.stance.instructions.includes("account-review-v2"); if (review) reviewCalls++;
+    const choice = review ? "ai_generated" : modelChoice;
+    return Response.json({ answers: { stance: { type: "choice", choice, confidence: .99, probabilities: { ai_generated: choice === "ai_generated" ? .98 : .01, human_like: choice === "human_like" ? .98 : .01, uncertain: .01 } } } });
   };
   const observation = (index, userId = "900001", extra = {}) => {
+    clockOffset += 61000; // Distinct observations model normal browsing across time.
     const rootId = index === 1 ? "100000" : "200000", id = String(100000 + index);
     return { account: "viewer", root: { id: rootId, conversationId: rootId, text: "具体的原帖内容", handle: "author", userId: "800001" }, reply: { id, parentId: rootId, conversationId: rootId, text: `模板回复 ${index}`, handle: `user${userId}`, userId, blueVerified: true, following: false, followingAccount: "viewer", followingAt: Date.now(), ...extra }, ancestors: [] };
   };
@@ -39,12 +44,18 @@ test("passive observer persists distinct evidence, queues independently, and hon
     const one = observation(1);
     await Promise.all([rpc("OBSERVE_REPLY", one), rpc("OBSERVE_REPLY", one)]);
     assert.equal(jevCalls, 1, "duplicate page messages share one paid analysis");
+    const rapid = { ...one, reply: { ...one.reply, id: "100099", text: "快速连续出现的另一条回复" } };
+    assert.equal((await rpc("OBSERVE_REPLY", rapid)).why, "account-cooldown");
+    assert.equal(jevCalls, 1, "rapid same-account replies do not consume more model calls");
     await rpc("OBSERVE_REPLY", observation(2));
     assert.equal(data.state.jobs.length, 0);
     const result = await rpc("OBSERVE_REPLY", observation(3));
     assert.equal(result.status, "pending"); assert.equal(result.action, "block");
     assert.equal(data.state.jobs.length, 1); assert.equal(data.state.jobs[0].module, "observer");
     assert.equal(data.state.sessions[1], undefined, "passive observer does not create a manual original-post task");
+    const queuedCalls = jevCalls;
+    assert.equal((await rpc("OBSERVE_REPLY", observation(91))).action, "skip");
+    assert.equal(jevCalls, queuedCalls, "already queued authors never trigger extra paid analysis");
     const snapshot = await rpc("SNAPSHOT", {}, ui);
     assert.equal(snapshot.observer.accounts[0].hits, 3); assert.equal(snapshot.observer.dailyUsed, 3);
     assert.equal(JSON.stringify(snapshot.observer).includes("avatar"), false);
@@ -214,8 +225,61 @@ test("passive observer persists distinct evidence, queues independently, and hon
       assert.equal(result.label, "ai_generated");
       assert.equal(result.status, "observing");
     });
+    await t.test("quick undo is bound to its page/account and cancels only granted unsent work", async () => {
+      await rpc("SAVE_SETTINGS", { value: { observer: { minHits: 2, minThreads: 1 } } }, ui);
+      await rpc("OBSERVE_REPLY", observation(61, "920061"));
+      const queued = await rpc("OBSERVE_REPLY", observation(62, "920061"));
+      assert.equal(queued.status, "pending");
+      const grant = (await rpc("SNAPSHOT", { account: "viewer" })).quickUndo;
+      assert.ok(grant.token);
+      const payload = { account: "viewer", token: grant.token, count: grant.count };
+      await assert.rejects(rpc("QUICK_UNDO", { ...payload, token: "forged" }));
+      await assert.rejects(rpc("QUICK_UNDO", { ...payload, account: "someoneelse" }));
+      await assert.rejects(rpc("QUICK_UNDO", payload, { ...web, tab: { id: 2 } }));
+      await assert.rejects(rpc("QUICK_UNDO", { ...payload, count: grant.count + 1 }));
+      const undone = await rpc("QUICK_UNDO", payload);
+      assert.equal(undone.count, 1);
+      assert.equal(data.state.jobs.find(j => j.historyId === queued.historyId).status, "cancelled");
+      const h = data.state.history.find(h => h.id === queued.historyId);
+      assert.equal(h.undoRequested, true);
+      assert.ok(data.state.observerSnoozedUntil["viewer:920061"] > Date.now());
+      const calls = jevCalls;
+      await rpc("OBSERVE_REPLY", observation(63, "920061"));
+      assert.equal(jevCalls, calls, "undo pauses fresh observations without another model call");
+      await assert.rejects(rpc("QUICK_UNDO", payload), "a consumed token cannot be reused");
+    });
+    await t.test("quick undo preserves subsequently shared ownership", async () => {
+      await rpc("OBSERVE_REPLY", observation(71, "920071"));
+      const queued = await rpc("OBSERVE_REPLY", observation(72, "920071"));
+      const grant = (await rpc("SNAPSHOT", { account: "viewer" })).quickUndo;
+      await change(db => { db.history.find(h => h.id === queued.historyId).stanceOwner = true; });
+      const result = await rpc("QUICK_UNDO", { account: "viewer", token: grant.token, count: grant.count });
+      assert.equal(result.count, 0); assert.equal(result.skipped, 1);
+      assert.equal(data.state.jobs.find(j => j.historyId === queued.historyId).status, "pending");
+    });
+    await t.test("combined mode collects without single calls and analyzes once at its independent counts", async () => {
+      const { readObserverUser } = await import("../src/lib/observer-store.js");
+      modelChoice = "human_like";
+      await rpc("DEBUG_DRY_RUN", { enabled: true });
+      await rpc("SAVE_SETTINGS", { value: { observer: { enabled: true, mode: "combined", reviewMinReplies: 3, reviewMinThreads: 2, minHits: 99, minThreads: 99 } } }, ui);
+      const beforeCollection = jevCalls;
+      let last;
+      for (const n of [501, 502, 503]) {
+        const input = observation(n, "920501"); input.root.id = n === 501 ? "700000" : "800000"; input.root.conversationId = input.root.id; input.reply.parentId = input.root.id; input.reply.conversationId = input.root.id;
+        last = input; const result = await rpc("OBSERVE_REPLY", input);
+        if (n < 503) assert.equal(jevCalls, beforeCollection, "collection must not call the model");
+        if (n === 503) { assert.equal(jevCalls, beforeCollection + 1, "one grouped request only"); assert.equal(result.status, "simulated"); assert.equal(result.label, "collected"); }
+      }
+      assert.equal(reviewCalls, 1);
+      const calls = jevCalls; await rpc("OBSERVE_REPLY", last); assert.equal(jevCalls, calls);
+      const snapshot = await rpc("SNAPSHOT", {}, ui), account = snapshot.observer.accounts.find(e => e.userId === "920501");
+      assert.equal(account.accountReview.samples, 3); assert.equal(account.hits, 0);
+      await rpc("SAVE_SETTINGS", { value: { observer: { mode: "cumulative" } } }, ui);
+      assert.ok((await readObserverUser("viewer", "920501")).every(e => !e.reviewContext && !e.accountReview));
+      await rpc("DEBUG_DRY_RUN", { enabled: false }); modelChoice = "ai_generated";
+    });
     assert.equal(blockCalls, 0);
     await rpc("SAVE_SETTINGS", { value: { observer: { enabled: false } } }, ui);
     assert.equal((await rpc("OBSERVE_REPLY", observation(20))).action, "skip");
-  } finally { globalThis.fetch = originalFetch; }
+  } finally { globalThis.fetch = originalFetch; Date.now = originalNow; }
 });

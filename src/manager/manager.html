@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>block s.b. · block somebody</title><link rel="icon" href="../../assets/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="manager.css"><script src="manager-start.js"></script><script src="manager.js" type="module"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>block s.b. · block somebody</title><link rel="icon" href="../../assets/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="manager.css"><link rel="stylesheet" href="guide.css"><script src="manager-start.js"></script><script src="manager.js" type="module"></script></head>
 <body>
   <main class="app">
     <header class="topbar">
       <div class="brand-row"><img src="../../assets/brand.svg" width="28" height="28" alt=""><h1>block s.b.</h1><button id="global-pause" class="pill" data-i18n="pause"></button></div>
       <nav class="tabs" aria-label="" data-i18n-aria-label="ui_management"><button data-tab="observer" aria-selected="true"><span data-i18n="ui_observer_title"></span></button><button data-tab="history" aria-selected="false"><span data-i18n="block_history"></span></button><button data-tab="settings" aria-selected="false"><span data-i18n="settings"></span></button></nav>
     </header>
-    <div id="service-error" class="notice warning" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5M12 17.2v.1"/></svg><span id="service-error-text"></span><button id="resume-services" class="text-button" data-i18n="ui_resume_tasks"></button></div>
+    <div id="service-error" class="notice warning" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5M12 17.2v.1"/></svg><span id="service-error-text"></span><button id="service-settings" class="text-button" data-i18n="ui_check_connection"></button><button id="resume-services" class="text-button" data-i18n="ui_resume_tasks"></button></div>
     <div id="onboarding" class="notice" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg><span data-i18n="ui_connect_jev_first"></span><button id="connect-now" class="text-button" data-i18n="ui_open_settings"></button></div>
 
     <section id="view-history" class="view" hidden aria-label="" data-i18n-aria-label="block_history">
@@ -36,7 +36,7 @@
       <form id="name-rules-form" class="name-rules-form">
         <div id="filter-rule-list"></div>
         <button id="filter-add" type="button" class="subtle wide add-row" data-i18n="ui_filter_add"></button>
-        <p class="hint section-hint" data-i18n="ui_name_rules_hint"></p>
+
         <div class="save-row page-save"><span id="name-feedback" class="hint" role="status"></span><button type="submit" class="primary" data-i18n="save_settings"></button></div>
       </form>
       <h3 class="section-title" data-i18n="ui_name_records"></h3>
@@ -52,7 +52,7 @@
         <a class="beta-contribute" href="https://github.com/cnflwzh/block_somebody_plugin/pulls" target="_blank" rel="noopener noreferrer"><span data-i18n="ui_observer_beta_contribute"></span> ↗</a></div>
         <button id="dismiss-observer-beta" type="button" class="notice-close" data-i18n-aria-label="ui_don_t_show_again" data-i18n-title="ui_don_t_show_again"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </aside>
-      <label class="observer-status"><span><i id="observer-dot" class="state-dot"></i><span id="observer-state"></span></span><input id="observer-quick-enable" type="checkbox" role="switch" data-i18n-aria-label="ui_observer_enable"></label>
+      <div id="observer-status-action" class="status-action" hidden></div><label class="observer-status"><span><i id="observer-dot" class="state-dot"></i><span id="observer-state"></span></span><input id="observer-quick-enable" type="checkbox" role="switch" data-i18n-aria-label="ui_observer_enable"></label>
       <div class="stats observer-stats"><div><strong id="observer-watching-count">0</strong><span data-i18n="ui_observer_watching"></span></div><div><strong id="observer-queued-count">0</strong><span data-i18n="ui_queued"></span></div><div><strong id="observer-blocked-count">0</strong><span data-i18n="ui_submitted_blocked"></span></div></div>
       <div class="toolbar observer-search"><label class="search-field"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="observer-search" type="search" data-i18n-placeholder="ui_observer_search" data-i18n-aria-label="ui_observer_search"></label><div class="filters"><button data-observer-filter="all" class="selected" data-i18n="ui_all"></button><button data-observer-filter="watching" data-i18n="ui_observer_watching"></button><button data-observer-filter="blocked" data-i18n="ui_submitted_blocked"></button></div></div>
       <div id="observer-list"></div><button id="observer-more" class="wide subtle" hidden data-i18n="ui_show_more_accounts"></button>
@@ -67,9 +67,9 @@
           <button id="model-details" class="text-button disclosure" aria-expanded="false"><span data-i18n="ui_api_model"></span><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5.5 6.5 6.5L9 18.5"/></svg></button>
           <form id="key-form" hidden>
             <label for="api-key" data-i18n="api_key"></label><div class="input-action"><input id="api-key" type="password" autocomplete="off" spellcheck="false" required maxlength="500"><button type="button" id="reveal-key" class="subtle" data-i18n="ui_show"></button></div>
-            <label for="api-endpoint" data-i18n="ui_api_endpoint"></label><input id="api-endpoint" type="url" required maxlength="2048" spellcheck="false" placeholder="https://api.typesafe.ai/v1/systemone">
-            <label for="model" data-i18n="ui_model"></label><input id="model" required maxlength="100" spellcheck="false" placeholder="jev-1.13.0">
-            <div class="save-row"><span id="model-feedback" class="hint" role="status"></span><button type="button" id="remove-key" class="text-button danger" hidden data-i18n="ui_remove_key"></button><button type="submit" class="primary" id="save-key" data-i18n="ui_save_and_connect"></button></div>
+            <label for="api-endpoint" data-i18n="ui_api_endpoint" data-setting-help="help_endpoint"></label><input id="api-endpoint" type="url" required maxlength="2048" spellcheck="false" placeholder="https://api.typesafe.ai/v1/systemone">
+            <label for="model" data-i18n="ui_model" data-setting-help="help_model"></label><input id="model" required maxlength="100" spellcheck="false" placeholder="jev-1.13.0">
+            <div class="save-row"><button type="button" id="discard-model" class="text-button" data-i18n="ui_discard_draft" hidden></button><span id="model-feedback" class="hint" role="status"></span><button type="button" id="remove-key" class="text-button danger" hidden data-i18n="ui_remove_key"></button><button type="submit" class="primary" id="save-key" data-i18n="ui_save_and_connect"></button></div>
           </form>
         </section>
         <section class="card nav-group">
@@ -82,53 +82,65 @@
             <div class="compact-row"><span data-i18n="ui_delete_effect"></span><div class="segments"><label><input type="radio" name="animation-effect" value="fly" checked><span data-i18n="ui_fly_to_trash"></span></label><label><input type="radio" name="animation-effect" value="particles"><span data-i18n="ui_particle_dissolve"></span></label></div></div>
             <label class="switch-row"><span data-i18n="ui_follow_system_reduced_motion_preference"></span><input id="reduced-motion" type="checkbox" role="switch"></label>
           </section>
-          <section class="card nav-group cache-entry"><button type="button" id="cache-toggle" class="full-disclosure" aria-expanded="false"><strong data-i18n="ui_cache"></strong><span id="cache-summary" class="muted"></span><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5.5 6.5 6.5L9 18.5"/></svg></button><div id="cache-details" hidden><label for="cache-limit" data-i18n="ui_maximum_entries"></label><input id="cache-limit" type="number" min="100" max="100000" step="1" required value="10000"></div></section>
-          <div class="page-save"><span id="general-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
+          <section class="card nav-group cache-entry"><button type="button" id="cache-toggle" class="full-disclosure" aria-expanded="false"><strong data-i18n="ui_cache"></strong><span id="cache-summary" class="muted"></span><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5.5 6.5 6.5L9 18.5"/></svg></button><div id="cache-details" hidden><label for="cache-limit" data-i18n="ui_maximum_entries" data-setting-help="help_cache"></label><input id="cache-limit" type="number" min="100" max="100000" step="1" required value="10000"><button id="clear-cache" type="button" class="subtle" data-i18n="ui_clear_cache"></button><span id="cache-feedback" role="status" class="hint"></span></div></section>
+          <div class="settings-tools"><button id="preview-animation" class="text-button" type="button" data-i18n="ui_preview_animation"></button><button id="replay-guide" class="text-button" type="button" data-i18n="ui_replay_guide"></button></div><div class="page-save"><button id="discard-general" class="text-button" type="button" data-i18n="ui_discard_draft" hidden></button><span id="general-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
         </form>
       </div>
       <form id="observer-form" class="settings-panel" hidden>
         <section class="card compact-settings observer-policy">
+          <a id="observer-modes-help" class="modes-help-link" href="modes.html" target="_blank" rel="noopener" data-i18n="modes_title"></a>
+          <div class="compact-row"><span data-i18n="ui_observer_mode" data-setting-help="help_observer_mode"></span><div class="segments"><label><input type="radio" name="observer-mode" value="cumulative" checked><span data-i18n="ui_mode_cumulative"></span></label><label><input type="radio" name="observer-mode" value="combined"><span data-i18n="ui_mode_combined"></span></label></div></div>
           <label class="switch-row"><strong data-i18n="ui_observer_enable"></strong><input id="observer-enabled" type="checkbox" role="switch"></label>
-          <div class="compact-row"><span data-i18n="ui_observer_scope"></span><div class="segments"><label><input name="observer-scope" type="radio" value="blue" checked><span data-i18n="ui_observer_blue"></span></label><label><input name="observer-scope" type="radio" value="all"><span data-i18n="ui_observer_all"></span></label></div></div>
+          <div class="compact-row"><span data-i18n="ui_observer_scope" data-setting-help="help_scope"></span><div class="segments"><label><input name="observer-scope" type="radio" value="blue" checked><span data-i18n="ui_observer_blue"></span></label><label><input name="observer-scope" type="radio" value="all"><span data-i18n="ui_observer_all"></span></label></div></div>
         </section>
-        <section class="card compact-settings">
-          <div class="compact-row policy-row"><h3 data-i18n="ui_detection_policy"></h3><div class="segments"><label><input type="radio" name="observer-preset" value="careful" checked><span data-i18n="ui_cautious"></span></label><label><input type="radio" name="observer-preset" value="balanced"><span data-i18n="ui_balanced"></span></label><label><input type="radio" name="observer-preset" value="active"><span data-i18n="ui_aggressive"></span></label><label><input type="radio" name="observer-preset" value="custom"><span data-i18n="ui_custom"></span></label></div></div>
-          <div class="threshold"><label for="observer-threshold" data-i18n="ui_observer_single_threshold"></label><input id="observer-threshold" type="range" min="1" max="100" step="1" value="90"><output id="observer-threshold-out" for="observer-threshold">90%</output></div>
-          <div class="threshold"><label for="observer-confidence" data-i18n="model_confidence"></label><input id="observer-confidence" type="range" min="1" max="100" step="1" value="80"><output id="observer-confidence-out" for="observer-confidence">80%</output></div>
+        <section class="card compact-settings observer-cumulative">
+          <div class="compact-row policy-row"><h3 data-i18n="ui_detection_policy" data-setting-help="help_policy"></h3><div class="segments"><label><input type="radio" name="observer-preset" value="careful" checked><span data-i18n="ui_cautious"></span></label><label><input type="radio" name="observer-preset" value="balanced"><span data-i18n="ui_balanced"></span></label><label><input type="radio" name="observer-preset" value="active"><span data-i18n="ui_aggressive"></span></label><label><input type="radio" name="observer-preset" value="custom"><span data-i18n="ui_custom"></span></label></div></div>
+          <div class="threshold"><label for="observer-threshold" data-i18n="ui_observer_single_threshold" data-setting-help="help_suspect"></label><input id="observer-threshold" type="range" min="1" max="100" step="1" value="90"><output id="observer-threshold-out" for="observer-threshold">90%</output></div>
+          <div class="threshold"><label for="observer-confidence" data-i18n="model_confidence" data-setting-help="help_confidence"></label><input id="observer-confidence" type="range" min="1" max="100" step="1" value="80"><output id="observer-confidence-out" for="observer-confidence">80%</output></div>
         </section>
-        <section class="card compact-settings">
+        <section class="card compact-settings observer-cumulative">
           <h3 data-i18n="ui_observer_conditions"></h3>
-          <label class="number-row"><span data-i18n="ui_observer_hits"></span><input id="observer-minHits" type="number" min="2" max="100" required value="3"><span data-i18n="ui_observer_items"></span></label>
-          <label class="number-row"><span data-i18n="ui_observer_threads"></span><input id="observer-minThreads" type="number" min="1" max="100" required value="2"><span data-i18n="ui_observer_items"></span></label>
-          <label class="number-row"><span data-i18n="ui_observer_rate"></span><input id="observer-hitRate" type="number" min="50" max="100" required value="75"><span>%</span></label>
+          <label class="number-row"><span data-i18n="ui_observer_hits" data-setting-help="help_hits"></span><input id="observer-minHits" type="number" min="2" max="100" required value="3"><span data-i18n="ui_observer_items"></span></label>
+          <label class="number-row"><span data-i18n="ui_observer_threads" data-setting-help="help_threads"></span><input id="observer-minThreads" type="number" min="1" max="100" required value="3"><span data-i18n="ui_observer_items"></span></label>
+          <label class="number-row"><span data-i18n="ui_observer_rate" data-setting-help="help_rate"></span><input id="observer-hitRate" type="number" min="50" max="100" required value="75"><span>%</span></label>
           <p class="hint recent-hint" data-i18n="ui_observer_recent_hint"></p>
-          <label class="number-row" for="observer-retentionDays"><span data-i18n="ui_observer_retention"></span><select id="observer-retentionDays"><option value="7" data-i18n="ui_observer_days_7"></option><option value="30" data-i18n="ui_observer_days_30"></option><option value="90" data-i18n="ui_observer_days_90"></option></select><span></span></label>
-          <label class="number-row" for="observer-dailyLimit"><span data-i18n="ui_observer_daily"></span><input id="observer-dailyLimit" type="number" min="1" max="10000" required value="200"><span data-i18n="ui_observer_items"></span></label>
+        </section>
+        <section class="card compact-settings observer-combined" hidden>
+          <h3 data-i18n="ui_combined_conditions"></h3>
+          <label class="number-row"><span data-i18n="ui_collect_replies" data-setting-help="help_collect_replies"></span><input id="observer-reviewMinReplies" type="number" min="3" max="5" required value="3"><span data-i18n="ui_observer_items"></span></label>
+          <label class="number-row"><span data-i18n="ui_observer_threads" data-setting-help="help_collect_threads"></span><input id="observer-reviewMinThreads" type="number" min="2" max="5" required value="3"><span data-i18n="ui_observer_items"></span></label>
+          <div class="threshold"><label for="observer-reviewThreshold" data-i18n="ui_combined_probability" data-setting-help="help_combined_probability"></label><input id="observer-reviewThreshold" type="range" min="1" max="100" value="90"><output id="observer-reviewThreshold-out">90%</output></div>
+          <div class="threshold"><label for="observer-reviewConfidence" data-i18n="model_confidence" data-setting-help="help_combined_confidence"></label><input id="observer-reviewConfidence" type="range" min="1" max="100" value="80"><output id="observer-reviewConfidence-out">80%</output></div>
+          <label class="number-row"><span data-i18n="ui_combined_ratio" data-setting-help="help_combined_ratio"></span><input id="observer-reviewHitRate" type="number" min="50" max="100" required value="75"><span>%</span></label>
         </section>
         <section class="card compact-settings">
-          <label class="switch-row"><span data-i18n="ui_skip_following"></span><input id="observer-skipFollowing" type="checkbox" role="switch" checked></label>
-          <label class="switch-row"><span data-i18n="ui_observer_markers"></span><input id="observer-showMarkers" type="checkbox" role="switch"></label>
-          <label class="switch-row"><span data-i18n="ui_observer_mask"></span><input id="observer-mask" type="checkbox" role="switch"></label>
+          <label class="number-row" for="observer-retentionDays"><span data-i18n="ui_observer_retention" data-setting-help="help_retention"></span><select id="observer-retentionDays"><option value="7" data-i18n="ui_observer_days_7"></option><option value="30" data-i18n="ui_observer_days_30"></option><option value="90" data-i18n="ui_observer_days_90"></option></select><span></span></label>
+          <label class="number-row" for="observer-dailyLimit"><span data-i18n="ui_observer_daily" data-setting-help="help_daily"></span><input id="observer-dailyLimit" type="number" min="1" max="10000" required value="200"><span data-i18n="ui_observer_items"></span></label>
+        </section>
+        <section class="card compact-settings">
+          <label class="switch-row"><span data-i18n="ui_skip_following" data-setting-help="help_following"></span><input id="observer-skipFollowing" type="checkbox" role="switch" checked></label>
+          <label class="switch-row"><span data-i18n="ui_observer_markers" data-setting-help="help_markers"></span><input id="observer-showMarkers" type="checkbox" role="switch"></label>
+          <label class="switch-row"><span data-i18n="ui_observer_mask" data-setting-help="help_observer_mask"></span><input id="observer-mask" type="checkbox" role="switch"></label>
         </section>
         <section class="card nav-group"><button id="observer-advanced" type="button" class="full-disclosure"><strong data-i18n="ui_observer_advanced"></strong><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button></section>
-        <div class="page-save"><span id="observer-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
+        <details id="observer-effect" class="settings-effect"><summary data-i18n="ui_see_effect"></summary><p id="observer-effect-result" class="effect-result" role="status"></p></details><div class="page-save"><button id="discard-observer" class="text-button" type="button" data-i18n="ui_discard_draft" hidden></button><span id="observer-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
       </form>
       <form id="settings-form" class="settings-panel" hidden>
         <section class="card compact-settings">
-          <div class="compact-row policy-row"><h3 data-i18n="ui_detection_policy"></h3><div class="segments"><label><input type="radio" name="preset" value="careful"><span data-i18n="ui_cautious"></span></label><label><input type="radio" name="preset" value="balanced"><span data-i18n="ui_balanced"></span></label><label><input type="radio" name="preset" value="active"><span data-i18n="ui_aggressive"></span></label><label><input type="radio" name="preset" value="custom"><span data-i18n="ui_custom"></span></label></div></div>
-          <div class="threshold"><label for="high"><span data-i18n="ui_auto_block"></span><span class="probability-label" data-i18n="support_probability"></span></label><input id="high" type="range" min="1" max="100" step="1"><output id="high-out">92%</output></div>
-          <div class="threshold"><label for="confidence" data-i18n="ui_auto_block_model_confidence"></label><input id="confidence" type="range" min="1" max="100" step="1"><output id="confidence-out">80%</output></div>
+          <div class="compact-row policy-row"><h3 data-i18n="ui_detection_policy" data-setting-help="help_policy"></h3><div class="segments"><label><input type="radio" name="preset" value="careful"><span data-i18n="ui_cautious"></span></label><label><input type="radio" name="preset" value="balanced"><span data-i18n="ui_balanced"></span></label><label><input type="radio" name="preset" value="active"><span data-i18n="ui_aggressive"></span></label><label><input type="radio" name="preset" value="custom"><span data-i18n="ui_custom"></span></label></div></div>
+          <div class="threshold"><label for="high"><span data-i18n="ui_auto_block"></span><span class="probability-label" data-i18n="support_probability" data-setting-help="help_support"></span></label><input id="high" type="range" min="1" max="100" step="1"><output id="high-out">92%</output></div>
+          <div class="threshold"><label for="confidence" data-i18n="ui_auto_block_model_confidence" data-setting-help="help_confidence"></label><input id="confidence" type="range" min="1" max="100" step="1"><output id="confidence-out">80%</output></div>
         </section>
         <section class="card compact-settings">
-          <label class="switch-row"><strong data-i18n="ui_auto_hide_heading"></strong><input id="mask-enabled" type="checkbox" role="switch"></label>
-          <div class="threshold mask-threshold"><span class="threshold-label" data-i18n="ui_probability_range"></span><div class="dual-range"><input id="maskThreshold" type="range" min="0" max="91" step="1" data-i18n-aria-label="ui_hide_lower"><input id="maskUpper" type="range" min="0" max="100" step="1" data-i18n-aria-label="ui_hide_upper"></div><output id="mask-range"></output><output id="maskThreshold-out" hidden></output></div>
+          <label class="switch-row"><strong data-i18n="ui_auto_hide_heading" data-setting-help="help_mask"></strong><input id="mask-enabled" type="checkbox" role="switch"></label>
+          <div class="threshold mask-threshold"><span class="threshold-label" data-i18n="ui_probability_range" data-setting-help="help_mask"></span><div class="dual-range"><input id="maskThreshold" type="range" min="0" max="91" step="1" data-i18n-aria-label="ui_hide_lower"><input id="maskUpper" type="range" min="0" max="100" step="1" data-i18n-aria-label="ui_hide_upper"></div><output id="mask-range"></output><output id="maskThreshold-out" hidden></output></div>
         </section>
         <section class="card compact-settings">
-          <label class="switch-row"><span data-i18n="ui_skip_following"></span><input id="skip-following" type="checkbox" role="switch" checked></label>
-          <label class="switch-row"><span data-i18n="ui_auto_load_default"></span><input id="auto-load-default" type="checkbox" role="switch"></label>
+          <label class="switch-row"><span data-i18n="ui_skip_following" data-setting-help="help_following"></span><input id="skip-following" type="checkbox" role="switch" checked></label>
+          <label class="switch-row"><span data-i18n="ui_auto_load_default" data-setting-help="help_auto_load"></span><input id="auto-load-default" type="checkbox" role="switch"></label>
         </section>
         <section class="card nav-group"><button type="button" id="edit-rules" class="full-disclosure"><strong data-i18n="ui_prompt_settings"></strong><svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button><span id="rule-summary" hidden></span></section>
-        <div class="page-save"><span id="settings-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
+        <details id="support-effect" class="settings-effect"><summary data-i18n="ui_see_effect"></summary><p id="support-effect-result" class="effect-result" role="status"></p></details><div class="page-save"><button id="discard-support" class="text-button" type="button" data-i18n="ui_discard_draft" hidden></button><span id="settings-feedback" class="hint" role="status"></span><button class="primary" type="submit" data-i18n="save_settings"></button></div>
       </form>
       <div id="settings-about" class="about"><span id="extension-version"></span><a class="github-link" href="https://github.com/cnflwzh/block_somebody_plugin" target="_blank" rel="noopener noreferrer" aria-label="" data-i18n-aria-label="ui_github_repository" title="GitHub"><svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 3.86c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a></div>
     </section>

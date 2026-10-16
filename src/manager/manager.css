@@ -104,7 +104,7 @@ input[type=checkbox][role=switch]:disabled{cursor:default;opacity:.5}
 .tabs button{flex:1;display:flex;justify-content:center;height:53px;min-height:53px;padding:0 12px;border-radius:0;color:var(--muted);font-weight:500}
 .tabs button>span{position:relative;display:flex;align-items:center;height:100%}
 .tabs button[aria-selected=true]{color:var(--ink);font-weight:700}
-.tabs button[aria-selected=true]>span::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;min-width:56px;margin:0 auto;border-radius:9999px;background:var(--blue)}
+.tabs button[aria-selected=true]>span::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:0;height:4px;width:100%;min-width:56px;border-radius:9999px;background:var(--blue)}
 .view{padding:0 0 24px}
 
 /* ---------- Notices ---------- */
@@ -415,3 +415,27 @@ body.popup{width:100%;height:100%;overflow-x:hidden;overflow-y:auto;scrollbar-gu
   .quote,.record-meta,.record-actions,.record-error{margin-left:0}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+/* Inline edits keep the slider layout and expose a proper keyboard target. */
+.threshold output[role=button]{cursor:text;border-bottom:1px dashed var(--muted);border-radius:3px}
+.threshold output[role=button]:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.threshold .percent-input{grid-area:out;width:64px;min-width:0;padding:5px 4px;text-align:right;font:inherit;font-variant-numeric:tabular-nums}
+.settings-tools{display:flex;flex-wrap:wrap;gap:8px 16px;padding:8px 16px}
+.settings-effect{margin:12px 16px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.settings-effect summary{cursor:pointer;padding:10px 0;font-size:14px;color:var(--blue)}
+.settings-effect .effect-result{padding:8px 0 12px;font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
+.page-save{flex-wrap:wrap}.page-save>.hint{flex:1;min-width:100px}
+.pause-scope{padding:8px 16px}
+.status-action{display:flex;gap:8px;align-items:center;padding:4px 16px;font-size:13px;color:var(--muted)}
+.observer-progress{font-size:12px;color:var(--muted);line-height:1.5;font-variant-numeric:tabular-nums}
+.settings-help-label{display:inline-flex;align-items:center;gap:6px;min-width:0}.settings-help-label>label,.settings-help-label>span,.settings-help-label>strong{min-width:0}
+.threshold>.settings-help-label{grid-area:label;font-size:15px;line-height:1.3}
+.settings-help-button{display:inline-grid;place-items:center;flex:0 0 17px;width:17px;height:17px;border:1px solid var(--muted);border-radius:50%;color:var(--muted);font-size:11px;font-weight:600;line-height:1;cursor:help}
+.settings-help-button:hover,.settings-help-button:focus-visible{color:var(--blue);border-color:var(--blue);outline:2px solid var(--blue-soft);outline-offset:2px}
+.settings-help-panel{position:fixed;z-index:2147483647;width:min(330px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;padding:12px 14px;background:var(--bg);color:var(--ink);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);font-size:13px;line-height:1.6;white-space:pre-line}
+#clear-cache{margin:12px 8px 0 0}#cache-feedback{display:inline-block;margin-top:8px}
+.mode-disabled>span:first-child{color:var(--muted)}.mode-disabled{cursor:default}.mode-disabled .settings-help-button{cursor:help}
+
+.settings-help-panel p { margin: 0 0 9px; }
+.settings-help-panel p:last-child { margin-bottom: 0; }
+.settings-help-panel strong { color: var(--ink); font-weight: 650; }
+.modes-help-link { display: block; width: fit-content; margin: 0 0 12px auto; font-size: 13px; color: var(--blue); text-underline-offset: 3px; }

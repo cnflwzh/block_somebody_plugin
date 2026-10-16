@@ -62,7 +62,15 @@ export function saveObserverEvidence(entry, epoch, retentionDays = 30) { return 
   guard.onsuccess = () => {
     if ((guard.result?.value || 0) !== epoch) return done(false);
     const r = store.get(entry.key);
-    r.onsuccess = () => { if (r.result && r.result.observedAt > Date.now() - retentionDays * 86400000) return done(false); store.put(entry); done(true); };
+    r.onsuccess = () => {
+      if (r.result && r.result.observedAt > Date.now() - retentionDays * 86400000) return done(false);
+      store.put(entry); done(true);
+      // Review needs only five recent contexts per user, not the full retained history.
+      if (entry.reviewContext) { const recent = store.index("user").getAll(entry.userKey); recent.onsuccess = () => {
+        const texts = recent.result.filter(e => e.reviewContext).sort((a, b) => b.observedAt - a.observedAt);
+        for (const old of texts.slice(5)) { const { reviewContext, ...score } = old; store.put(score); }
+      }; }
+    };
   };
 }); }
 /** A threshold edit re-evaluates evidence without changing its age or counting it again. */
@@ -72,6 +80,46 @@ export function markObserverEvaluated(key, epoch, policyRevision) { return trans
     const entry = r.result; if (!entry || entry.withdrawn) return;
     const guard = meta.get(`epoch:${entry.userKey}`);
     guard.onsuccess = () => { if ((guard.result?.value || 0) === epoch) store.put({ ...entry, policyRevision }); };
+  };
+}); }
+/** Reserve at most one review per user/hour and require two new replies after a prior
+ * attempt. Reservation persists across worker restarts; failed requests are not retried
+ * merely because a page refreshes. Epochs invalidate work after undo/forget.
+ */
+export function reserveAccountReview(userKey, epoch, fingerprint, replyIds, now = Date.now()) { return transaction("readwrite", (store, meta, done) => {
+  const guard = meta.get(`epoch:${userKey}`);
+  guard.onsuccess = () => {
+    if ((guard.result?.value || 0) !== epoch) return done(false);
+    const key = `review:${userKey}`, r = meta.get(key);
+    r.onsuccess = () => {
+      const old = r.result;
+      if (old && (now - old.at < 3600000 || old.fingerprint === fingerprint && old.epoch === epoch && replyIds.filter(id => !old.replyIds.includes(id)).length < 2)) return done(false);
+      meta.put({ key, at: now, epoch, fingerprint, replyIds }); done(true);
+    };
+  };
+}); }
+/** Attach a validated aggregate result without changing the single-reply classification. */
+export function saveAccountReview(key, epoch, accountReview) { return transaction("readwrite", (store, meta, done) => {
+  const r = store.get(key); r.onsuccess = () => {
+    const e = r.result; if (!e || e.withdrawn) return done(false);
+    const guard = meta.get(`epoch:${e.userKey}`); guard.onsuccess = () => {
+      if ((guard.result?.value || 0) !== epoch) return done(false);
+      store.put({ ...e, accountReview }); done(true);
+    };
+  };
+}); }
+/** Disabling optional review removes its retained text and results, leaving normal scores. */
+export function clearAccountReviewData() { return transaction("readwrite", (store, meta) => {
+  const users = new Set();
+  const r = store.openCursor(); r.onsuccess = () => { const c = r.result; if (!c) return;
+    if (c.value.reviewContext || c.value.accountReview) {
+      const { reviewContext, accountReview, ...entry } = c.value;
+      if (entry.collected) entry.withdrawn = true;
+      c.update(entry);
+      if (!users.has(entry.userKey)) { users.add(entry.userKey); const key = `epoch:${entry.userKey}`, guard = meta.get(key);
+        guard.onsuccess = () => meta.put({ key, value: (guard.result?.value || 0) + 1 });
+      }
+    } c.continue();
   };
 }); }
 /** Keep withdrawn reply identities until normal expiry so refresh cannot resurrect evidence. */
@@ -92,6 +140,9 @@ export function readObserverBudget(now = Date.now()) { return transaction("reado
  * Reads never extend lifetime. Withdrawal generations outlive evidence to guard late flights.
  */
 export function cleanObserverEvidence(days = 30, limit = 10000) { return transaction("readwrite", (store, meta) => {
+  const reviews = meta.openCursor(); reviews.onsuccess = () => { const c = reviews.result; if (!c) return;
+    if (c.key.startsWith("review:") && c.value.at < Date.now() - days * 86400000) c.delete(); c.continue();
+  };
   const r = store.index("time").openCursor(IDBKeyRange.upperBound(Date.now() - days * 86400000));
   r.onsuccess = () => {
     const c = r.result; if (c) { c.delete(); c.continue(); return; }

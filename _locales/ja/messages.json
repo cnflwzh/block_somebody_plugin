@@ -144,7 +144,7 @@
     "message": "許可リスト内のため Jev に送信しません"
   },
   "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
-    "message": "許可リストのユーザーは分析・自動ブロックされません。既存のブロックは手動で解除してください。"
+    "message": "許可リストのアカウントは対象外です。既存のブロックは別途解除してください。"
   },
   "ui_already_blocked": {
     "message": "以前からブロック済み"
@@ -2111,7 +2111,7 @@
     "message": "複数選択可。累積条件を満たすとブロックします。"
   },
   "ui_observer_beta_notice": {
-    "message": "誤判定や見逃しが発生する場合があります。"
+    "message": "ベータ版：誤検出や見逃しが発生する場合があります。"
   },
   "ui_observer_beta_contribute": {
     "message": "PR でプロンプトを改善"
@@ -2290,5 +2290,508 @@
   },
   "ui_filter_preview_error": {
     "message": "式が無効か、実行がタイムアウトしました。"
+  },
+  "ui_quick_undo": {
+    "message": "元に戻す"
+  },
+  "ui_quick_undo_count": {
+    "message": "$v0$ 件のアカウントをキューに追加しました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_done": {
+    "message": "$v0$ 件のアカウントへの操作を取り消しました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_partial": {
+    "message": "$v0$ 件の操作を取り消しました。残りは履歴をご確認ください",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_expired": {
+    "message": "取り消し期限が切れました。ブロック履歴から操作してください。"
+  },
+  "ui_quick_undo_dismiss": {
+    "message": "取り消し通知を閉じる"
+  },
+  "ui_quick_undo_preview_count": {
+    "message": "$v0$ 件の返信の削除をプレビューしました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_draft_retained": {
+    "message": "未保存の下書き"
+  },
+  "ui_discard_draft": {
+    "message": "下書きを破棄"
+  },
+  "ui_model_memory_draft": {
+    "message": "未保存"
+  },
+  "ui_check_connection": {
+    "message": "モデル接続を確認"
+  },
+  "ui_preview_animation": {
+    "message": "アニメーションをプレビュー"
+  },
+  "ui_replay_guide": {
+    "message": "設定ガイド"
+  },
+  "ui_percent_input": {
+    "message": "割合（1～100）：Enterで確定、Escでキャンセル"
+  },
+  "ui_percent_edit": {
+    "message": "クリックして割合を入力"
+  },
+  "ui_see_effect": {
+    "message": "効果を試算"
+  },
+  "ui_effect_hint": {
+    "message": "現在のモデルとプロンプトによる有効な端末内の結果だけで推計します。モデルへのリクエストやブロックは実行しません。"
+  },
+  "ui_effect_loading": {
+    "message": "端末内の結果から計算中…"
+  },
+  "ui_effect_invalid": {
+    "message": "先に設定の無効な値を修正してください。"
+  },
+  "ui_effect_unavailable": {
+    "message": "利用可能な結果がありません"
+  },
+  "ui_effect_stale": {
+    "message": "ルールが変更されています。古い下書きを破棄してから再度調整してください。"
+  },
+  "ui_effect_counts": {
+    "message": "返信$1件：一致$2件、ブロック条件を満たす返信$3件、マスク条件を満たす返信$4件。$5件の処理結果が変わります。"
+  },
+  "ui_effect_observer_counts": {
+    "message": "返信$1件：疑わしい返信$2件、累積ブロック条件を満たすアカウント$3件、マスク条件を満たす返信$4件。$5アカウントの処理結果が変わります。"
+  },
+  "ui_observer_progress": {
+    "message": "一致 $1/$2 · 元の投稿 $3/$4 · 一致率 $5%（必要な割合 $6%）"
+  },
+  "ui_pause_scope": {
+    "message": "一時停止すると、新たな分析とブロック送信が止まります。取り消しは引き続き利用でき、送信済みのリクエストは完了する場合があります。"
+  },
+  "ui_observer_cooldown": {
+    "message": "次回送信可能：$1"
+  },
+  "ui_observer_snoozed": {
+    "message": "$1まで分析を保留"
+  },
+  "ui_debug_protection_help": {
+    "message": "バックグラウンドの「ブロック禁止」保護が有効です。XページのblockSBDebugデバッグパネルで確認してください。モデルの分析には引き続き料金が発生する場合があります。"
+  },
+  "guide_skip": {
+    "message": "スキップ"
+  },
+  "guide_previous": {
+    "message": "戻る"
+  },
+  "guide_next": {
+    "message": "次へ"
+  },
+  "guide_replay": {
+    "message": "このステップを再生"
+  },
+  "ui_reply_actions": {
+    "message": "その他の操作"
+  },
+  "ui_reply_keep_one": {
+    "message": "この返信を残す"
+  },
+  "ui_reply_keep_user": {
+    "message": "この返信欄ではこのユーザーを処理しない"
+  },
+  "ui_reply_resume": {
+    "message": "自動処理を再開"
+  },
+  "ui_reply_retained": {
+    "message": "この返信欄で残すように設定しました"
+  },
+  "ui_reply_resumed": {
+    "message": "この返信欄での自動処理を再開しました"
+  },
+  "ui_filter_from_name": {
+    "message": "この表示名からルールを作成"
+  },
+  "ui_filter_from_text": {
+    "message": "この返信からルールを作成"
+  },
+  "ui_filter_from_selection": {
+    "message": "選択したテキストからルールを作成"
+  },
+  "ui_filter_seed_empty": {
+    "message": "ルールの作成に使えるテキストがありません。"
+  },
+  "ui_filter_draft_conflict": {
+    "message": "下書きを復元しましたが、別の画面でルールが変更されています。下書きを破棄してから再度編集してください。"
+  },
+  "setup_connect": {
+    "message": "モデルに接続"
+  },
+  "setup_features": {
+    "message": "機能を選択"
+  },
+  "setup_confirm": {
+    "message": "設定を確認"
+  },
+  "setup_finish": {
+    "message": "保存して使い始める"
+  },
+  "setup_connect_next": {
+    "message": "接続して次へ"
+  },
+  "setup_endpoint_model": {
+    "message": "API エンドポイントとモデル"
+  },
+  "setup_auto_observe": {
+    "message": "AI アカウントを自動検出"
+  },
+  "setup_manual_stance": {
+    "message": "元のポストの右上にある「···」から、投稿者と支持者をブロックする項目を選びます。そのポストへの返信を分析し、選んだ方針で処理します。"
+  },
+  "setup_on": {
+    "message": "オン"
+  },
+  "setup_off": {
+    "message": "オフ"
+  },
+  "setup_start": {
+    "message": "かんたん設定"
+  },
+  "setup_demo": {
+    "message": "デモ"
+  },
+  "setup_sample_reply": {
+    "message": "返信"
+  },
+  "setup_model_analysis": {
+    "message": "分析中"
+  },
+  "setup_result": {
+    "message": "分類結果"
+  },
+  "setup_sample_text": {
+    "message": "面白い視点ですね。私も試してみたいです。"
+  },
+  "setup_demo_probability": {
+    "message": "確率 96%"
+  },
+  "setup_demo_distribution": {
+    "message": "選択肢 A 96%\n選択肢 B 3%\n不明 1%"
+  },
+  "setup_demo_undo": {
+    "message": "元に戻す"
+  },
+  "setup_demo_removed": {
+    "message": "デモの返信を削除しました"
+  },
+  "setup_demo_reveal": {
+    "message": "非表示の返信を見る"
+  },
+  "setup_demo_evidence": {
+    "message": "疑わしい記録 $1/3 · デモ"
+  },
+  "setup_demo_start": {
+    "message": "投稿者と支持者をブロック"
+  },
+  "setup_demo_menu": {
+    "message": "···"
+  },
+  "setup_demo_remove": {
+    "message": "削除アニメーションを試す"
+  },
+  "setup_auto_hint": {
+    "message": "閲覧中に動作します。累積は返信を個別分析して該当件数を数え、総合は必要数を集めてからまとめて判定します。"
+  },
+  "setup_connect_description": {
+    "message": "返信の判定に使うモデルに接続します。API キーを入力して接続してください。接続済みならそのまま次へ進めます。"
+  },
+  "setup_display_description": {
+    "message": "返信にマウスを重ねると確率と操作が表示され、確率に重ねると内訳を確認できます。非表示の内容は開いて読めます。処理後は元に戻すか、右下のごみ箱から履歴を確認できます。"
+  },
+  "setup_finish_description": {
+    "message": "設定を確認して保存してください。自動検出はスイッチに従い、集団ブロックはポストのメニューから開始します。"
+  },
+  "setup_x_post": {
+    "message": "ポスト"
+  },
+  "setup_original_text": {
+    "message": "週末は公園を散歩する予定です。皆さんの予定は？"
+  },
+  "setup_other_reply": {
+    "message": "私も散歩に出かける予定です。"
+  },
+  "setup_native_block": {
+    "message": "@example をブロック"
+  },
+  "setup_threshold_note": {
+    "message": "縦線：ブロックのしきい値 92%"
+  },
+  "setup_stance_original": {
+    "message": "フォローされたら必ずフォローバックすべき。返さないのは失礼です。"
+  },
+  "setup_stance_support": {
+    "message": "その通り。相互フォローは最低限の礼儀です。返してくれない人はフォローを外します。"
+  },
+  "setup_stance_oppose": {
+    "message": "私は反対です。フォローは投稿を読みたいからするもので、お返しを義務にすべきではありません。"
+  },
+  "ui_observer_account_review": {
+    "message": "同じアカウントの返信をまとめて再判定"
+  },
+  "ui_observer_account_review_hint": {
+    "message": "任意機能です。追加のモデル呼び出しで最大5件の返信をまとめて再判定します。返信数と異なるポスト数の条件を満たし、判定に該当すればアカウントをブロックできます。1日の上限に含まれ、オフにすると再判定用の本文を削除します。"
+  },
+  "ui_observer_review_result": {
+    "message": "$1件の総合判定 · 確率 $2% · 信頼度 $3%"
+  },
+  "ui_setting_help": {
+    "message": "設定の説明"
+  },
+  "ui_clear_cache": {
+    "message": "キャッシュを削除"
+  },
+  "ui_cache_cleared": {
+    "message": "$1件のキャッシュを削除しました"
+  },
+  "help_scope": {
+    "message": "**自動観察の対象を選びます。**\n\n青い認証バッジ限定では未確認のアカウントを除外します。\n\nバッジはAI判定の根拠にはなりません。\n\n自動観察が必要です。"
+  },
+  "help_policy": {
+    "message": "**プリセットは確率と信頼度だけを変更します。**\n\nスライダーを動かすとカスタムになります。\n\n累計返信数、ポスト数、直近の該当率は変わりません。"
+  },
+  "help_suspect": {
+    "message": "**累積で返信を該当件数に数えるための疑い確率です。**\n\n個別信頼度とアカウント累計条件も必要です。\n\n総合は独立したしきい値を使います。"
+  },
+  "help_confidence": {
+    "message": "**個別分類の確信度で、分類確率とは別です。**\n\n両方を満たす必要があり、累積モードでは件数条件も必要です。\n\n総合は独立した信頼度を使います。"
+  },
+  "help_hits": {
+    "message": "**同じアカウントの該当返信が何件必要かを指定します。**\n\n異なるポスト数と直近の該当率も満たす必要があります。\n\n再読み込みやキャッシュは重複計上しません。"
+  },
+  "help_threads": {
+    "message": "**該当返信が何件の異なる元ポストに必要かを指定します。**\n\n同じスレッドは1件です。\n\n他の累計条件も必要で、高いほど厳しくなります。\n\n返信数を超える設定はできません。"
+  },
+  "help_rate": {
+    "message": "**累積専用で直近最大5件の有効判定に占める該当率です。**\n\n低信頼度と対象外の不明分類は除外し、返信数・ポスト数も必要です。"
+  },
+  "help_retention": {
+    "message": "**観察記録の保存期間です。**\n\n期限切れの記録は集計や再判定に使いませんが、ブロックは解除しません。\n\nリクエストキャッシュの30日間とは別です。"
+  },
+  "help_daily": {
+    "message": "**AI検出の実リクエスト日次上限です。**\n\n累積は個別送信ごと、総合は収集時0回・バッチ分析1回と数えます。\n\nキャッシュは除外、失敗した送信は含みます。\n\nUTC午前0時にリセットし、集団ブロックは対象外です。"
+  },
+  "help_following": {
+    "message": "**フォロー中のアカウントを除外し、状態不明の場合も保留します。**\n\nモジュールごとに設定します。\n\n許可リストは常に優先されます。"
+  },
+  "help_markers": {
+    "message": "**累積モード専用の個別確率表示です。**\n\n総合は個別分析しないため無効です。\n\n累積に戻ると以前の選択を保持します。"
+  },
+  "help_observer_mask": {
+    "message": "**累積専用です。**\n\n個別しきい値を満たした返信を等高マスクで隠します。\n\n個別判定のない総合では無効ですが、総合でブロック条件を満たせば削除アニメーションは動作します。"
+  },
+  "help_review": {
+    "message": "**自動観察と追加のモデル呼び出しが必要です。**\n\n最大5件、最低3件・2ポストをまとめ、高い累計設定も尊重します。\n\n件数設定が5を超えると実行しません。\n\n確率・信頼度・該当率を共用し、最低1時間と新規2件を空けます。\n\n日次上限に含み、オフで本文を削除します。"
+  },
+  "help_support": {
+    "message": "**手動開始した集団ブロックで、支持または選択した分類に必要な確率です。**\n\n信頼度も必要です。\n\nカスタム出力で対象が変わり、高いほど厳しくなります。"
+  },
+  "help_mask": {
+    "message": "**開始済みの集団ブロックでのみ有効です。**\n\n下限から自動ブロックしきい値未満をマスクし、上限はそのしきい値と連動します。\n\n高さを維持して開けます。\n\nブロックとは別です。"
+  },
+  "help_auto_load": {
+    "message": "**集団ブロックを手動開始した後、自動で返信を追加読み込みします。**\n\n自動でタスクを開始はしません。\n\n利用量が増える場合があり、タスクバーでオフにできます。"
+  },
+  "help_cache": {
+    "message": "**両モジュール共通のリクエストキャッシュです。**\n\n同じモデル・ルール・文脈を再利用し、30日で期限切れになります。\n\n上限超過時は古い使用順に削除します。\n\n削除しても観察記録・履歴・許可リストは残り、再リクエストには料金が発生する場合があります。"
+  },
+  "help_endpoint": {
+    "message": "**共通のJev互換APIエンドポイントです。**\n\nドメイン変更には対応キーとアクセス許可が必要で、選択モデルに対応している必要があります。\n\n保存時に検証リクエストを送ります。"
+  },
+  "help_model": {
+    "message": "**両モジュール共通のモデル名で、エンドポイントとの互換性が必要です。**\n\n変更時はキャッシュと観察記録を区別し、古いモデルの結果を新しい累計判定に混ぜません。"
+  },
+  "ui_observer_mode": {
+    "message": "判定モード"
+  },
+  "ui_mode_cumulative": {
+    "message": "累積判定"
+  },
+  "ui_mode_combined": {
+    "message": "総合判定"
+  },
+  "ui_combined_conditions": {
+    "message": "収集と判定の条件"
+  },
+  "ui_collect_replies": {
+    "message": "収集する返信数"
+  },
+  "ui_combined_probability": {
+    "message": "総合判定の疑い確率"
+  },
+  "ui_combined_ratio": {
+    "message": "必要な該当サンプル率"
+  },
+  "ui_collected_unanalysed": {
+    "message": "収集済み・個別分析なし"
+  },
+  "ui_collection_progress": {
+    "message": "収集 $1/$2件 · ポスト $3/$4件"
+  },
+  "help_observer_mode": {
+    "message": "**累積は返信を個別に分析して該当件数を数えます。**\n\n総合は必要数を収集してからまとめて分析し、個別リクエストは送りません。\n\n設定と証拠はモード間で分離します。"
+  },
+  "help_collect_replies": {
+    "message": "**総合分析前に収集する3〜5件の返信です。**\n\n個別の疑い判定は不要です。\n\n異なるポスト数の条件も必要で、累積モードの該当件数とは独立しています。"
+  },
+  "help_collect_threads": {
+    "message": "**収集対象が属する異なるポスト数です。**\n\n2〜5件で返信数を超えられません。\n\n総合モードのサンプルのみ数え、同じスレッドは1件です。"
+  },
+  "help_combined_probability": {
+    "message": "**複数返信の総合結果に必要な疑い確率です。**\n\n総合信頼度も必要です。\n\n累積の単一返信しきい値とは独立し、個別スコアは生成しません。"
+  },
+  "help_combined_confidence": {
+    "message": "**総合分類への確信度です。**\n\n総合確率と同時に満たした場合にブロックします。\n\n累積モードの信頼度とは別に保存します。"
+  },
+  "help_combined_ratio": {
+    "message": "**モデルに求める該当パターンのサンプル割合です。**\n\n3件で75%なら3件すべてが必要です。\n\n総合判定の基準であり、個別確率の平均や累積の直近該当率ではありません。"
+  },
+  "modes_title": {
+    "message": "2つの判定モードの違い"
+  },
+  "modes_intro": {
+    "message": "どちらも普段の閲覧中に動作します。返信を1件ずつ判定するか、集めてからまとめて判定するかを選べます。"
+  },
+  "modes_default": {
+    "message": "標準のモード"
+  },
+  "modes_together": {
+    "message": "集めてから分析"
+  },
+  "modes_cumulative": {
+    "message": "**返信を見かけるたびに、1件ずつ判定します。**\n\n同じアカウントの疑わしい返信が増え、件数・元ポスト数・直近の割合が設定を満たすと、ブロック待ちに追加します。"
+  },
+  "modes_combined": {
+    "message": "**まず返信を集め、必要な件数に達したらまとめて判定します。**\n\n閲覧中に見かけた返信だけが対象です。プロフィールへ移動して収集することはありません。収集中は Jev を呼び出さず、返信ごとのスコアも付けません。"
+  },
+  "modes_c1": {
+    "message": "返信を見かける → 個別に分析"
+  },
+  "modes_c2": {
+    "message": "疑わしい返信の件数・元ポスト数が条件を満たす"
+  },
+  "modes_c3": {
+    "message": "直近の割合も条件を満たす → ブロック待ちに追加"
+  },
+  "modes_b1": {
+    "message": "返信を見かける → 端末に保存"
+  },
+  "modes_b2": {
+    "message": "返信数・元ポスト数がそろう → まとめて分析"
+  },
+  "modes_b3": {
+    "message": "全体の確率・確信度が条件を満たす → ブロック待ちに追加"
+  },
+  "modes_try": {
+    "message": "動きを試してみる"
+  },
+  "modes_demo_intro": {
+    "message": "同じ人の返信を、元ポスト A・B・C で1件ずつ見かけた場合です。2つのモードを並べて比較できます。"
+  },
+  "modes_scenario": {
+    "message": "例を選ぶ"
+  },
+  "modes_suspicious": {
+    "message": "3件とも疑わしい"
+  },
+  "modes_mixed": {
+    "message": "1件は普通のやり取り"
+  },
+  "modes_next": {
+    "message": "次の返信を見かける"
+  },
+  "modes_reset": {
+    "message": "最初から"
+  },
+  "modes_demo_note": {
+    "message": "固定の例：返信3件、元ポスト3件、確率90%、確信度80%、割合75%。スコアは説明用です。モデルへの送信、ブロック、設定変更は行いません。"
+  },
+  "modes_requests": {
+    "message": "回の分析リクエスト"
+  },
+  "modes_read_settings": {
+    "message": "設定の数字の意味"
+  },
+  "modes_counts_title": {
+    "message": "「返信3件・元ポスト3件」とは？"
+  },
+  "modes_counts": {
+    "message": "**累積判定：疑わしい返信を数えます。** 条件に合う返信3件が、異なる元ポスト3件に必要です。直近の割合も条件を満たす必要があります。\n\n**総合判定：集めた返信を数えます。** 事前に疑わしいと判定する必要はありません。返信3件と元ポスト3件がそろってから分析します。\n\n同じスレッド内の返信は元ポスト1件として数えます。再読み込みしても同じ返信は重複カウントしません。"
+  },
+  "modes_scores_title": {
+    "message": "確率・確信度・割合の違い"
+  },
+  "modes_scores": {
+    "message": "**確率：ブロック対象の内容にどれほど当てはまるか。**\n\n**確信度：モデルが分類にどれほど自信を持っているか。** 両方が設定値を満たす必要があります。\n\n**累積の割合：直近最大5件の有効な判定のうち、疑わしい返信の割合。** 4件中3件なら75%。確かな判断ができないものは除外します。\n\n**総合の割合：疑わしい特徴が何件のサンプルに見られるべきか。** 3件の75%は切り上げて3件です。個別スコアの平均ではありません。"
+  },
+  "modes_marks_title": {
+    "message": "総合モードで個別の確率が出ない理由"
+  },
+  "modes_marks": {
+    "message": "**個別に分析しないため、個別スコアはありません。** 判定マークと事前マスクは利用できません。\n\n全体の判定がブロック条件を満たすと、削除アニメーションとバックグラウンド処理は通常どおり動きます。累積に戻すと、マークとマスクの以前の選択が復元されます。"
+  },
+  "modes_cost_title": {
+    "message": "リクエストが少ないのは？"
+  },
+  "modes_cost": {
+    "message": "**累積：対象の返信を1件ずつ分析します。**\n\n**総合：収集中は0回、そろったらまとめて1回。** 1回に含む文章が長いため、料金が回数に比例して減るとは限りません。\n\n同一リクエストはキャッシュを利用できます。同じアカウントを再分析するには、1時間以上の間隔と新しい返信2件が必要です。両モードとも1日の上限が適用されます。"
+  },
+  "modes_shared": {
+    "message": "**自動観察をオンにしてください。** 許可リストと有効なフォロー保護が適用され、公式 @grok は対象外です。期限切れの返信は集計されず、モード変更前の判定は混ぜません。\n\n確率はモデルの判断であり、投稿者の正体を証明するものではありません。"
+  },
+  "modes_reply": {
+    "message": "返信 $1 · 元ポスト $2"
+  },
+  "modes_reply_score": {
+    "message": "累積モードの例：確率 $1%、確信度90%"
+  },
+  "modes_unseen": {
+    "message": "まだ見かけていません"
+  },
+  "modes_hit_progress": {
+    "message": "疑わしい返信 $1/3件 · 元ポスト $2/3件"
+  },
+  "modes_collect_progress": {
+    "message": "収集済み $1/3件 · 元ポスト $2/3件"
+  },
+  "modes_queued": {
+    "message": "条件達成 → ブロック待ちに追加"
+  },
+  "modes_wait_hits": {
+    "message": "観察を継続：疑わしい返信が不足"
+  },
+  "modes_batch_no": {
+    "message": "全体の確率42%・確信度90% → ブロックしない"
+  },
+  "modes_batch_yes": {
+    "message": "全体の確率96%・確信度90% → ブロック待ちに追加"
+  },
+  "modes_wait_collect": {
+    "message": "収集中：モデルへの送信なし"
   }
 }

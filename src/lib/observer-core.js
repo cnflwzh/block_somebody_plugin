@@ -3,15 +3,17 @@ import { RULE_VARIABLES, normalizeRule, expandRuleTemplate } from "./choice-rule
 const { t } = globalThis.BlockSBI18n;
 /** Independent observer policy. Blue verification selects scope, never increases a score. */
 export const OBSERVER_VERSION = "observer-v1";
-export const OBSERVER_DEFAULTS = Object.freeze({ enabled: false, scope: "blue", minHits: 3, minThreads: 2, hitRate: 0.75, retentionDays: 30, dailyLimit: 200, skipFollowing: true, showMarkers: false, mask: false, preset: "careful", threshold: 0.9, confidence: 0.8, prompt: "", analysisRule: null });
+export const OBSERVER_DEFAULTS = Object.freeze({ enabled: false, mode: "cumulative", reviewMinReplies: 3, reviewMinThreads: 3, reviewThreshold: 0.9, reviewConfidence: 0.8, reviewHitRate: 0.75, scope: "blue", minHits: 3, minThreads: 3, hitRate: 0.75, retentionDays: 30, dailyLimit: 200, skipFollowing: true, showMarkers: false, mask: false, preset: "careful", threshold: 0.9, confidence: 0.8, prompt: "", analysisRule: null });
 // Presets adjust single-reply evidence only; cumulative account conditions stay independent.
 export const OBSERVER_PRESETS = Object.freeze({ careful: Object.freeze({ threshold: 0.9, confidence: 0.8 }), balanced: Object.freeze({ threshold: 0.85, confidence: 0.75 }), active: Object.freeze({ threshold: 0.8, confidence: 0.7 }) });
 // General guidance stays in instructions; category-specific boundaries live in criteria.
-export const OBSERVER_PROMPT = `判断当前评论是否疑似AI代写，原帖与父回复仅作语境。切题、有用也可能是AI。不要依据账号、观点或单一文体判断；条列、术语、礼貌不证明AI，口语、错字、经历不证明真人。`;
+export const OBSERVER_PROMPT = "判断当前回复是否疑似AI代写，依据生成式语言组织和交互行为，不是评价内容质量，也不需要证明作者身份。优先识别被包装成口语、专业建议或精炼点评的AI内容。原帖与父回复仅作语境；未读媒体可能含评论引用的信息，不据此判编造。";
 export const OBSERVER_CRITERIA = Object.freeze({
-  "ai_generated": "疑似AI生成：有组合生成证据：通用助手式重述、均衡展开和总结；泛泛赞同后升华；无必要百科解释与服务式追问；误读调侃而机械纠错。切题不豁免，但专业格式、人工模板或摘录本身不足以归因。",
-  "human_like": "更像自然交流：自然参与具体交流、表达立场或经验，无明显组合生成证据；不是身份认证。",
-  "uncertain": "来源不明：AI与人工解释同样合理，或文本太短、通用、引用、翻译、缺少语境。不要仅因工整专业而判AI，也不要因来源不可证明而一律不确定。"
+  // Evaluate conversational structure, including concise technical replies; factual detail
+  // and informal punctuation must not automatically push the result toward human_like.
+  "ai_generated": "疑似AI生成：判断生成式表达结构，不要求回复空洞或出错。重点识别：①把原帖信息压缩成一篇点评稿：密集复用数字/术语，以“不是A而是B”或对照短句提炼关键，再接确定性建议/引导追问；即使无标点、像口语，也可能是生成式摘要。②像随叫随到的咨询助手：复述问题、拆分变量、给验证流程，再索要数据或表示可以继续帮助。③先承认偏题，再改述用户目标，用二选一澄清把对话接回服务流程。④泛泛赞同后升华、百科式展开、机械纠正调侃。以上任一完整模式都可构成生成迹象，不要求几种模式同时出现。不因简短、无标点或信息准确而降低判断。尤其注意把多个数字浓缩成对照短句和一句建议的微型点评稿。",
+  "human_like": "更像自然交流：自然接话、直接反应、具体追问或纠正，重点落在交流中的某一处，而非重新包装整段内容、抽象升华或完成一套咨询流程。专业、有用、数字准确、口语化或自称有经验不算真人证据；有明显生成式组织时应选择AI类。",
+  "uncertain": "来源不明：文本极短、信息不足以判断，或主要是直接引用。若整体已呈现完整生成式点评或助手服务模式，不应仅因无法证明来源而归入不明。"
 });
 const suspect = new Set(["ai_generated"]);
 /** Return whether a target handle is the allowed platform AI; display names never grant exemption. */
@@ -50,8 +52,11 @@ export function observerSuspicious(entry, config, options = getObserverRule(conf
 
 /** Normalize a partial policy, rejecting invalid input rather than silently weakening guards. */
 export function normalizeObserverSettings(value = {}, current = OBSERVER_DEFAULTS) {
-  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some(k => !Object.hasOwn(OBSERVER_DEFAULTS, k))) throw new Error(t("observer_error_settings"));
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some(k => k !== "accountReview" && !Object.hasOwn(OBSERVER_DEFAULTS, k))) throw new Error(t("observer_error_settings"));
   const next = { ...OBSERVER_DEFAULTS, ...current };
+  // Retired optional-review flags never silently opt users into a new charging mode.
+  delete next.accountReview;
+  if (value.mode !== undefined) { if (!["cumulative", "combined"].includes(value.mode)) throw new Error(t("observer_error_settings")); next.mode = value.mode; }
   if (value.preset !== undefined) {
     if (!["careful", "balanced", "active", "custom"].includes(value.preset)) throw new Error(t("observer_error_settings"));
     next.preset = value.preset;
@@ -62,11 +67,12 @@ export function normalizeObserverSettings(value = {}, current = OBSERVER_DEFAULT
     next[field] = value[field];
   }
   if (value.scope !== undefined) { if (!["blue", "all"].includes(value.scope)) throw new Error(t("observer_error_settings")); next.scope = value.scope; }
-  for (const [field, min, max] of [["minHits", 2, 100], ["minThreads", 1, 100], ["retentionDays", 1, 90], ["dailyLimit", 1, 10000], ["hitRate", 0.5, 1], ["threshold", 0.01, 1], ["confidence", 0.01, 1]]) if (value[field] !== undefined) {
+  for (const [field, min, max] of [["reviewMinReplies", 3, 5], ["reviewMinThreads", 2, 5], ["reviewThreshold", 0.01, 1], ["reviewConfidence", 0.01, 1], ["reviewHitRate", 0.5, 1], ["minHits", 2, 100], ["minThreads", 1, 100], ["retentionDays", 1, 90], ["dailyLimit", 1, 10000], ["hitRate", 0.5, 1], ["threshold", 0.01, 1], ["confidence", 0.01, 1]]) if (value[field] !== undefined) {
     const n = value[field];
     if (typeof n !== "number" || !Number.isFinite(n) || n < min || n > max || (max > 1 && !Number.isInteger(n))) throw new Error(t("observer_error_settings"));
     next[field] = n;
   }
+  if (next.reviewMinThreads > next.reviewMinReplies) throw new Error(t("observer_error_threads"));
   if (next.minThreads > next.minHits) throw new Error(t("observer_error_threads"));
   if (value.prompt !== undefined) { if (typeof value.prompt !== "string" || value.prompt.length > 12000) throw new Error(t("observer_error_prompt")); next.prompt = value.prompt.trim(); }
   if (value.analysisRule !== undefined) next.analysisRule = value.analysisRule === null ? null : normalizeObserverRule(value.analysisRule);

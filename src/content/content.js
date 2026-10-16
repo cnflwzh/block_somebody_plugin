@@ -18,22 +18,25 @@
   function dispose() {
     if (invalidated) return;
     invalidated = true; listeners.abort(); pageObserver?.disconnect(); clearInterval(pollTimer);
-    for (const handle of [timer, refreshTimer, probabilityHideTimer, toastTimer]) clearTimeout(handle);
+    for (const handle of [timer, refreshTimer, probabilityHideTimer, toastTimer, undoTimer]) clearTimeout(handle);
+    stopReadingAnchor();
     observerEpoch++; nameEpoch++;
-    hideProbabilityPanel(); menuTarget = null; menuTrigger = null;
+    hideProbabilityPanel(); hideReplyMenu(); menuTarget = null; menuTrigger = null;
     for (const article of new Set([...movingRows, ...document.querySelectorAll(".blocksb-removed,.blocksb-exiting,.blocksb-masked,.blocksb-folded")])) { clearMask(article); restore(article); }
-    document.querySelectorAll(".blocksb-comment-tools,.blocksb-observer-marker,.blocksb-menu-item").forEach(node => node.remove());
-    drawerOpen = false; iframe.removeAttribute("src"); host.remove(); delete document.documentElement.dataset.blocksbTheme;
+    document.querySelectorAll(".blocksb-comment-tools,.blocksb-comment-actions,.blocksb-observer-marker,.blocksb-menu-item").forEach(node => node.remove());
+    drawerOpen = false; iframe.removeAttribute("src"); host.remove(); stopReadingAnchor(); pointerArticle = null; delete document.documentElement.dataset.blocksbTheme;
     try { chrome.runtime.onMessage.removeListener(onStateChanged); } catch { /* Already detached by Chrome. */ }
   }
   let locale = globalThis.BlockSBI18n.locale;
   const metadata = new Map(), busy = new Set(), skipped = new Map(), rowState = new WeakMap(), manualPending = new Set();
+  const analysisRetries = new Map();
   const contextPosts = new Map(), savedContext = new Map(), requestedContext = new Set();
   let contextFlight = null, contextRetryAt = 0, contextError = "";
   let contextRevision = 0, syncedContextRevision = -1;
   let scanPosts = null, scanRects = null;
   const maskState = new WeakMap(), revealedMasks = new Set();
   const timelineState = new Map();
+  const keptReplies = new Set(), keptUsers = new Set();
   const whiteHandles = new Set(), whiteIds = new Set(), historyHandles = new Map(), historyIds = new Map();
   const followingUsers = new Map();
   let followingAccount = "";
@@ -57,6 +60,10 @@
   const openedSpam = new WeakSet();
   let state = null, menuTarget = null, menuTrigger = null, timer, refreshTimer, refreshing = false, refreshAgain = false, lastLocation = "", sessionId = "", failure = "", drawerOpen = false;
   let locationSending = false, locationRetryAt = 0, locationError = "";
+  let readingAnchor = null, anchorFrame = 0, anchorSettling = 0, anchorResize = null;
+  let readingPauseUntil = 0, pointerArticle = null;
+  let previewUndo = null;
+  let undoTimer, dismissedUndoToken = "", undoBusy = false;
   let themeReadAt = 0, dockReadAt = 0, dockSignature = "";
   let drawerTab = "";
   const setText = (node, value) => { const text = String(value); if (node.textContent !== text) node.textContent = text; };
@@ -77,14 +84,15 @@
   }
   const followingStatus = p => followingObservation(p)?.following ?? null;
   const skipFollowing = p => state?.settings.skipFollowing && followingStatus(p) !== false;
+  const kept = p => { const prefix = `${viewer()}:${route() || p.conversationId}:`; return keptReplies.has(prefix + p.id) || keptUsers.has(prefix + (p.userId || p.handle)); };
   const observerSurface = () => !!route() || /^\/home\/?$/.test(location.pathname);
   const nameEnabled = () => !!state?.settings.filterRules?.some(r => r.enabled) && observerSurface() && state.account === viewer();
   // Filter first, then allow model analysis only for replies that did not match.
   const nameMatches = p => nameEnabled() && !nameProtected(p) && ((nameResults.get(p.id)?.pendingUntil || 0) > Date.now()
     || nameAuthorization(p) || !!route() && !!nameContext(p) && nameResults.get(p.id)?.result?.action === "mask");
-  const nameProtected = p => white(p) || p.handle === viewer() || p.handle?.toLowerCase() === "grok" || followingStatus(p) !== false;
+  const nameProtected = p => kept(p) || white(p) || p.handle === viewer() || p.handle?.toLowerCase() === "grok" || followingStatus(p) !== false;
   const observerEnabled = () => !!state?.settings.observer?.enabled && observerSurface() && state.account === viewer();
-  const observerProtected = p => p.handle?.toLowerCase() === "grok" || white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
+  const observerProtected = p => kept(p) || p.handle?.toLowerCase() === "grok" || white(p) || p.handle === viewer() || !!(state?.settings.observer?.skipFollowing && followingStatus(p) !== false);
   const hasDecision = p => {
     const result = state?.session?.results[p.id];
     return result && (result.error || !state.decisionVersion || result.decisionVersion === state.decisionVersion);
@@ -104,6 +112,11 @@
     if (state.session?.dryRun) for (const [postId, result] of Object.entries(state.session.results)) {
       if (result.dryRun && result.action === "block" && result.handle) simulatedHandles.set(result.handle,
         { id: `debug:${state.session.id}:${postId}`, status: "blocked", rootId: state.session.root.id, updated: result.simulatedAt || Date.now() });
+    }
+    keptReplies.clear(); keptUsers.clear();
+    for (const e of state.contentExceptions || []) if (e.account === viewer() && e.expires > Date.now()) {
+      const prefix = `${e.account}:${e.rootId}:`;
+      if (e.scope === "reply") keptReplies.add(prefix + e.replyId); else keptUsers.add(prefix + (e.userId || e.handle));
     }
     whiteHandles.clear(); whiteIds.clear(); historyHandles.clear(); historyIds.clear(); observerHistory.clear(); nameHistory.clear();
     for (const w of state.whitelist) { whiteHandles.add(w.handle); if (w.userId) whiteIds.add(w.userId); }
@@ -245,7 +258,56 @@
   probabilityPanel.setAttribute("role", "tooltip"); probabilityPanel.setAttribute("aria-label", t("ui_probabilities_by_option"));
   const probabilityDetails = new WeakMap();
   let probabilityAnchor = null, probabilityHideTimer, probabilitySignature = "";
-  shadow.append(trash, status, backdrop, drawer, toastEl, probabilityPanel); document.body.append(host);
+  const undoBar = element("div", "quick-undo"); undoBar.hidden = true; undoBar.setAttribute("role", "status");
+  const undoText = element("span");
+  const undoButton = button(t("ui_quick_undo"), async () => {
+    const grant = previewUndo || state?.quickUndo, account = viewer();
+    if (undoBusy || !grant || grant.expires <= Date.now() || state.account !== account) return;
+    if (grant === previewUndo) {
+      const count = grant.count; resetDebugPreview(); schedule(); toast(t("ui_quick_undo_done", count)); return;
+    }
+    undoBusy = true; undoButton.disabled = true;
+    try {
+      const result = await send("QUICK_UNDO", { account, token: grant.token, count: grant.count });
+      dismissedUndoToken = grant.token; undoBar.hidden = true;
+      await refresh(); schedule();
+      toast(t(result.skipped ? "ui_quick_undo_partial" : "ui_quick_undo_done", result.count));
+    } catch (error) { toast(error.message); }
+    finally { undoBusy = false; undoButton.disabled = false; }
+  });
+  const undoDismiss = button("×", () => { dismissedUndoToken = (previewUndo || state?.quickUndo)?.token || ""; undoBar.hidden = true; });
+  undoDismiss.setAttribute("aria-label", t("ui_quick_undo_dismiss")); undoBar.append(undoText, undoButton, undoDismiss);
+  const replyMenu = element("div", "reply-actions-menu"); replyMenu.hidden = true; replyMenu.setAttribute("role", "menu");
+  let replyMenuAnchor = null;
+  function hideReplyMenu() { replyMenuAnchor?.setAttribute("aria-expanded", "false"); replyMenuAnchor = null; replyMenu.hidden = true; replyMenu.replaceChildren(); }
+  function openReplyMenu(article, anchor, selectedText = "") {
+    const post = readPost(article), rootId = route();
+    if (!post || !rootId || post.id === rootId) return;
+    const root = contextFor(rootId), chain = root && ancestors(post, root);
+    if (!root || !chain) return;
+    const context = { root, ancestors: chain };
+    hideReplyMenu(); replyMenuAnchor = anchor; anchor.setAttribute("aria-expanded", "true");
+    const account = viewer();
+    const add = (key, action) => { const b = button(t(key), async () => {
+      if (viewer() !== account || route() !== rootId || readPost(article)?.id !== post.id) { hideReplyMenu(); return; }
+      hideReplyMenu(); await action();
+    }); b.setAttribute("role", "menuitem"); replyMenu.append(b); };
+    const retain = scope => async () => {
+      await send("KEEP_CONTENT", { account, rootId, reply: post, scope, ...context });
+      await refresh(); schedule(); toast(t(scope === "clear" ? "ui_reply_resumed" : "ui_reply_retained"));
+    };
+    if (kept(post)) add("ui_reply_resume", retain("clear"));
+    else { add("ui_reply_keep_one", retain("reply")); add("ui_reply_keep_user", retain("thread-user")); }
+    add("ui_add_to_allowlist", async () => { await send("WHITELIST_ADD", post); await refresh(); });
+    add("ui_filter_from_name", () => send("OPEN_FILTER_FROM_REPLY", { account, rootId, reply: post, field: "name", ...context }));
+    add(selectedText ? "ui_filter_from_selection" : "ui_filter_from_text", () => send("OPEN_FILTER_FROM_REPLY", { account, rootId, reply: post, field: "text", value: selectedText || post.text, ...context }));
+    replyMenu.hidden = false;
+    const r = anchor.getBoundingClientRect();
+    replyMenu.style.left = `${Math.max(8, Math.min(r.left, innerWidth - replyMenu.offsetWidth - 8))}px`;
+    replyMenu.style.top = `${Math.max(8, Math.min(r.bottom + 6, innerHeight - replyMenu.offsetHeight - 8))}px`;
+    replyMenu.firstElementChild?.focus();
+  }
+  shadow.append(trash, status, backdrop, drawer, toastEl, probabilityPanel, undoBar, replyMenu); document.body.append(host);
   const debugPanel = element("section", "debug-panel"); debugPanel.hidden = true;
   debugPanel.setAttribute("aria-label", t("ui_debug_panel"));
   const debugHeading = element("div", "debug-heading");
@@ -303,6 +365,7 @@
     finally { debugBusy = false; renderDebugPanel(); schedule(); }
   }
   function resetDebugPreview() {
+    previewUndo = null; undoBar.hidden = true; clearTimeout(undoTimer);
     debugRows.clear();
     for (const article of new Set([...movingRows, ...document.querySelectorAll(".blocksb-removed,.blocksb-exiting")])) if (rowState.get(article)?.debug) restore(article);
   }
@@ -314,7 +377,7 @@
         && (postId ? p.id === postId : r.bottom > 0 && r.top < innerHeight);
     });
     const post = article && readPost(article);
-    if (post) { debugRows.set(post.id, post.handle); while (debugRows.size > 1000) debugRows.delete(debugRows.keys().next().value); updateOverlay(); removeCard(article, post, true, true); }
+    if (post) { debugRows.set(post.id, post.handle); while (debugRows.size > 1000) debugRows.delete(debugRows.keys().next().value); updateOverlay(); removeCard(article, post, true, true); previewUndo = { token: `preview:${Date.now()}`, count: debugRows.size, expires: Date.now() + 15000 }; renderQuickUndo(); }
     else toast(t("ui_block_s_b_no_reply_to_preview_scroll_to_the"));
   }
   let probabilityFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
@@ -419,6 +482,23 @@
   listen(document, "pointerdown", e => { if (e.target !== probabilityAnchor && !e.composedPath().includes(host)) hideProbabilityPanel(); }, true);
   listen(document, "visibilitychange", () => { if (document.hidden) hideProbabilityPanel(); else { schedule(); void refresh(); } });
   let toastTimer;
+  replyMenu.addEventListener("keydown", event => {
+    if (event.key === "Escape") { const anchor = replyMenuAnchor; hideReplyMenu(); anchor?.focus(); event.preventDefault(); }
+    if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+      const buttons = [...replyMenu.querySelectorAll("button")], index = buttons.indexOf(shadow.activeElement);
+      buttons[(index + (event.key === "ArrowDown" ? 1 : buttons.length - 1)) % buttons.length]?.focus(); event.preventDefault();
+    }
+  });
+  listen(document, "pointerdown", event => { if (event.isTrusted && event.target !== host && !event.target.closest?.(".blocksb-more-button")) hideReplyMenu(); }, true);
+  function renderQuickUndo() {
+    clearTimeout(undoTimer);
+    const grant = previewUndo || state?.quickUndo;
+    undoBar.hidden = !grant || grant.token === dismissedUndoToken || grant.expires <= Date.now() || state.account !== viewer();
+    if (undoBar.hidden) return;
+    setText(undoText, t(grant === previewUndo ? "ui_quick_undo_preview_count" : "ui_quick_undo_count", grant.count));
+    setText(undoButton, t("ui_quick_undo"));
+    undoTimer = setTimeout(() => { undoBar.hidden = true; }, Math.max(0, grant.expires - Date.now()));
+  }
   function toast(text) { if (invalidated) return; toastEl.textContent = String(text); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, 6000); }
   function openDrawer(tab) {
     if (!contextAlive()) return;
@@ -570,6 +650,7 @@
     } else if (!observerContext(post)) return null;
     const decision = observerDecision(post), history = observerHistory.get(post.userId);
     if (history) {
+      if (history.undoRequested) return null;
       if (isBlocked(history) || ["pending", "running"].includes(history.status) && !history.waitingFollowing) return history;
       // Undo, cancellation and failures override a stale reply classification.
       return null;
@@ -635,7 +716,7 @@
   function nameAuthorization(post) {
     if (!nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
     const h = nameHistory.get(post.userId), local = nameResults.get(post.id)?.result;
-    if (h) return (h.nameRootIds || [h.rootId]).includes(nameContext(post).root.id) && h.nameOwner && !h.nameRuleWithdrawn && (isBlocked(h) || ["pending", "running"].includes(h.status)) ? h : null;
+    if (h) return !h.undoRequested && (h.nameRootIds || [h.rootId]).includes(nameContext(post).root.id) && h.nameOwner && !h.nameRuleWithdrawn && (isBlocked(h) || ["pending", "running"].includes(h.status)) ? h : null;
     // Real removals require the current history authorization. A cached enqueue reply
     // must not resurrect a withdrawn block after its history record is cleared.
     return local?.status === "simulated" && state.settings.debugDryRun ? local : null;
@@ -690,6 +771,10 @@
       return;
     }
   }
+  function analysisHandledOnPage(post) {
+    const h = historyFor(post);
+    return h && ["pending", "running", "submitted", "blocked", "preexisting", "undo_pending", "undo_running", "uncertain"].includes(h.status);
+  }
   function scanObserver(rows) {
     if (!observerEnabled()) return;
     const config = state.settings.observer, account = viewer(), now = Date.now();
@@ -706,7 +791,7 @@
     if (syncObserverRelationships()) return;
     if (observerFlight || document.hidden || animationDebug || debugBusy || state.settings.paused || state.modelError || !state.settings.configured) return;
     for (const post of candidates) {
-      if (nameMatches(post) || !observerLoaded.has(post.id) || observerDecision(post) || observerProtected(post)
+      if (analysisHandledOnPage(post) || nameMatches(post) || !observerLoaded.has(post.id) || observerDecision(post) || observerProtected(post)
         || config.scope === "blue" && post.blueVerified !== true || (observerRetries.get(post.id) || 0) > now
         || observerRemoval(post)) continue;
       const context = observerContext(post);
@@ -719,7 +804,7 @@
       observerFlight = token;
       send("OBSERVE_REPLY", { account, root: context.root, reply, ancestors: context.ancestors }).then(result => {
         if (epoch !== observerEpoch || account !== viewer()) return;
-        if (result?.action === "skip") observerRetries.set(post.id, ["withdrawn", "previous-error"].includes(result.why) ? Infinity : Date.now() + (result.why === "daily-limit" ? 300000 : 30000));
+        if (result?.action === "skip") observerRetries.set(post.id, ["withdrawn", "previous-error"].includes(result.why) ? Infinity : Date.now() + (result.why === "daily-limit" ? 300000 : result.why === "account-cooldown" ? 60000 : 30000));
         else if (result?.replyId === post.id) { observerDecisions.set(post.id, result); indexObserverSimulations(); observerReload = true; }
         while (observerRetries.size > 2500) observerRetries.delete(observerRetries.keys().next().value);
         schedule();
@@ -735,7 +820,7 @@
   function observerMarker(article, post) {
     let marker = article.querySelector(".blocksb-observer-marker");
     const decision = observerDecision(post);
-    if (!observerEnabled() || observerProtected(post) || !state.settings.observer.showMarkers || !decision || !Number.isFinite(decision.spamScore)) { marker?.remove(); return; }
+    if (!observerEnabled() || observerProtected(post) || state.settings.observer.mode === "combined" || !state.settings.observer.showMarkers || !decision || !Number.isFinite(decision.spamScore)) { marker?.remove(); return; }
     const date = (article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time"))?.closest("a");
     if (!date) { marker?.remove(); return; }
     if (!marker) { marker = probabilityBadge("blocksb-observer-marker"); date.after(marker); }
@@ -751,7 +836,7 @@
   }
   function observerMask(article, post) {
     const decision = observerDecision(post), key = `observer:${viewer()}:${post.id}`;
-    if (!observerEnabled() || observerProtected(post) || !state.settings.observer.mask || !decision?.suspicious
+    if (!observerEnabled() || observerProtected(post) || state.settings.observer.mode === "combined" || !state.settings.observer.mask || !decision?.suspicious
       || !observerContext(post) || revealedMasks.has(key) || ["cancelled", "unblocked"].includes(decision.status)) return false;
     applyMask(article, key, t("observer_content_mask", Math.round((decision.spamScore ?? decision.score) * 100)), "observer");
     return true;
@@ -822,6 +907,7 @@
     clearMask(article);
     const info = rowState.get(article);
     if (!info) return;
+    const release = holdScrollAnchor(article);
     info.cancelled = true;
     releaseRowResources(info);
     if (info.opacity && article.style.getPropertyValue("opacity") === "0") {
@@ -839,7 +925,7 @@
     article.querySelector(":scope > .blocksb-foldbar")?.remove();
     info.cell?.classList.remove("blocksb-empty-cell");
     rowState.delete(article);
-    movingRows.delete(article);
+    movingRows.delete(article); release();
   }
   /** Restore interactivity without changing the original elements' size or display properties. */
   function clearMask(article) {
@@ -853,7 +939,7 @@
   /** Cover the existing card in-place; no folding, height animation or virtual-list offset changes. */
   function maskCard(article, post, decision) {
     const key = `${state.session?.id}:${post.id}`;
-    const eligible = threadEnabled() && pageReady && state.settings.maskEnabled && post.id !== route()
+    const eligible = !kept(post) && threadEnabled() && pageReady && state.settings.maskEnabled && post.id !== route()
       && post.handle !== viewer() && !white(post) && !skipFollowing(post) && !state.session.excluded.includes(post.handle)
       && Number.isFinite(decision?.support) && (decision.customRule ? decision.matched : !["oppose", "neutral"].includes(decision.label))
       && decision.support >= state.settings.maskThreshold && decision.support < state.settings.high
@@ -867,6 +953,7 @@
    * agreement tasks from restoring each other's still-active visual treatment.
    */
   function applyMask(article, key, label, module) {
+    if (!maskState.has(article) && readingInteraction(article)) return;
     if (maskState.get(article)?.key !== key) clearMask(article);
     let info = maskState.get(article);
     if (!info) {
@@ -876,7 +963,7 @@
         revealedMasks.add(key);
         while (revealedMasks.size > 2500) revealedMasks.delete(revealedMasks.values().next().value);
         clearMask(article);
-      }, "blocksb-mask-reveal"));
+      }, "blocksb-mask-reveal"), button(t("ui_reply_actions"), event => openReplyMenu(article, event.currentTarget), "blocksb-more-button"));
       // Do not let the article's navigation handler receive clicks through the mask.
       cover.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); });
       info = { key, cover, children: new Map(), module };
@@ -893,6 +980,20 @@
       info.children.set(child, child.inert); child.inert = true;
     }
     if (!info.cover.isConnected) article.append(info.cover);
+  }
+  /** A compact contextual menu is available for active modules, including masked replies. */
+  function replyTools(article, post) {
+    let tools = article.querySelector(".blocksb-comment-actions");
+    if (!route() || post.id === route() || !(featureEnabled() || observerEnabled() || nameEnabled())) { tools?.remove(); return; }
+    if (tools?.dataset.postId !== post.id) { tools?.remove(); tools = null; }
+    if (tools) return;
+    const date = article.querySelector("time")?.closest("a"); if (!date) return;
+    tools = element("span", "blocksb-comment-actions"); tools.dataset.postId = post.id;
+    let selected = "";
+    const more = button("⋯", event => openReplyMenu(article, event.currentTarget, selected), "blocksb-more-button");
+    more.setAttribute("aria-label", t("ui_reply_actions")); more.setAttribute("aria-haspopup", "menu"); more.setAttribute("aria-expanded", "false");
+    more.addEventListener("pointerdown", event => { if (!event.isTrusted) return; const selection = document.getSelection(); selected = selection && article.contains(selection.anchorNode) && article.contains(selection.focusNode) ? selection.toString().trim().slice(0, 512) : ""; });
+    tools.append(more); (article.querySelector(".blocksb-comment-tools") || date).after(tools);
   }
   /** Add stable, single-line controls beside this card's own date. Missing scores are never zeroes. */
   function commentTools(article, post, decision, history, rootId) {
@@ -920,7 +1021,7 @@
       date.after(tools);
     } else if (date.nextElementSibling !== tools) date.after(tools);
     const followingProtected = skipFollowing(post);
-    const protectedUser = white(post) || followingProtected, self = post.handle === viewer();
+    const protectedUser = kept(post) || white(post) || followingProtected, self = post.handle === viewer();
     const scoreName = state.settings.customRule ? t("match_probability") : t("agreement_probability");
     const score = !protectedUser && decision?.error ? t("ui_invalid_analysis_result") : !protectedUser && Number.isFinite(decision?.support) ? `${scoreName} ${Math.round(decision.support * 100)}%` : `${scoreName} —`;
     const badge = tools.firstElementChild, control = tools.lastElementChild;
@@ -928,7 +1029,7 @@
     const s = state.session;
     const categoryName = decision && !decision.customRule && ["support", "oppose", "neutral", "uncertain"].includes(decision.label)
       ? t(`category_${decision.label}`) : decision?.labelName || decision?.label;
-    const explanation = white(post) ? t("ui_allowlisted_not_sent_to_jev") : followingProtected ? t(followingStatus(post) === true ? "ui_following_skipped" : "ui_following_unknown") : self ? t("ui_your_own_reply_not_analyzed")
+    const explanation = kept(post) ? t("ui_reply_retained") : white(post) ? t("ui_allowlisted_not_sent_to_jev") : followingProtected ? t(followingStatus(post) === true ? "ui_following_skipped" : "ui_following_unknown") : self ? t("ui_your_own_reply_not_analyzed")
       : decision?.error ? t("ui_reply_kept_no_automatic_retry_in_this_task", String(decision.error))
       : decision ? t("ui_confidence_2", categoryName, Math.round(decision.confidence * 100), decision.blockReasons?.length ? t("ui_not_auto_blocked", decision.blockReasons.join(locale.startsWith("zh") ? "；" : "; ")) : "", history?.status === "failed" ? t("ui_block_submission_failed_check_the_trash") : "")
       : post.handle === s.root.handle ? t("ui_original_author_blocked_by_this_task")
@@ -948,25 +1049,78 @@
     if (control.textContent !== label) control.textContent = label;
     control.hidden = followingProtected;
     control.disabled = !!(pending || protectedUser || self || isBlocked(history));
-    control.title = protectedUser ? t("ui_this_user_is_allowlisted") : self ? t("ui_you_cannot_block_yourself") : t("ui_block_and_remove_their_other_replies", post.handle);
+    control.title = kept(post) ? t("ui_reply_retained") : protectedUser ? t("ui_this_user_is_allowlisted") : self ? t("ui_you_cannot_block_yourself") : t("ui_block_and_remove_their_other_replies", post.handle);
     control.setAttribute("aria-label", t("ui_block_2", post.handle));
   }
-  /** Suspend scroll anchoring only while heights change, restoring the exact previous inline value. */
-  function holdScrollAnchor() {
+  /** Reading protection affects presentation only; backend queues continue normally. */
+  function readingInteraction(article) {
+    const selection = document.getSelection();
+    const focused = document.activeElement;
+    return !!(selection && !selection.isCollapsed || focused?.matches('textarea,input,[contenteditable="true"],[role="textbox"]')
+      || article && (pointerArticle === article && article.matches(":hover") || article.contains(focused)));
+  }
+  function stopReadingAnchor() {
+    cancelAnimationFrame(anchorFrame); anchorFrame = 0; readingAnchor = null; anchorSettling = 0;
+    anchorResize?.disconnect(); anchorResize = null;
     const style = document.documentElement.style;
-    if (!anchorUsers++) {
+    if (anchorStyle && style.getPropertyValue("overflow-anchor") === "none") {
+      if (anchorStyle[0]) style.setProperty("overflow-anchor", ...anchorStyle); else style.removeProperty("overflow-anchor");
+    }
+    anchorStyle = null;
+  }
+  function compensateReadingPosition() {
+    const a = readingAnchor;
+    if (!a) return;
+    if (a.href !== location.href) { readingAnchor = null; return; }
+    // X can replace/recycle the anchor DOM node while restoring a hidden row.
+    // Follow the stable permalink, not the node instance or X's own scroll adjustment.
+    if (!a.node.isConnected || a.node.querySelector("time")?.closest("a")?.getAttribute("href") !== a.post) {
+      a.node = [...document.querySelectorAll('article[data-testid="tweet"]')].find(node => node.querySelector("time")?.closest("a")?.getAttribute("href") === a.post);
+      if (!a.node) { readingAnchor = null; return; }
+    }
+    const delta = a.node.getBoundingClientRect().top - a.top;
+    if (Math.abs(delta) > .5) window.scrollBy({ top: delta, behavior: "instant" });
+  }
+  /** One coordinator compensates simultaneous collapses/restores before paint.
+   * Trusted user input cancels compensation; X's virtualizer adjustments do not.
+   */
+  function holdScrollAnchor(changingNode) {
+    if (!anchorUsers++ && !anchorFrame) {
+      const style = document.documentElement.style;
       anchorStyle = [style.getPropertyValue("overflow-anchor"), style.getPropertyPriority("overflow-anchor")];
       style.setProperty("overflow-anchor", "none", "important");
+      const node = [...document.querySelectorAll('article[data-testid="tweet"]')].find(node => {
+        if (node === changingNode || node.matches(".blocksb-removed,.blocksb-exiting") || movingRows.has(node)) return false;
+        const r = node.getBoundingClientRect(); return r.bottom > 96 && r.top < innerHeight;
+      });
+      readingAnchor = node ? { node, top: node.getBoundingClientRect().top, href: location.href,
+        post: node.querySelector("time")?.closest("a")?.getAttribute("href") } : null;
+      // ResizeObserver runs after layout and before paint, including WAAPI height frames.
+      // A rAF-only measurement can precede X's offset update and leave one frame of drift.
+      anchorResize = new ResizeObserver(compensateReadingPosition);
+      const tick = () => {
+        anchorFrame = 0; compensateReadingPosition();
+        if (invalidated || !anchorUsers && --anchorSettling <= 0) { stopReadingAnchor(); return; }
+        anchorFrame = requestAnimationFrame(tick);
+      };
+      anchorFrame = requestAnimationFrame(tick);
     }
+    if (changingNode) anchorResize?.observe(changingNode);
     let released = false;
     return () => {
       if (released) return; released = true;
-      if (!--anchorUsers && style.getPropertyValue("overflow-anchor") === "none") {
-        if (anchorStyle[0]) style.setProperty("overflow-anchor", ...anchorStyle);
-        else style.removeProperty("overflow-anchor");
-      }
+      compensateReadingPosition();
+      anchorUsers = Math.max(0, anchorUsers - 1); if (!anchorUsers) anchorSettling = 4;
     };
   }
+  listen(document, "pointermove", e => { if (e.isTrusted) pointerArticle = e.target.closest?.('article[data-testid="tweet"]') || null; }, { passive: true });
+  for (const type of ["wheel", "touchstart", "keydown", "pointerdown"]) listen(document, type, e => {
+    if (!e.isTrusted) return;
+    readingPauseUntil = Date.now() + (type === "wheel" && e.deltaY < 0 ? 8000 : 2500);
+    readingAnchor = null;
+  }, { passive: true, capture: true });
+  listen(document, "selectionchange", () => { readingPauseUntil = Date.now() + 1500; schedule(); });
+  listen(document, "pointerout", e => { if (e.isTrusted && !e.relatedTarget) pointerArticle = null; }, { passive: true });
   /** Scatter bounded, clipped pieces of the actual card.
    * No canvas readback, screenshots, external assets or image/model service is needed.
    * Returns completion of every fragment; cancellation shares the normal restore path.
@@ -1009,6 +1163,7 @@
    */
   function removeCard(article, post, animate, debug = false, module = "agreement") {
     if (rowState.get(article)?.id === post.id && rowState.get(article).mode === "removed") { rowState.get(article).module = module; return; }
+    if (!debug && (readingInteraction(article) || movingRows.size >= 2)) return;
     restore(article);
     const info = { id: post.id, mode: "removed", handle: post.handle, cancelled: false, debug, module, inert: article.inert, animations: [] };
     rowState.set(article, info);
@@ -1019,10 +1174,11 @@
     const valid = () => !info.cancelled && article.isConnected && rowState.get(article) === info && readPost(article)?.id === post.id;
     const finish = () => {
       if (!valid()) { restore(article); return; }
+      const release = holdScrollAnchor(article);
       article.classList.add("blocksb-removed"); article.classList.remove("blocksb-exiting");
       releaseRowResources(info);
       // Completed rows remain in a WeakMap for undo, not a strong global Set.
-      movingRows.delete(article);
+      movingRows.delete(article); release();
     };
     if (motion) {
       if (!debug) { played.add(key); while (played.size > 5000) played.delete(played.values().next().value); }
@@ -1051,7 +1207,7 @@
           await effectFinished; clone.remove();
           if (info.cancelled) return;
           if (!valid()) { restore(article); return; }
-          info.releaseAnchor = holdScrollAnchor();
+          info.releaseAnchor = holdScrollAnchor(article);
           const style = getComputedStyle(article);
           const from = { height: `${article.getBoundingClientRect().height}px`, minHeight: "0px", maxHeight: "none" };
           const to = { height: "0px", minHeight: "0px", maxHeight: "none" };
@@ -1153,7 +1309,8 @@
         await globalThis.BlockSBI18n.setLanguage(state.settings.language);
         localizeOverlay();
       }
-      const nextNames = JSON.stringify([viewer(), state.settings.filterRules, state.settings.debugDryRun, state.settings.paused, state.whitelist]);
+      renderQuickUndo();
+      const nextNames = JSON.stringify([viewer(), state.settings.filterRules, state.settings.debugDryRun, state.settings.paused, state.whitelist, state.contentExceptions]);
       if (nameConfig !== nextNames) { nameConfig = nextNames; nameEpoch++; nameResults.clear(); }
       const nextObserverConfig = JSON.stringify([state.settings.observer, state.settings.analysisRevision, state.settings.debugDryRun]);
       if (observerAccount !== viewer() || observerConfig !== nextObserverConfig) {
@@ -1172,7 +1329,7 @@
       if (previousState && (previousState.modelError && !state.modelError || previousState.settings.paused && !state.settings.paused || previousState.settings.analysisRevision !== state.settings.analysisRevision || previousState.settings.skipFollowing !== state.settings.skipFollowing)) { skipped.clear(); observerRetries.clear(); }
       if (sessionId !== (state.session?.id || "")) {
         contextPosts.clear(); savedContext.clear(); requestedContext.clear(); contextFlight = null; contextRetryAt = 0; contextError = ""; syncedContextRevision = -1;
-        sessionId = state.session?.id || ""; skipped.clear(); failure = ""; lastLocation = ""; locationRetryAt = 0; locationError = "";
+        sessionId = state.session?.id || ""; skipped.clear(); analysisRetries.clear(); failure = ""; lastLocation = ""; locationRetryAt = 0; locationError = "";
         pageReady = false; sortFlow = null; loadWait = null; loadNote = ""; autoAt = 0;
         // Starting a task must discover existing cards without waiting for a scroll or request.
         if (sessionId) window.postMessage({ channel: "blocksb:replay:v1" }, location.origin);
@@ -1258,7 +1415,7 @@
    */
   function advanceComments(active) {
     const s = state?.session;
-    if (!active || !pageReady || !s?.autoLoad || drawerOpen || document.hidden || autoStopping) { loadWait = null; return; }
+    if (!active || !pageReady || !s?.autoLoad || drawerOpen || document.hidden || autoStopping || movingRows.size || readingInteraction(pointerArticle?.isConnected ? pointerArticle : null) || Date.now() < readingPauseUntil) { loadWait = null; return; }
     const event = timelineState.get(route());
     if (state.modelError || state.queueError || state.queueNotice || event && !event.ok) {
       void stopAuto(t("ui_auto_load_stopped_due_to_a_service_or_loading_error")); return;
@@ -1269,7 +1426,7 @@
     const pending = busy.size || [...metadata.values()].some(p => {
       const token = `${s.id}:${p.id}`;
       if (!p.domSeen && !(p.networkAt > 0 && p.networkAt >= s.created)) return false;
-      if (hasDecision(p) || skipped.has(token) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || skipFollowing(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account)) || !p.text.trim()) return false;
+      if (kept(p) || analysisHandledOnPage(p) || hasDecision(p) || skipped.has(token) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || skipFollowing(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account)) || !p.text.trim()) return false;
       return p.conversationId === s.root.conversationId && ancestors(p, s.root) !== null;
     });
     if (pending) { loadWait = null; return; }
@@ -1297,7 +1454,7 @@
       const info = rowState.get(article), post = readPost(article);
       if (!article.isConnected || post?.id !== info.id || info.debug && (!animationDebug || !debugRows.has(info.id)) || info.module === "observer" && !observerEnabled() || info.module === "name" && !nameEnabled()) restore(article);
     }
-    if (!observerEnabled()) document.querySelectorAll(".blocksb-observer-marker,.blocksb-masked").forEach(node => {
+    if (!observerEnabled() || state.settings.observer.mode === "combined") document.querySelectorAll(".blocksb-observer-marker,.blocksb-masked").forEach(node => {
       if (node.classList.contains("blocksb-observer-marker")) node.remove();
       else if (maskState.get(node)?.module === "observer") clearMask(node);
     });
@@ -1347,13 +1504,14 @@
     for (const article of rows) {
       const p = readPost(article);
       if (!p) { restore(article); article.querySelector(".blocksb-comment-tools")?.remove(); article.querySelector(".blocksb-observer-marker")?.remove(); continue; }
-      observerMarker(article, p);
+      observerMarker(article, p); replyTools(article, p);
+      if (kept(p)) { restore(article); clearMask(article); commentTools(article, p, null, null, rootId); continue; }
       const old = rowState.get(article);
       const decision = s?.root.id === rootId ? s.results[p.id] : null;
       // The classification response already confirms durable enqueue, before the X request completes.
       const h = historyFor(p, account) || (decision?.historyId ? { id: decision.historyId, rootId, status: "pending", updated: Date.now() } : null);
       const queued = ["pending", "running"].includes(h?.status) && !h?.waitingFollowing;
-      const manualHide = taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
+      const manualHide = !kept(p) && !h?.undoRequested && taskMayHide(p, h) && (isBlocked(h) || queued) && !white(p) && (p.handle === s.root.handle || !skipFollowing(p)) && p.handle !== account;
       const observedRemoval = observerRemoval(p);
       const namedRemoval = nameRemoval(p);
       const hide = manualHide || !!observedRemoval || !!namedRemoval;
@@ -1380,7 +1538,7 @@
     failure = "";
     if (active && !state.modelError && state.settings.configured) for (const raw of metadata.values()) {
       const p = mergeContext(contextPosts.get(raw.id), raw);
-      if (nameMatches(p)) continue;
+      if (kept(p) || analysisHandledOnPage(p) || nameMatches(p) || (analysisRetries.get(`${s.id}:${p.id}`) || 0) > Date.now()) continue;
       if (busy.size >= 2) break;
       if (!p.domSeen && !(p.networkAt > 0 && p.networkAt >= s.created)) continue;
       if (hasDecision(p) || busy.has(`${s.id}:${p.id}`) || p.id === s.root.id || p.handle === account || p.handle === s.root.handle || white(p) || skipFollowing(p) || s.excluded.includes(p.handle) || isBlocked(historyFor(p, account))) continue;
@@ -1395,7 +1553,10 @@
         if (state.settings.analysisRevision !== analysisRevision) return;
         if (state.session?.id === s.id && result.action !== "skip") { state.session.results[p.id] = result; indexSnapshot(); }
         schedule();
-        if (result.action === "skip" && result.why !== "config-changed") rememberSkipped(token, fingerprint);
+        if (result.action === "skip" && result.why === "account-busy") {
+          analysisRetries.set(token, Date.now() + 2000);
+          while (analysisRetries.size > 2500) analysisRetries.delete(analysisRetries.keys().next().value);
+        } else if (result.action === "skip" && result.why !== "config-changed") rememberSkipped(token, fingerprint);
       }).catch(e => {
         if (state.settings.analysisRevision !== analysisRevision) return;
         // A storage/validation failure must not resubmit the same comment and consume more credit.
@@ -1421,7 +1582,7 @@
     })) schedule();
   });
   pageObserver.observe(document.body, { childList: true, subtree: true });
-  listen(document, "scroll", e => { if (e.target !== host && !host.contains(e.target)) hideProbabilityPanel(); schedule(); }, { passive: true, capture: true });
+  listen(document, "scroll", e => { if (e.target !== host && !host.contains(e.target)) hideProbabilityPanel(); hideReplyMenu(); schedule(); }, { passive: true, capture: true });
   listen(window, "resize", () => { hideProbabilityPanel(); schedule(); }, { passive: true });
   let previous = "";
   // Restore rows immediately on route/account changes, even while a background snapshot is pending.

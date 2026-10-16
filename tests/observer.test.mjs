@@ -11,7 +11,8 @@ const evidence = (replyId, rootId, extra = {}) => ({ replyId, rootId, observedAt
 test("observer requires independent comments, multiple threads and recent normal evidence", () => {
   const first = evidence("100001", "100000");
   assert.equal(summarizeObserverEvidence([first, first, first], config, "rule-a", now).eligible, false);
-  const rows = [first, evidence("100002", "100000"), evidence("200001", "200000")];
+  assert.equal(config.minThreads, 3);
+  const rows = [first, evidence("100002", "300000"), evidence("200001", "200000")];
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).eligible, true);
   rows.push(evidence("300001", "300000", { label: "human_like", observedAt: now + 1 }));
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).hitRate, .75);

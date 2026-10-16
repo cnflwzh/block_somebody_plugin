@@ -144,7 +144,7 @@
     "message": "白名单用户，不发送给 Jev 分析"
   },
   "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
-    "message": "白名单用户不分析、不自动屏蔽。已有屏蔽需手动取消。"
+    "message": "白名单账号不分析、不自动屏蔽；已有屏蔽需另行撤回。"
   },
   "ui_already_blocked": {
     "message": "原本已屏蔽"
@@ -2111,7 +2111,7 @@
     "message": "可多选，累计达标后屏蔽。"
   },
   "ui_observer_beta_notice": {
-    "message": "仍可能出现误判或漏判。"
+    "message": "Beta：可能错判或漏判。"
   },
   "ui_observer_beta_contribute": {
     "message": "通过 PR 改进提示词"
@@ -2290,5 +2290,508 @@
   },
   "ui_filter_preview_error": {
     "message": "表达式无效或运行超时。"
+  },
+  "ui_quick_undo": {
+    "message": "撤销"
+  },
+  "ui_quick_undo_count": {
+    "message": "已将 $v0$ 个账号加入队列",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_done": {
+    "message": "已撤回 $v0$ 个账号的操作",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_partial": {
+    "message": "已撤回 $v0$ 个账号，其余请在记录中查看",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_expired": {
+    "message": "快捷撤销已过期，请到屏蔽记录中操作。"
+  },
+  "ui_quick_undo_dismiss": {
+    "message": "关闭撤销提示"
+  },
+  "ui_quick_undo_preview_count": {
+    "message": "已预览移除 $v0$ 条评论",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_draft_retained": {
+    "message": "草稿未保存"
+  },
+  "ui_discard_draft": {
+    "message": "放弃草稿"
+  },
+  "ui_model_memory_draft": {
+    "message": "未保存"
+  },
+  "ui_check_connection": {
+    "message": "检查模型连接"
+  },
+  "ui_preview_animation": {
+    "message": "预览动画"
+  },
+  "ui_replay_guide": {
+    "message": "设置向导"
+  },
+  "ui_percent_input": {
+    "message": "百分比（1–100），Enter 确认，Esc 取消"
+  },
+  "ui_percent_edit": {
+    "message": "点击输入百分比"
+  },
+  "ui_see_effect": {
+    "message": "预估效果"
+  },
+  "ui_effect_hint": {
+    "message": "仅用当前模型与提示词的本地有效结果估算；不请求模型、不执行屏蔽。"
+  },
+  "ui_effect_loading": {
+    "message": "正在计算本地结果…"
+  },
+  "ui_effect_invalid": {
+    "message": "请先修正设置中的无效数值。"
+  },
+  "ui_effect_unavailable": {
+    "message": "暂无可用结果"
+  },
+  "ui_effect_stale": {
+    "message": "当前规则已变化，请放弃旧草稿后重新调整。"
+  },
+  "ui_effect_counts": {
+    "message": "$1 条评论：$2 条命中，$3 条达到屏蔽条件，$4 条达到遮罩条件；$5 条处理结果会变化。"
+  },
+  "ui_effect_observer_counts": {
+    "message": "$1 条评论：$2 条可疑，$3 个账号达到累计屏蔽条件，$4 条达到遮罩条件；$5 个账号处理结果会变化。"
+  },
+  "ui_observer_progress": {
+    "message": "命中 $1/$2 · 原帖 $3/$4 · 命中比例 $5%（要求 $6%）"
+  },
+  "ui_pause_scope": {
+    "message": "暂停会停止新分析与屏蔽提交；撤销仍可执行，已发出的请求仍可能完成。"
+  },
+  "ui_observer_cooldown": {
+    "message": "下次可提交：$1"
+  },
+  "ui_observer_snoozed": {
+    "message": "分析暂缓至 $1"
+  },
+  "ui_debug_protection_help": {
+    "message": "后台“禁止屏蔽”保护已开启。请在 X 页面的 blockSBDebug 调试面板中检查；模型分析仍可能产生费用。"
+  },
+  "guide_skip": {
+    "message": "跳过"
+  },
+  "guide_previous": {
+    "message": "上一步"
+  },
+  "guide_next": {
+    "message": "下一步"
+  },
+  "guide_replay": {
+    "message": "重播本步"
+  },
+  "ui_reply_actions": {
+    "message": "更多操作"
+  },
+  "ui_reply_keep_one": {
+    "message": "保留这条评论"
+  },
+  "ui_reply_keep_user": {
+    "message": "本评论区不再处理此人"
+  },
+  "ui_reply_resume": {
+    "message": "恢复自动处理"
+  },
+  "ui_reply_retained": {
+    "message": "已在当前评论区保留"
+  },
+  "ui_reply_resumed": {
+    "message": "已恢复当前评论区的自动处理"
+  },
+  "ui_filter_from_name": {
+    "message": "按此昵称创建规则"
+  },
+  "ui_filter_from_text": {
+    "message": "按此评论创建规则"
+  },
+  "ui_filter_from_selection": {
+    "message": "按选中文字创建规则"
+  },
+  "ui_filter_seed_empty": {
+    "message": "没有可用于创建规则的文本。"
+  },
+  "ui_filter_draft_conflict": {
+    "message": "已恢复草稿；规则已在其他页面更改，请放弃草稿后重新编辑。"
+  },
+  "setup_connect": {
+    "message": "连接模型"
+  },
+  "setup_features": {
+    "message": "选择功能"
+  },
+  "setup_confirm": {
+    "message": "确认设置"
+  },
+  "setup_finish": {
+    "message": "保存并开始使用"
+  },
+  "setup_connect_next": {
+    "message": "连接并继续"
+  },
+  "setup_endpoint_model": {
+    "message": "API 端点与模型"
+  },
+  "setup_auto_observe": {
+    "message": "自动识别伪人"
+  },
+  "setup_manual_stance": {
+    "message": "打开原帖右上角的“···”菜单，选择屏蔽博主及评论区支持者的入口。插件会分析这条原帖下的评论，并按所选策略处理支持者。"
+  },
+  "setup_on": {
+    "message": "开启"
+  },
+  "setup_off": {
+    "message": "关闭"
+  },
+  "setup_start": {
+    "message": "快速设置"
+  },
+  "setup_demo": {
+    "message": "示例"
+  },
+  "setup_sample_reply": {
+    "message": "评论"
+  },
+  "setup_model_analysis": {
+    "message": "分析中"
+  },
+  "setup_result": {
+    "message": "分类结果"
+  },
+  "setup_sample_text": {
+    "message": "这个角度挺有意思，我也想试试看。"
+  },
+  "setup_demo_probability": {
+    "message": "概率 96%"
+  },
+  "setup_demo_distribution": {
+    "message": "选项 A 96%\n选项 B 3%\n不确定 1%"
+  },
+  "setup_demo_undo": {
+    "message": "撤销"
+  },
+  "setup_demo_removed": {
+    "message": "已移除示例评论"
+  },
+  "setup_demo_reveal": {
+    "message": "点击查看隐藏内容"
+  },
+  "setup_demo_evidence": {
+    "message": "可疑记录 $1/3 · 演示"
+  },
+  "setup_demo_start": {
+    "message": "屏蔽博主及支持者"
+  },
+  "setup_demo_menu": {
+    "message": "···"
+  },
+  "setup_demo_remove": {
+    "message": "试播删除动画"
+  },
+  "setup_auto_hint": {
+    "message": "浏览时自动收集和判断回复。累计模式逐条分析并累计可疑评论；综合模式先收集足够回复，再一起判断账号。"
+  },
+  "setup_connect_description": {
+    "message": "先连接用于识别评论的模型。输入 API Key 后点击“连接并继续”；已有连接可以直接进入下一步。"
+  },
+  "setup_display_description": {
+    "message": "鼠标移到评论上可看到概率和操作按钮；移到概率上可查看各项结果。遮罩内容可以点开查看，处理后可点“撤销”，或从右下角垃圾桶查看记录。"
+  },
+  "setup_finish_description": {
+    "message": "确认后保存这些设置。自动识别按开关运行，屏蔽抱团在你从推文菜单启动后运行。"
+  },
+  "setup_x_post": {
+    "message": "帖子"
+  },
+  "setup_original_text": {
+    "message": "周末准备去公园散步，你们有什么安排？"
+  },
+  "setup_other_reply": {
+    "message": "我也准备出门走走。"
+  },
+  "setup_native_block": {
+    "message": "屏蔽 @example"
+  },
+  "setup_threshold_note": {
+    "message": "竖线：屏蔽概率阈值 92%"
+  },
+  "setup_stance_original": {
+    "message": "别人关注你，你就必须回关。不回关就是没礼貌。"
+  },
+  "setup_stance_support": {
+    "message": "说得对，互相关注是基本礼貌，不回关的人我都会取关。"
+  },
+  "setup_stance_oppose": {
+    "message": "我不同意。关注是因为喜欢内容，不应该变成必须回报的人情。"
+  },
+  "ui_observer_account_review": {
+    "message": "同账号近期回复复核"
+  },
+  "ui_observer_account_review_hint": {
+    "message": "可选，会额外调用模型。最多合看近期5条回复，满足累计条数和不同原帖要求后复核；确认后可屏蔽账号。计入每日上限，关闭后删除复核用文本。"
+  },
+  "ui_observer_review_result": {
+    "message": "综合判定 $1 条 · 概率 $2% · 置信度 $3%"
+  },
+  "ui_setting_help": {
+    "message": "查看设置说明"
+  },
+  "ui_clear_cache": {
+    "message": "清理缓存"
+  },
+  "ui_cache_cleared": {
+    "message": "已清理 $1 条缓存"
+  },
+  "help_scope": {
+    "message": "**决定观察哪些账号。** 需先开启自动观察。\n\n选“仅蓝 V”会跳过未确认蓝标的账号。蓝标只决定是否观察，不是判断 AI 的依据。"
+  },
+  "help_policy": {
+    "message": "**快速调整概率和置信度两条滑杆。** 手动拖动后会切换为“自定义”。\n\n不会改变评论条数、不同原帖数或近期可疑比例。"
+  },
+  "help_suspect": {
+    "message": "**一条评论多像你要屏蔽的内容。** 数值越高，越难计为可疑。\n\n还要达到模型置信度；累计够可疑评论、不同原帖和近期比例，才会屏蔽账号。"
+  },
+  "help_confidence": {
+    "message": "**模型对自己的分类有多大把握。**\n\n它与可疑概率是两个条件，必须同时达标。屏蔽伪人的累计模式还要满足数量和比例要求。"
+  },
+  "help_hits": {
+    "message": "**同一个账号要出现多少条可疑评论。** 评论的概率与置信度都达标，才计入。\n\n还需满足不同原帖数、近期命中占比。重复刷到同一条不会重复计数。"
+  },
+  "help_threads": {
+    "message": "**可疑评论要分布在多少个原帖下。** 同一评论区有很多回复，也只算 1 个原帖。\n\n例如设为 3，需要在 3 个原帖下都遇到可疑回复。调高会更难触发，不能超过可疑评论条数。"
+  },
+  "help_rate": {
+    "message": "**最近的有效判断中，有多少是可疑评论。** 最多看最近 5 条。\n\n例如 4 条里 3 条可疑，占比就是 75%。把握不足或未被选为屏蔽类别的“来源不明”不计入。\n\n还需满足可疑评论条数和不同原帖数。"
+  },
+  "help_retention": {
+    "message": "**观察到的评论在本地保留多久。** 过期后不再参与判断，但不会解除已有屏蔽。\n\n这与模型请求缓存的 30 天有效期是两回事。"
+  },
+  "help_daily": {
+    "message": "**每天最多向模型发送多少次分析请求。** 仅限制屏蔽伪人，不限制屏蔽抱团。\n\n累计模式逐条计数；综合模式收集不计数，整组分析计 1 次。缓存命中不扣次数，失败请求也计数。\n\n按 UTC 零点重置，即北京时间早上 8 点。"
+  },
+  "help_following": {
+    "message": "**保留你已关注的账号。** 无法确认关注状态时，也暂不处理。\n\n两个模块各自设置，白名单始终优先。"
+  },
+  "help_markers": {
+    "message": "**在评论旁显示识别标记，悬停可看各类概率。**\n\n仅累计模式可用。综合模式没有单条分数，所以禁用；切回累计模式会恢复原选择。"
+  },
+  "help_observer_mask": {
+    "message": "**账号尚未达到累计屏蔽条件时，先遮住可疑评论。** 保留原高度，不挤动页面。\n\n需要单条概率与置信度达标。综合模式没有单条分数，不能提前遮罩；达到整组屏蔽条件后仍正常播放删除动画。"
+  },
+  "help_review": {
+    "message": "需开启自动观察，会额外调用模型。合看同账号最近最多 5 条回复，至少 3 条、2 个原帖且满足更高的累计数量；超过 5 的数量条件不会触发。沿用概率、置信度和命中占比。每次间隔至少 1 小时并新增 2 条回复，计入每日上限；关闭后删除复核文本。"
+  },
+  "help_support": {
+    "message": "**评论支持原帖的概率达到多少，才考虑屏蔽。** 还需达到模型置信度。\n\n仅在你主动启动的抱团任务中生效。使用自定义提示词时，按你选择的屏蔽类别判断。"
+  },
+  "help_mask": {
+    "message": "**遮住指定概率范围内的评论，保留原高度。** 可以展开查看，不等于屏蔽账号。\n\n只对已启动的抱团任务生效。上限跟随自动屏蔽的概率阈值调整。"
+  },
+  "help_auto_load": {
+    "message": "**任务开始后，自动向下加载更多评论。** 不会自行开启抱团任务。\n\n加载更多评论可能增加分析费用，可随时在任务栏关闭。"
+  },
+  "help_cache": {
+    "message": "**避免相同内容反复付费分析。** 相同模型、规则和上下文可以复用结果，30 天后过期。\n\n超出上限时，优先删除最久未使用的结果。\n\n**清理缓存只删除分析结果。** 观察记录、屏蔽记录和白名单都保留；之后再次分析相同内容可能重新计费。"
+  },
+  "help_endpoint": {
+    "message": "**两个模块共用的模型服务地址。** 需要兼容 Jev API。\n\n更换域名可能需要对应密钥和访问授权，模型也必须受该服务支持。保存连接会发送一次验证请求。"
+  },
+  "help_model": {
+    "message": "**两个模块使用哪一个模型。** 必须受当前 API 端点支持。\n\n更换后不会把旧模型的判断混入新判断；缓存也按模型分别匹配。"
+  },
+  "ui_observer_mode": {
+    "message": "判定模式"
+  },
+  "ui_mode_cumulative": {
+    "message": "累计判定"
+  },
+  "ui_mode_combined": {
+    "message": "综合判定"
+  },
+  "ui_combined_conditions": {
+    "message": "收集与判定条件"
+  },
+  "ui_collect_replies": {
+    "message": "收集评论数"
+  },
+  "ui_combined_probability": {
+    "message": "综合可疑概率"
+  },
+  "ui_combined_ratio": {
+    "message": "样本命中占比"
+  },
+  "ui_collected_unanalysed": {
+    "message": "已收集，未单独分析"
+  },
+  "ui_collection_progress": {
+    "message": "已收集 $1/$2 条 · 原帖 $3/$4"
+  },
+  "help_observer_mode": {
+    "message": "**累计判定：每条分别判断，再数可疑评论。**\n\n**综合判定：先收集，够数后一起判断。** 只收集正常浏览遇到的回复，不会去对方主页抓取。\n\n两种模式分别保存设置，切换后不混用原来的判断。"
+  },
+  "help_collect_replies": {
+    "message": "**先攒够多少条回复，再一起分析。** 可设 3–5 条，不需要先判为可疑。\n\n只收集你浏览时遇到的回复，不会去对方主页抓取。还要满足不同原帖数；没攒够不调用模型。"
+  },
+  "help_collect_threads": {
+    "message": "**收集的回复要来自多少个原帖。** 可设 2–5 个，不能超过收集评论数。\n\n例如设为 3：即使同一评论区收集了 5 条，也不够，仍需遇到其他原帖下的回复。"
+  },
+  "help_combined_probability": {
+    "message": "**整组回复有多像你要屏蔽的内容。**\n\n收集够数才会分析。整组概率和置信度都达标，才加入屏蔽队列；不为每条回复分别打分。"
+  },
+  "help_combined_confidence": {
+    "message": "**模型对整组判断有多大把握。**\n\n必须和综合可疑概率同时达标。它与累计模式的置信度设置分开保存。"
+  },
+  "help_combined_ratio": {
+    "message": "**要求可疑特征出现在多少比例的回复里。**\n\n例如 3 条回复、设为 75%，向上取整，需要覆盖 3 条。不是把单条概率加起来取平均。\n\n这是给整组分析的判断要求，不使用累计模式的近期命中占比。"
+  },
+  "modes_title": {
+    "message": "两种模式怎么选？"
+  },
+  "modes_intro": {
+    "message": "都在你正常浏览时工作。区别在于：是每条分别判断，还是攒够几条一起判断。"
+  },
+  "modes_default": {
+    "message": "默认使用"
+  },
+  "modes_together": {
+    "message": "先收集，再分析"
+  },
+  "modes_cumulative": {
+    "message": "**每看到一条，就判断一条。**\n\n同一个账号多次被判为可疑，而且符合你设置的数量和比例，才加入屏蔽队列。"
+  },
+  "modes_combined": {
+    "message": "**先攒评论，够数后一起判断。**\n\n只收集你正常浏览时遇到的回复，不会进入对方主页抓取。收集期间不调用 Jev，也不给单条评论打分。"
+  },
+  "modes_c1": {
+    "message": "遇到一条回复 → 单独分析"
+  },
+  "modes_c2": {
+    "message": "可疑评论够多、来自足够多的原帖"
+  },
+  "modes_c3": {
+    "message": "近期可疑比例也达标 → 加入屏蔽队列"
+  },
+  "modes_b1": {
+    "message": "遇到回复 → 先保存在本地"
+  },
+  "modes_b2": {
+    "message": "评论条数和不同原帖数都够了 → 一起分析"
+  },
+  "modes_b3": {
+    "message": "整组概率和置信度达标 → 加入屏蔽队列"
+  },
+  "modes_try": {
+    "message": "点几下，看它怎么运作"
+  },
+  "modes_demo_intro": {
+    "message": "假设你在原帖 A、B、C 下，分别遇到同一个人的一条回复。两边同时演示，方便比较。"
+  },
+  "modes_scenario": {
+    "message": "选择例子"
+  },
+  "modes_suspicious": {
+    "message": "三条都可疑"
+  },
+  "modes_mixed": {
+    "message": "其中一条是正常交流"
+  },
+  "modes_next": {
+    "message": "再遇到一条评论"
+  },
+  "modes_reset": {
+    "message": "重新演示"
+  },
+  "modes_demo_note": {
+    "message": "演示固定使用：3 条评论、3 个原帖、可疑概率 90%、置信度 80%、占比 75%。分数是预设示例，不会请求模型或屏蔽账号，也不修改你的设置。"
+  },
+  "modes_requests": {
+    "message": "次分析请求"
+  },
+  "modes_read_settings": {
+    "message": "设置里的数字怎么看？"
+  },
+  "modes_counts_title": {
+    "message": "“3 条、3 个原帖”分别数什么？"
+  },
+  "modes_counts": {
+    "message": "**累计判定：数可疑评论。** 要有 3 条符合条件的可疑评论，且来自 3 个不同原帖；近期可疑比例还要达标。\n\n**综合判定：数收集的评论。** 不要求事先判为可疑。收集到 3 条、来自 3 个原帖，才开始整组分析。\n\n同一个评论区的多条回复只算 1 个原帖。刷新看到同一条，不重复计数。"
+  },
+  "modes_scores_title": {
+    "message": "概率、置信度、占比有什么区别？"
+  },
+  "modes_scores": {
+    "message": "**概率：有多像你要屏蔽的内容。**\n\n**置信度：模型对这个分类有多大把握。** 两项都达到设置值才算通过，不是达到其中一项就屏蔽。\n\n**累计占比：最近最多 5 条有效判断中，可疑的比例。** 例如 4 条有效判断里有 3 条可疑，就是 75%；无法可靠判断的不计入。\n\n**综合占比：要求可疑特征覆盖多少条样本。** 例如 3 条的 75% 向上取整是 3 条；不是把单条概率取平均。"
+  },
+  "modes_marks_title": {
+    "message": "为什么综合模式不能显示单条概率？"
+  },
+  "modes_marks": {
+    "message": "**没有逐条分析，就没有逐条分数。** 因此综合模式下，“显示识别标记”和“提前遮罩可疑评论”不可用。\n\n整组判定达到屏蔽条件后，删除动画和后台队列仍会正常执行。切回累计模式，会恢复这两个选项原来的选择。"
+  },
+  "modes_cost_title": {
+    "message": "哪一种更省请求？"
+  },
+  "modes_cost": {
+    "message": "**累计：每条符合观察条件的评论分别分析。**\n\n**综合：收集期间 0 次，够数后整组分析 1 次。** 一次包含多条内容，费用不能简单按请求次数等比例比较。\n\n相同请求可复用缓存。综合再次分析同一账号，至少间隔 1 小时，并且新增 2 条回复；两种模式都受每日分析上限限制。"
+  },
+  "modes_shared": {
+    "message": "**共同前提：先开启自动观察。** 白名单和已开启的关注保护都生效，官方 @grok 保留。过期评论不再参与判断；切换模式不混用原模式的判断。\n\n概率是模型的判断，不代表身份已经得到证实。"
+  },
+  "modes_reply": {
+    "message": "评论 $1 · 原帖 $2"
+  },
+  "modes_reply_score": {
+    "message": "累计模式单条示例：可疑概率 $1%，置信度 90%"
+  },
+  "modes_unseen": {
+    "message": "还没有遇到"
+  },
+  "modes_hit_progress": {
+    "message": "可疑 $1/3 条 · 来自 $2/3 个原帖"
+  },
+  "modes_collect_progress": {
+    "message": "已收集 $1/3 条 · 来自 $2/3 个原帖"
+  },
+  "modes_queued": {
+    "message": "条件已满足 → 加入屏蔽队列"
+  },
+  "modes_wait_hits": {
+    "message": "继续观察：可疑评论还不够"
+  },
+  "modes_batch_no": {
+    "message": "整组概率 42%、置信度 90% → 暂不屏蔽"
+  },
+  "modes_batch_yes": {
+    "message": "整组概率 96%、置信度 90% → 加入屏蔽队列"
+  },
+  "modes_wait_collect": {
+    "message": "先收集，暂不请求模型"
   }
 }
