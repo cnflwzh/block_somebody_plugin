@@ -139,9 +139,9 @@ export function clearAccountReviewData() { return transaction("readwrite", (stor
   collections.onsuccess = () => { const c = collections.result; if (c) { const { accountSignals, ...entry } = c.value; c.update(entry); c.continue(); } };
   const users = new Set();
   const r = store.openCursor(); r.onsuccess = () => { const c = r.result; if (!c) return;
-    if (c.value.reviewContext || c.value.accountReview) {
+    if (c.value.reviewContext || c.value.accountReview || c.value.collected) {
       const { reviewContext, accountReview, ...entry } = c.value;
-      if (entry.collected) entry.withdrawn = true;
+      if (entry.collected) { entry.withdrawn = true; delete entry.replyText; delete entry.replyTextIncomplete; delete entry.excerpt; }
       c.update(entry);
       if (!users.has(entry.userKey)) { users.add(entry.userKey); const key = `epoch:${entry.userKey}`, guard = meta.get(key);
         guard.onsuccess = () => meta.put({ key, value: (guard.result?.value || 0) + 1 });

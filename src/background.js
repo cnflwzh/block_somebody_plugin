@@ -758,7 +758,7 @@ async function observeReply(message, sender) {
     observerFinalizing = finalize.catch(() => {});
     return finalize;
   })();
-  observerFlights.set(evidenceKey, { promise: run, controller, tabId: sender.tab.id, handle: reply.handle, account, replyId: reply.id, userId: reply.userId, contextHandles: [root.handle, ...ancestors.map(p => p.handle)] });
+  observerFlights.set(evidenceKey, { promise: run, controller, rootId: root.id, tabId: sender.tab.id, handle: reply.handle, account, replyId: reply.id, userId: reply.userId, contextHandles: [root.handle, ...ancestors.map(p => p.handle)] });
   try { return await run; } finally { observerFlights.delete(evidenceKey); }
 }
 
@@ -773,6 +773,7 @@ async function classify(message, sender) {
   const promise = (async () => {
     let db = await read();
     let s = sessionFor(db, tabId, message.sessionId, account);
+    flights.get(flightKey).rootId = s.root.id;
     if (await currentPostId(sender) !== s.root.id || reply.id === s.root.id || reply.conversationId !== s.root.conversationId) throw new Error(t("ui_reply_does_not_belong_to_the_selected_conversation"));
     if (s.sortRequired && !s.pageReady) return { action: "skip", why: "waiting-first-page" };
     if (analysisAlreadyHandled(db, account, reply) && !s.results[reply.id]) return { action: "skip", why: "already-handled" };
@@ -1211,7 +1212,7 @@ async function handle(message, sender) {
       }
       return { cancelled };
     });
-    if (message.scope !== "clear") abortFlights(f => f.account === account && (message.scope === "thread-user" ? f.userId === reply.userId || f.handle === reply.handle : f.replyId === reply.id));
+    if (message.scope !== "clear") abortFlights(f => f.account === account && f.rootId === rootId && (message.scope === "thread-user" ? f.userId === reply.userId || f.handle === reply.handle : f.replyId === reply.id));
     notify(); return result;
   }
   if (type === "FILTER_SEED_GET") {

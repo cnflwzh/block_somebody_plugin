@@ -285,6 +285,33 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       session = await rpc("ARM", { root, account: "viewer" });
       await rpc("LOCATION", { root, account: "viewer", postId: root.id, pageReady: true, sort: "recent" });
     });
+    await t.test("keeping a user in one thread does not cancel another thread's analysis", async () => {
+      const { change, read } = await import("../src/lib/store.js");
+      const saved = await read(), savedFetch = globalThis.fetch, savedGet = chrome.tabs.get;
+      const otherRoot = { ...root, id: "600000", conversationId: "600000", text: "Independent thread cancellation fixture" };
+      const otherReply = { ...reply, id: "600001", parentId: "600000", conversationId: "600000", userId: "990099", handle: "crossroot" };
+      const localReply = { ...otherReply, id: "100099", parentId: root.id, conversationId: root.conversationId };
+      let release, signal, pending;
+      try {
+        chrome.tabs.get = async id => ({ id, url: `https://x.com/author/status/${id === 2 ? otherRoot.id : root.id}` });
+        await change(db => {
+          db.settings.paused = false; db.modelError = ""; db.history = []; db.jobs = []; db.nextActionAt = now + 3600000;
+          db.sessions[2] = { ...db.sessions[1], id: "other-session", root: otherRoot, results: {}, excluded: [], sortRequired: false, pageReady: true };
+        });
+        globalThis.fetch = async (url, options) => {
+          signal = options.signal;
+          await new Promise(resolve => { release = resolve; });
+          return Response.json({ answers: { stance: { type: "choice", choice: "support", probabilities: { support: .96, oppose: .01, neutral: .01, uncertain: .02 }, confidence: .98 } } });
+        };
+        pending = rpc("CLASSIFY", { sessionId: "other-session", reply: otherReply, account: "viewer", ancestors: [] }, { ...sender, frameId: 0, tab: { id: 2 } }).catch(error => error);
+        await Promise.race([flush(() => !!release), pending.then(result => { throw new Error("Classification ended before fetch: " + String(result instanceof Error ? result.message : JSON.stringify(result))); })]);
+        await rpc("KEEP_CONTENT", { account: "viewer", rootId: root.id, root, reply: localReply, ancestors: [], scope: "thread-user" }, { ...sender, frameId: 0 });
+        assert.equal(signal.aborted, false, "unrelated original post remains active");
+        await rpc("KEEP_CONTENT", { account: "viewer", rootId: otherRoot.id, root: otherRoot, reply: otherReply, ancestors: [], scope: "thread-user" }, { ...sender, frameId: 0, tab: { id: 2 } });
+        assert.equal(signal.aborted, true, "matching original post is cancelled");
+        release(); await pending;
+      } finally { release?.(); if (pending) await pending; globalThis.fetch = savedFetch; chrome.tabs.get = savedGet; await change(db => { Object.assign(db, saved); }); }
+    });
     await t.test("dashboard cancellation handles pending and in-flight stance jobs", async () => {
       const { change, read } = await import("../src/lib/store.js");
       const saved = await read();
