@@ -1,6 +1,6 @@
 const KEY = "blocksb.settings-drafts.v1";
 const GROUPS = Object.freeze({
-  general: ["language", "cache-limit", "reduced-motion", "animation-effect"],
+  general: ["block-hidden-text", "language", "cache-limit", "reduced-motion", "animation-effect"],
   support: ["preset", "high", "confidence", "skip-following", "mask-enabled", "maskThreshold", "auto-load-default"],
   observer: ["observer-enabled", "observer-scope", "observer-preset", "observer-threshold", "observer-confidence", "observer-minHits", "observer-hit-policy", "observer-skipFollowing", "observer-showMarkers", "observer-mask", "observer-mode", "observer-reviewMinReplies", "observer-reviewThreshold", "observer-reviewConfidence"]
 });

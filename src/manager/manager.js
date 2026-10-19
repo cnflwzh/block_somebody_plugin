@@ -166,7 +166,9 @@ const replyPreview = mountReplyPreview();
       modelLoaded = false; await refresh();
     },
     onSave: async value => {
-      await send("SAVE_SETTINGS", { value: { preset: value.preset, animationEffect: value.animationEffect,
+      const high = state.presets[value.preset]?.high ?? state.settings.high;
+      const maskThreshold = Math.min(state.settings.maskThreshold, Math.max(0, high - 0.01));
+      await send("SAVE_SETTINGS", { value: { preset: value.preset, maskThreshold, animationEffect: value.animationEffect,
         observer: { enabled: value.enabled, mode: value.mode, scope: value.scope, minHits: value.minHits, skipFollowing: value.skipFollowing, ...(value.mode === "cumulative" ? { preset: value.observerPreset } : {}) } } });
       // Preserve unrelated general drafts while keeping the wizard's saved effect consistent.
       for (const radio of document.querySelectorAll('[name="animation-effect"]')) radio.checked = radio.value === value.animationEffect;
@@ -537,11 +539,11 @@ const replyPreview = mountReplyPreview();
   }
   $("modal-close").onclick = () => $("modal").close();
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !e.defaultPrevented && !document.querySelector("dialog[open]") && params.has("embedded")) parent.postMessage({ type: "blocksb:close" }, "*"); });
-  function undo(h) {
+  function undo(h, module) {
     const body = el("div"); body.append(el("p", "modal-copy", t("ui_use_s_x_session_to_unblock_keep_an_x_page", h.account, h.target.handle)));
     if (h.verification === "http-only") body.append(el("p", "hint", t("ui_only_http_success_was_recorded_the_prior_block_status_was")));
     const label = el("label", "modal-check"), input = el("input"); input.type = "checkbox"; label.append(input, document.createTextNode(t("ui_also_allowlist_this_user_to_skip_future_analysis"))); body.append(label);
-    modal(t("ui_unblock"), body, async () => { await send("UNDO", { id: h.id, whitelist: input.checked }); await refresh(); toast(t("ui_unblock_request_queued")); }, t("ui_unblock"));
+    modal(t("ui_unblock"), body, async () => { await send("UNDO", { id: h.id, module, whitelist: input.checked }); await refresh(); toast(t("ui_unblock_request_queued")); }, t("ui_unblock"));
   }
   function detail(h) {
     const body = el("div"); body.append(profileHead(h.target, h.waitingFollowing ? "waiting_following" : h.status));
@@ -915,8 +917,8 @@ const replyPreview = mountReplyPreview();
   }
   chrome.runtime.onMessage.addListener(m => { if (m?.type === "STATE_CHANGED") { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 150); } });
   const renderDashboard = mountDashboard({ send, refresh, navigate: tab, showRecord: detail, toast, undoRecord: async (h, module) => {
-    if (["pending", "running"].includes(h.status)) { await send("UNDO", { id: h.id, module: module === "stance" ? undefined : module }); await refresh(); }
-    else undo(h);
+    if (["pending", "running"].includes(h.status)) { await send(module === "stance" ? "CANCEL_JOB" : "UNDO", { id: h.id, module }); await refresh(); }
+    else undo(h, module);
   } });
   tab(currentTab); settingsTab(["general", "observer", "support"].includes(params.get("section")) ? params.get("section") : ["general", "observer", "support"].includes(remembered?.section) ? remembered.section : "general"); void refresh();
 })();

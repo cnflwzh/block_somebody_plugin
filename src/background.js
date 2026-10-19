@@ -1526,17 +1526,21 @@ async function handle(message, sender) {
   if (type === "CANCEL_JOB") {
     if (!ui) throw new Error(t("ui_use_the_history_panel"));
     const before = await read(), original = before.history.find(h => h.id === message.id);
-    if (original?.module === "observer" && before.jobs.some(j => j.historyId === original.id && j.status === "pending")) {
+    if (original?.module === "observer" && before.jobs.some(j => j.historyId === original.id && ["pending", "running"].includes(j.status))) {
       abortFlights(f => f.account === original.account && f.userId === original.target.userId);
       await forgetObserverUser(original.account, original.target.userId);
       observerSimulations.delete(observerUserKey(original.account, original.target.userId));
     }
     await change(d => {
-      const j = d.jobs.find(j => j.historyId === message.id && j.status === "pending"); if (!j) throw new Error(t("ui_action_already_started_submitted_requests_cannot_be_canceled"));
+      const j = d.jobs.find(j => j.historyId === message.id && (j.status === "pending" || j.kind === "block" && j.status === "running")); if (!j) throw new Error(t("ui_action_already_started_submitted_requests_cannot_be_canceled"));
       const h = d.history.find(h => h.id === message.id);
       if (j.kind === "block" && (h.observerOwner || h.nameOwner) && h.module === "stance") { h.stanceOwner = false; h.module = h.observerOwner ? "observer" : "name"; j.module = h.module; j.manual = false; return; }
-      j.status = "cancelled"; h.status = j.kind === "unblock" ? h.verification === "http-only" ? "submitted" : "blocked" : "cancelled"; h.updated = Date.now();
-      if (j.kind === "block") h.observerOwner = false;
+      // A sent request cannot be recalled: queue an unblock after confirmed success.
+      // Before submission, cancelling the job also invalidates the worker's final send guard.
+      if (j.kind === "block" && j.submitted) h.undoRequested = true;
+      else { j.status = "cancelled"; h.status = j.kind === "unblock" ? h.verification === "http-only" ? "submitted" : "blocked" : "cancelled"; }
+      h.updated = Date.now();
+      if (j.kind === "block") { h.observerOwner = false; h.stanceOwner = false; }
       for (const s of Object.values(d.sessions)) if (s.account === h.account && !s.excluded.includes(h.target.handle)) s.excluded.push(h.target.handle);
     }); notify(); return true;
   }

@@ -285,6 +285,22 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       session = await rpc("ARM", { root, account: "viewer" });
       await rpc("LOCATION", { root, account: "viewer", postId: root.id, pageReady: true, sort: "recent" });
     });
+    await t.test("dashboard cancellation handles pending and in-flight stance jobs", async () => {
+      const { change, read } = await import("../src/lib/store.js");
+      const saved = await read();
+      try {
+        for (const [status, sent] of [["pending", false], ["running", false], ["running", true]]) {
+          await change(db => {
+            db.history = [{ id: "cancel-fixture", account: "viewer", module: "stance", stanceOwner: true, status, target: { handle: "canceluser", userId: "999001" } }];
+            db.jobs = [{ id: "cancel-job", historyId: "cancel-fixture", kind: "block", status, submitted: sent }];
+          });
+          await rpc("CANCEL_JOB", { id: "cancel-fixture" }, ui);
+          assert.equal(data.state.jobs[0].status, sent ? "running" : "cancelled");
+          assert.equal(data.state.history[0].undoRequested === true, sent);
+          assert.equal(data.state.history[0].stanceOwner, false);
+        }
+      } finally { await change(db => { Object.assign(db, saved); }); }
+    });
     await t.test("queued blocks survive navigation and tab closure, retain spacing, and wait for the right account", async () => {
       const first = { ...reply, id: "100006", userId: "900006", handle: "queuedone" };
       const second = { ...reply, id: "100007", userId: "900007", handle: "queuedtwo" };
