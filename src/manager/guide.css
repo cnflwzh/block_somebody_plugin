@@ -38,3 +38,7 @@
 .guide-demo-history{position:absolute;z-index:7;right:0;top:0;bottom:0;width:75%;padding:18px;background:var(--bg);box-shadow:var(--shadow);font-size:13px}
 .setup-page-description{font-size:14px;line-height:1.6;margin-bottom:14px;color:var(--muted)}
 @media(hover:none){.guide-x-tools{opacity:1}}
+/* Setup uses the same blue controls and readable product examples as settings. */
+.bs-setup{border-radius:14px;max-width:600px;padding:22px}.setup-page-description{font-size:15px}.bs-setup h2{font-size:23px}.bs-setup .primary{background:var(--blue);color:white;border-radius:9px}.setup-demo{margin:18px 0}.guide-x-screen{border-radius:9px}.bs-setup select,.bs-setup input:not([type=checkbox]){border-radius:7px}.bs-setup .switch-row{min-height:50px}
+
+.setup-steps{list-style:none;margin:10px 0 22px;padding:0;display:flex;justify-content:space-between;gap:6px}.setup-steps li{display:flex;align-items:center;flex-direction:column;gap:8px;color:var(--muted);flex:1;text-align:center}.setup-steps li>span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--field);font-size:14px}.setup-steps li.active{color:var(--blue)}.setup-steps li.active>span{background:var(--blue);color:white}.setup-steps small{font-size:11px}.bs-setup{width:min(600px,calc(100vw - 24px));max-height:calc(100vh - 24px)}

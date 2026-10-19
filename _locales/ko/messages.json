@@ -2486,7 +2486,7 @@
     "message": "분류 결과"
   },
   "setup_sample_text": {
-    "message": "흥미로운 관점이네요. 저도 한번 해 보고 싶어요."
+    "message": "공원 산책은 단순한 운동이 아니라 머리를 쉬게 하는 시간입니다. 경로, 시간, 날씨라는 세 가지 관점에서 계획해 보세요. 휴식과 운동 중 어느 쪽이 목적이신가요?"
   },
   "setup_demo_probability": {
     "message": "확률 96%"
@@ -2516,7 +2516,7 @@
     "message": "삭제 애니메이션 보기"
   },
   "setup_auto_hint": {
-    "message": "탐색 중 작동합니다. 누적 모드는 댓글별로 분석해 적중 수를 세며, 종합 모드는 충분한 댓글을 모은 뒤 한 번에 판정합니다."
+    "message": "둘러보는 동안 답글을 자동으로 판별합니다. 누적 모드는 답글을 하나씩 분석해 의심 답글 수를 셉니다. 종합 모드는 계정을 처음 만나면 백그라운드에서 최근 답글을 가져와 한꺼번에 판단합니다."
   },
   "setup_connect_description": {
     "message": "댓글을 분석할 모델을 연결하세요. API 키를 입력하고 연결한 뒤 계속하세요. 이미 연결되어 있다면 바로 다음으로 이동할 수 있습니다."
@@ -2573,16 +2573,16 @@
     "message": "**자동 관찰 대상을 선택합니다.**\n\n블루 인증만 선택하면 인증을 확인할 수 없는 계정은 제외합니다.\n\n인증 자체는 AI 판정 근거가 아닙니다.\n\n자동 관찰을 켜야 합니다."
   },
   "help_policy": {
-    "message": "**프리셋은 확률과 모델 신뢰도만 바꿉니다.**\n\n슬라이더를 조정하면 사용자 지정으로 전환됩니다.\n\n누적 댓글 수, 원글 수, 최근 적중 비율은 유지됩니다."
+    "message": "**확률과 신뢰도를 함께 조정합니다.** 슬라이더를 움직이면 사용자 지정으로 바뀌며, 누적 답글 수는 유지됩니다."
   },
   "help_suspect": {
-    "message": "**누적 모드에서 댓글을 적중으로 세는 의심 확률 기준입니다.**\n\n개별 신뢰도와 계정 누적 조건도 필요합니다.\n\n종합 모드는 별도 기준을 사용합니다."
+    "message": "**의심 답글로 집계할 확률 기준입니다.** 신뢰도 기준도 충족해야 하며, 지정한 수에 도달하면 계정을 차단합니다."
   },
   "help_confidence": {
     "message": "**개별 분류의 신뢰도로 범주 확률과는 다르며 둘 다 충족해야 합니다.**\n\n누적 모드는 수량 조건도 필요합니다.\n\n종합 모드는 별도 신뢰도를 사용합니다."
   },
   "help_hits": {
-    "message": "**한 계정에서 기준을 충족한 서로 다른 댓글이 최소 몇 개 필요한지 정합니다.**\n\n원글 수와 최근 적중 비율도 충족해야 합니다.\n\n새로고침이나 캐시 적중은 중복 계산하지 않습니다."
+    "message": "**한 계정의 의심 답글이 지정한 수에 도달하면 차단합니다.** 각 답글이 확률과 신뢰도 기준을 모두 충족해야 합니다.\n\n1개, 2개 또는 1~100개를 직접 설정할 수 있습니다. 최근 30일의 서로 다른 답글만 세며, 같은 답글을 다시 봐도 중복 집계하지 않습니다. 같은 대화의 답글도 포함됩니다."
   },
   "help_threads": {
     "message": "**적중 댓글이 최소 몇 개의 서로 다른 원글에 있어야 하는지 정합니다.**\n\n같은 댓글란은 원글 하나로 계산합니다.\n\n다른 누적 조건도 충족해야 하며, 값이 클수록 엄격하고 댓글 수보다 클 수 없습니다."
@@ -2600,7 +2600,7 @@
     "message": "**팔로우한 계정을 제외하며 팔로우 상태를 확인할 수 없어도 보류합니다.**\n\n모듈별로 설정하고 허용 목록이 항상 우선합니다."
   },
   "help_markers": {
-    "message": "**누적 모드에서만 개별 확률을 표시합니다.**\n\n종합 모드는 개별 분석을 하지 않아 비활성화됩니다.\n\n누적 모드로 돌아오면 기존 선택을 유지합니다."
+    "message": "**누적 모드에서 답글별 확률 표시를 켤 수 있습니다. 마우스를 올리면 항목별 확률을 볼 수 있습니다.**\n\n종합 모드에서는 판단 후 사용자 이름 옆에 계정 AI 확률을 자동으로 표시하며, 이 스위치와는 별개입니다."
   },
   "help_observer_mask": {
     "message": "**누적 모드에서 개별 기준을 충족한 댓글을 높이 유지 마스크로 가립니다.**\n\n개별 판정이 없는 종합 모드에서는 비활성화되지만 차단 조건 충족 시 삭제 애니메이션은 정상 작동합니다."
@@ -2639,7 +2639,7 @@
     "message": "수집 및 판정 조건"
   },
   "ui_collect_replies": {
-    "message": "수집 댓글 수"
+    "message": "최대 분석 답글 수"
   },
   "ui_combined_probability": {
     "message": "종합 의심 확률"
@@ -2648,22 +2648,22 @@
     "message": "샘플 적중 비율"
   },
   "ui_collected_unanalysed": {
-    "message": "수집됨 · 개별 분석 안 함"
+    "message": "종합 판단 자료"
   },
   "ui_collection_progress": {
-    "message": "수집 $1/$2개 · 원글 $3/$4개"
+    "message": "수집한 답글 $1개 · 한 번에 최대 $2개 분석 · 원본 게시물 $3개"
   },
   "help_observer_mode": {
-    "message": "**누적 모드는 댓글별로 분석해 적중 수를 셉니다.**\n\n종합 모드는 필요한 수를 먼저 수집한 뒤 한 번에 분석하며 개별 요청은 보내지 않습니다.\n\n모드별 설정과 증거는 분리됩니다."
+    "message": "**누적: 개별 분석 후 의심 답글을 셉니다.**\n\n**종합: 처음 만난 뒤 최근 답글을 백그라운드에서 가져와 함께 분석합니다.** 프로필이나 다른 페이지로 이동하지 않습니다. 설정은 따로 저장됩니다."
   },
   "help_collect_replies": {
-    "message": "**종합 분석 전에 수집할 서로 다른 댓글 3~5개입니다.**\n\n개별 의심 판정은 필요 없으며 원글 수 조건도 충족해야 합니다.\n\n누적 모드의 적중 수와는 독립적입니다."
+    "message": "최근 답글을 최대 1~10개 사용합니다. 맥락이 누락된 답글은 건너뛰고 계속 찾습니다. 읽기가 끝나면 확보한 답글만 분석하며 상한까지 채우려고 기다리지 않습니다."
   },
   "help_collect_threads": {
-    "message": "**수집 댓글이 속한 서로 다른 원글 수로 2~5개이며 댓글 수보다 클 수 없습니다.**\n\n종합 모드 샘플만 세고 같은 댓글란은 하나로 계산합니다."
+    "message": "**필요한 서로 다른 원본 게시물 수(2~5개).** 답글 수보다 클 수 없습니다.\n\n같은 대화는 하나로 셉니다. 최대 두 페이지를 읽으며, 부족하면 나중에 보충합니다."
   },
   "help_combined_probability": {
-    "message": "**묶음 분석 결과에 필요한 의심 범주 확률입니다.**\n\n종합 신뢰도도 충족해야 합니다.\n\n누적 모드의 개별 기준과 별개이며 개별 점수는 생성하지 않습니다."
+    "message": "모델이 이번에 확보한 자료 전체를 분류합니다. 선택된 차단 범주의 확률과 확신도가 모두 기준을 충족하면 대기열에 추가합니다."
   },
   "help_combined_confidence": {
     "message": "**종합 분류의 확신도입니다.**\n\n종합 확률과 함께 충족해야 차단합니다.\n\n누적 모드 신뢰도와 별도로 저장합니다."
@@ -2675,34 +2675,34 @@
     "message": "두 판단 방식은 어떻게 다른가요?"
   },
   "modes_intro": {
-    "message": "둘 다 평소 탐색 중에 작동합니다. 답글을 하나씩 판단할지, 모아서 한꺼번에 판단할지 선택할 수 있습니다."
+    "message": "누적은 답글을 하나씩 관찰합니다. 종합은 처음 만난 뒤 최근 답글을 가져오므로 같은 사람을 여러 번 만날 필요가 없습니다."
   },
   "modes_default": {
     "message": "기본 방식"
   },
   "modes_together": {
-    "message": "먼저 수집"
+    "message": "처음 만나면 자료 보충"
   },
   "modes_cumulative": {
-    "message": "**답글을 볼 때마다 하나씩 판단합니다.**\n\n같은 계정의 의심 답글 수, 원본 게시물 수, 최근 의심 비율이 모두 설정 조건을 충족하면 차단 대기열에 추가합니다."
+    "message": "**접한 답글을 하나씩 판단합니다.**\n\n확률과 신뢰도 기준을 모두 충족한 답글만 셉니다. 1개, 2개 또는 지정한 수에 도달하면 차단 대기열에 추가합니다."
   },
   "modes_combined": {
-    "message": "**먼저 답글을 모은 뒤 함께 판단합니다.**\n\n탐색 중 마주친 답글만 수집하며, 상대 프로필에 들어가 추가로 가져오지 않습니다. 수집 중에는 Jev를 호출하지 않고 개별 점수도 매기지 않습니다."
+    "message": "**처음 만났을 때 계정을 종합 분석합니다.**\n\n최근 답글을 가져와 표시 이름, 소개, 여러 게시물에서 반복되는 표현 구조와 게시 패턴을 함께 판단합니다. 정보나 맥락이 부족하면 알 수 없음으로 남기며 프로필로 이동하지 않습니다."
   },
   "modes_c1": {
     "message": "답글 발견 → 개별 분석"
   },
   "modes_c2": {
-    "message": "의심 답글 수와 원본 게시물 수 충족"
+    "message": "의심 답글 1개 집계"
   },
   "modes_c3": {
-    "message": "최근 의심 비율도 충족 → 차단 대기열에 추가"
+    "message": "지정한 수 도달 → 차단 대기열"
   },
   "modes_b1": {
-    "message": "답글 발견 → 기기에 저장"
+    "message": "첫 만남 → 기기 내 자료 확인"
   },
   "modes_b2": {
-    "message": "답글 수와 원본 게시물 수 충족 → 함께 분석"
+    "message": "불완전한 답글 제외 → 확보한 자료 분석"
   },
   "modes_b3": {
     "message": "전체 확률과 확신도 충족 → 차단 대기열에 추가"
@@ -2711,7 +2711,7 @@
     "message": "직접 눌러 보기"
   },
   "modes_demo_intro": {
-    "message": "원본 게시물 A, B, C에서 같은 사람의 답글을 하나씩 만났다고 가정합니다. 두 방식의 진행을 나란히 비교해 보세요."
+    "message": "같은 사람이 A, B, C에 답글을 달았다고 가정합니다. 한 번 누르면 누적은 만난 답글 하나만, 종합은 나머지 두 개를 가져와 함께 분석하는 과정을 보여 줍니다."
   },
   "modes_scenario": {
     "message": "예시 선택"
@@ -2729,7 +2729,7 @@
     "message": "처음부터"
   },
   "modes_demo_note": {
-    "message": "고정 예시: 답글 3개, 원본 게시물 3개, 확률 90%, 확신도 80%, 비율 75%. 점수는 설명용입니다. 모델 요청이나 계정 차단, 설정 변경은 하지 않습니다."
+    "message": "누적 모드는 의심 답글 3개, 종합 모드는 최대 3개를 분석하는 예시입니다. 확률 기준은 90%, 신뢰도는 80%입니다. 점수는 예시이며 설정이나 계정을 변경하지 않습니다."
   },
   "modes_requests": {
     "message": "회 분석 요청"
@@ -2738,28 +2738,28 @@
     "message": "설정 숫자 이해하기"
   },
   "modes_counts_title": {
-    "message": "“답글 3개, 원본 게시물 3개”란?"
+    "message": "두 모드의 답글 수는 어떻게 다른가요?"
   },
   "modes_counts": {
-    "message": "**누적 판단: 의심 답글을 셉니다.** 조건에 맞는 의심 답글 3개가 서로 다른 원본 게시물 3개에 있어야 하고, 최근 비율도 충족해야 합니다.\n\n**종합 판단: 수집한 답글을 셉니다.** 미리 의심 여부를 판단하지 않습니다. 원본 게시물 3개에서 답글 3개를 모은 후 분석합니다.\n\n같은 대화의 여러 답글은 원본 게시물 1개로 셉니다. 새로고침해도 같은 답글은 중복 집계하지 않습니다."
+    "message": "**누적: 답글 수는 차단 기준입니다.** 2개를 선택하면 같은 계정의 서로 다른 답글 2개가 기준을 충족할 때 차단합니다. 같은 대화여도 됩니다.\n\n**종합: 답글 수는 분석 상한입니다.** 7개로 설정해도 5개만 사용 가능하면 5개를 분석합니다. 맥락이 없는 답글은 건너뛰고, 0개일 때는 분석하지 않습니다."
   },
   "modes_scores_title": {
-    "message": "확률, 확신도, 비율의 차이"
+    "message": "확률과 신뢰도"
   },
   "modes_scores": {
-    "message": "**확률: 차단하려는 내용에 얼마나 해당하는지.**\n\n**확신도: 모델이 자신의 분류에 얼마나 자신 있는지.** 두 조건을 모두 충족해야 합니다.\n\n**누적 비율: 최근 유효 판단 최대 5개 중 의심 답글 비율.** 4개 중 3개면 75%입니다. 신뢰하기 어려운 판단은 제외합니다.\n\n**종합 비율: 의심 패턴이 나타나야 하는 샘플 비율.** 3개의 75%는 올림하여 3개입니다. 개별 점수의 평균이 아닙니다."
+    "message": "**확률: 차단할 범주에 얼마나 해당하는지입니다.**\n\n**신뢰도: 모델이 분류를 얼마나 확신하는지입니다.** 두 기준을 모두 충족한 답글만 누적합니다."
   },
   "modes_marks_title": {
     "message": "종합 방식에서 개별 확률이 없는 이유"
   },
   "modes_marks": {
-    "message": "**개별 분석을 하지 않으므로 개별 점수도 없습니다.** 판단 표시와 미리 가리기는 사용할 수 없습니다.\n\n전체 판단이 차단 조건을 충족하면 삭제 애니메이션과 백그라운드 처리는 정상 작동합니다. 누적 방식으로 돌아가면 기존 표시·가리기 선택이 복원됩니다."
+    "message": "**종합 모드는 개별 답글 점수가 아닌 계정 전체의 확률을 표시합니다.** 판단 후 사용자 이름 옆 표시에 마우스를 올리면 항목별 확률, 신뢰도, 분석한 답글 수를 확인할 수 있습니다.\n\n미리 가리기는 사용할 수 없으며, 차단 조건을 충족하면 삭제 애니메이션이 실행됩니다."
   },
   "modes_cost_title": {
     "message": "어느 방식이 요청을 덜 쓰나요?"
   },
   "modes_cost": {
-    "message": "**누적: 대상 답글마다 개별 분석합니다.**\n\n**종합: 수집 중에는 0회, 모은 뒤 함께 1회.** 한 번에 더 많은 텍스트가 포함되므로 비용이 요청 수에 비례해 줄어드는 것은 아닙니다.\n\n동일한 요청은 캐시를 사용할 수 있습니다. 같은 계정의 재분석은 최소 1시간이 지나고 새 답글 2개가 추가되어야 합니다. 두 방식 모두 일일 상한이 적용됩니다."
+    "message": "**누적: 개별 분석 후 판단을 누적합니다.**\n\n**종합: 읽기 범위에서 상한까지 사용 가능한 답글을 모아 한 번에 분석합니다.** 수량을 채우려고 기다리거나 개별 적중 비율로 투표하지 않습니다.\n\n동일 결과는 캐시를 사용하고, 자연스러운 대화로 명확히 판단한 계정은 기기에 저장하여 이후 건너뜁니다."
   },
   "modes_shared": {
     "message": "**먼저 자동 관찰을 켜세요.** 허용 목록과 활성화된 팔로우 보호가 적용되며 공식 @grok은 제외됩니다. 보관 기간이 지난 답글은 집계하지 않고, 방식을 전환하면 이전 판단과 섞지 않습니다.\n\n모델의 확률은 판단 결과이며 작성자의 정체를 증명하지는 않습니다."
@@ -2774,10 +2774,10 @@
     "message": "아직 만나지 않음"
   },
   "modes_hit_progress": {
-    "message": "의심 $1/3개 · 원본 게시물 $2/3개"
+    "message": "의심 답글 $1/3개"
   },
   "modes_collect_progress": {
-    "message": "수집 $1/3개 · 원본 게시물 $2/3개"
+    "message": "사용 가능 $1개 · 원본 $2개"
   },
   "modes_queued": {
     "message": "조건 충족 → 차단 대기열에 추가"
@@ -2792,6 +2792,330 @@
     "message": "전체 확률 96%, 확신도 90% → 차단 대기열에 추가"
   },
   "modes_wait_collect": {
-    "message": "수집 중: 모델 요청 없음"
+    "message": "처음 만나면 백그라운드 수집 시작"
+  },
+  "modes_fetched_reply": {
+    "message": "종합에서 가져옴 · 누적에서는 아직 만나지 않음"
+  },
+  "ui_collection_fetching": {
+    "message": "최근 답글을 백그라운드에서 가져오는 중"
+  },
+  "ui_collection_insufficient": {
+    "message": "사용 가능한 답글이 없습니다"
+  },
+  "ui_collection_limited": {
+    "message": "X 읽기가 제한되었습니다. 나중에 재개합니다"
+  },
+  "ui_collection_unavailable": {
+    "message": "최근 답글을 가져올 수 없습니다. 나중에 재시도합니다"
+  },
+  "ui_block_hidden_text": {
+    "message": "숨은 문자 스팸 답글 차단"
+  },
+  "help_block_hidden_text": {
+    "message": "답글에 보이지 않는 문자를 과도하게 삽입하는 계정을 자동으로 차단합니다."
+  },
+  "ui_account_material": {
+    "message": "이번 분석 자료"
+  },
+  "ui_account_profile_available": {
+    "message": "표시 이름과 소개 참고"
+  },
+  "ui_account_profile_unknown": {
+    "message": "표시 이름 또는 소개 정보 부족"
+  },
+  "ui_account_observed": {
+    "message": "게시 간격 표본: 답글 $1개 · 원본 게시물 $2개"
+  },
+  "ui_account_rhythm": {
+    "message": "관측 간격 중앙값 $1초 · 가장 밀집한 5분: $2개／원본 $3개"
+  },
+  "ui_account_rhythm_unknown": {
+    "message": "게시 간격 표본 부족"
+  },
+  "modes_account_dimensions": {
+    "message": "**프로필:** 표시 이름과 소개가 답글과 어떤 관련이 있는지, 자동 답글임을 명시했는지 확인합니다.\n\n**답글 이력:** 서로 다른 주제에서도 같은 구성, 경험담 도입, 정형화된 질문이 반복되는지 비교합니다.\n\n**게시 패턴:** 간격, 밀도, 길이, 원본 게시물 수를 함께 보며 맞팔 단문과 여러 주제의 완성된 논평을 구별합니다.\n\n누락 정보는 알 수 없음으로 처리합니다. 이름의 AI, 높은 빈도, 사람이라는 주장만으로 결과를 정하지 않습니다."
+  },
+  "ui_normal_accounts": {
+    "message": "자연스러운 대화로 판단한 계정"
+  },
+  "ui_normal_remove": {
+    "message": "목록에서 제거"
+  },
+  "ui_normal_empty": {
+    "message": "기록이 없습니다"
+  },
+  "ui_normal_help": {
+    "message": "자연스러운 대화로 명확히 판단한 계정은 기기에 저장하고 이후 종합 분석을 건너뜁니다. 목록에서 제거하면 다시 판단할 수 있습니다."
+  },
+  "ui_more_judgment_options": {
+    "message": "고급 판단 설정"
+  },
+  "ui_reply_preview_incomplete": {
+    "message": "이 기록에는 답글의 일부만 저장되어 있습니다. 오른쪽 화살표를 눌러 원문을 확인하세요."
+  },
+  "observer_combined_marker": {
+    "message": "계정 AI 확률 $1%"
+  },
+  "observer_combined_marker_note": {
+    "message": "계정 종합 판단 · 답글 $1개 분석"
+  },
+  "ui_normal_search": {
+    "message": "이름 또는 @사용자 이름 검색"
+  },
+  "ui_normal_count": {
+    "message": "계정 $1개"
+  },
+  "ui_hits_one": {
+    "message": "1개면 차단"
+  },
+  "ui_hits_two": {
+    "message": "의심 답글 2개"
+  },
+  "ui_hits_progress": {
+    "message": "의심 답글 $1 / $2개"
+  },
+  "dash_title": {
+    "message": "대시보드"
+  },
+  "dash_overview": {
+    "message": "오늘 현황"
+  },
+  "dash_analyzed": {
+    "message": "분석 완료"
+  },
+  "dash_recent": {
+    "message": "최근 처리"
+  },
+  "dash_search": {
+    "message": "계정 또는 일치 규칙 검색"
+  },
+  "dash_combined_score": {
+    "message": "종합 판단 $1%"
+  },
+  "dash_ai_score": {
+    "message": "AI 확률 $1%"
+  },
+  "dash_support_score": {
+    "message": "원글에 동의 $1%"
+  },
+  "dash_observation": {
+    "message": "관찰 기록"
+  },
+  "dash_skipped": {
+    "message": "건너뜀"
+  },
+  "dash_masked": {
+    "message": "가림 처리"
+  },
+  "dash_withdraw": {
+    "message": "취소"
+  },
+  "dash_undo": {
+    "message": "실행 취소"
+  },
+  "dash_empty": {
+    "message": "처리 기록이 없습니다"
+  },
+  "dash_count_note": {
+    "message": "캐시 재사용을 포함한 오늘의 보관된 분석 결과 수이며 API 요청 수가 아닙니다."
+  },
+  "dash_tasks": {
+    "message": "진행 중 작업 $1개"
+  },
+  "dash_no_tasks": {
+    "message": "진행 중 작업 없음"
+  },
+  "dash_combined_watching": {
+    "message": "종합 판단 · 관찰 중"
+  },
+  "dash_cumulative_watching": {
+    "message": "누적 판단 · 관찰 중"
+  },
+  "dash_view_tasks": {
+    "message": "작업 보기"
+  },
+  "dash_manage": {
+    "message": "관리"
+  },
+  "dash_running": {
+    "message": "실행 중"
+  },
+  "dash_task_records": {
+    "message": "작업 기록"
+  },
+  "dash_detection_settings": {
+    "message": "인식 설정"
+  },
+  "dash_my_rules": {
+    "message": "내 규칙"
+  },
+  "dash_edit_rule": {
+    "message": "규칙 편집"
+  },
+  "ui_custom_filters_enabled": {
+    "message": "사용자 지정 필터 사용"
+  },
+  "ui_custom_filters_off": {
+    "message": "사용자 지정 필터 꺼짐"
+  },
+  "ui_custom_filters_toggle_help": {
+    "message": "끄면 규칙 검사와 아직 전송하지 않은 차단을 중단합니다. 개별 규칙 설정은 유지하며, 이미 전송된 차단은 취소하지 않습니다. 일반 설정의 숨은 문자 필터는 별도로 작동합니다."
+  },
+  "ui_rule_conditions": {
+    "message": "일치 조건"
+  },
+  "ui_rule_condition_number": {
+    "message": "조건 $1"
+  },
+  "ui_rules_import": {
+    "message": "JSON 가져오기"
+  },
+  "ui_rules_export": {
+    "message": "JSON 내보내기"
+  },
+  "ui_rules_export_one": {
+    "message": "이 규칙 내보내기"
+  },
+  "ui_rules_select_all": {
+    "message": "전체 선택"
+  },
+  "ui_rules_import_note": {
+    "message": "가져온 규칙은 기존 목록에 추가되며 저장 후 적용됩니다."
+  },
+  "ui_rules_import_count": {
+    "message": "$1개 가져오기"
+  },
+  "ui_rules_export_count": {
+    "message": "$1개 내보내기"
+  },
+  "ui_rules_import_ready": {
+    "message": "규칙 $1개를 가져왔습니다. 설정을 저장해 주세요."
+  },
+  "ui_rules_file_invalid": {
+    "message": "파일 또는 규칙이 잘못되었습니다. JSON, 조건, 정규식을 확인해 주세요. 한 번에 최대 50개까지 가져올 수 있습니다."
+  },
+  "ui_rules_file_large": {
+    "message": "파일 총 크기는 1 MB 이하, 파일 수는 최대 50개여야 합니다."
+  },
+  "ui_rules_export_empty": {
+    "message": "내보낼 규칙이 없습니다."
+  },
+  "ui_subscription_add": {
+    "message": "URL 구독"
+  },
+  "ui_subscription_title": {
+    "message": "규칙 구독"
+  },
+  "ui_subscription_daily": {
+    "message": "매일 자동 업데이트"
+  },
+  "ui_subscription_apply": {
+    "message": "구독 추가"
+  },
+  "ui_subscription_load": {
+    "message": "규칙 불러오기"
+  },
+  "ui_subscription_count": {
+    "message": "규칙 $1개"
+  },
+  "ui_subscription_notice": {
+    "message": "구독 규칙은 즉시 적용됩니다. 자동 업데이트를 켜면 출처에서 추가·수정·삭제한 규칙이 자동 반영됩니다. 로컬 규칙은 유지됩니다."
+  },
+  "ui_subscription_url_invalid": {
+    "message": "계정 정보나 # 조각이 없는 HTTPS JSON 주소를 입력하세요."
+  },
+  "ui_subscription_permission": {
+    "message": "이 사이트의 접근 권한이 허용되지 않았습니다."
+  },
+  "ui_subscription_checked": {
+    "message": "확인: $1"
+  },
+  "ui_subscription_update_failed": {
+    "message": "업데이트에 실패해 마지막 유효한 규칙을 유지합니다."
+  },
+  "ui_subscription_refresh": {
+    "message": "지금 업데이트"
+  },
+  "ui_subscription_remove": {
+    "message": "구독 및 규칙 제거"
+  },
+  "ui_subscription_failed": {
+    "message": "구독을 읽거나 적용할 수 없습니다. 주소, 권한, JSON 형식과 규칙 수를 확인하세요. 같은 주소는 중복 구독할 수 없으며 전체 규칙은 최대 50개입니다."
+  },
+  "legal_title": {
+    "message": "이용 안내 및 라이선스"
+  },
+  "legal_continue": {
+    "message": "동의하고 계속"
+  },
+  "legal_full_license": {
+    "message": "AGPL-3.0 전문 보기"
+  },
+  "legal_load_failed": {
+    "message": "라이선스를 불러오지 못했습니다. 다시 열어 주세요."
+  },
+  "legal_acknowledge": {
+    "message": "이용 안내를 읽었으며 AGPL-3.0 라이선스를 이해했습니다."
+  },
+  "legal_risk_title": {
+    "message": "판별 결과가 틀릴 수 있습니다"
+  },
+  "legal_risk": {
+    "message": "AI 확률은 계정의 정체를 증명하지 않습니다. 오탐과 누락이 있을 수 있으므로 직접 판단해 규칙을 설정하고 처리 기록을 확인하세요."
+  },
+  "legal_actions_title": {
+    "message": "차단은 계정에 영향을 줍니다"
+  },
+  "legal_actions": {
+    "message": "자동 처리를 켜면 현재 로그인한 X 계정으로 차단 요청을 보낼 수 있습니다. 전송된 요청은 취소하지 못할 수 있습니다. 기록에서 차단 해제를 시도할 수 있습니다."
+  },
+  "legal_data_title": {
+    "message": "데이터와 키"
+  },
+  "legal_data": {
+    "message": "분석에 필요한 원문, 답글과 계정 정보는 설정한 모델 API로 전송됩니다. API 키, 규칙과 처리 기록은 로컬 브라우저에 저장됩니다. X 인증 정보는 X 요청에만 쓰이며 모델 서비스로 보내지 않습니다."
+  },
+  "legal_cost_title": {
+    "message": "외부 서비스 비용 및 가용성"
+  },
+  "legal_cost": {
+    "message": "모델 호출에는 제공업체 요금이 부과될 수 있습니다. X 또는 모델 API 변경, 요청 제한, 네트워크 오류로 기능이 일시적으로 작동하지 않을 수 있습니다."
+  },
+  "legal_sources_title": {
+    "message": "구독 및 로컬 확인 기록"
+  },
+  "legal_sources": {
+    "message": "신뢰할 수 있는 출처만 구독하세요. 자동 업데이트로 적용 규칙이 바뀔 수 있습니다. 이 확인은 문서 버전과 시각만 로컬에 저장하며 이름을 수집하거나 서명 정보를 전송하지 않습니다."
+  },
+  "legal_license_title": {
+    "message": "오픈소스 라이선스와 보증"
+  },
+  "legal_license": {
+    "message": "이 프로젝트는 AGPL-3.0-only로 현 상태 그대로 제공되며 판별 정확도나 지속적인 가용성을 보증하지 않습니다. 실행 자체에는 AGPL 수락이 필요하지 않지만 복제·수정·배포 등에는 해당 조건이 적용됩니다. 이 확인은 추가 라이선스 제한을 두지 않습니다."
+  },
+  "legal_step": {
+    "message": "이용 안내"
+  },
+  "variable_review_account": {
+    "message": "계정 정보와 게시 패턴"
+  },
+  "variable_review_profile": {
+    "message": "닉네임 및 소개"
+  },
+  "variable_review_activity": {
+    "message": "답글 시간 통계"
+  },
+  "variable_review_samples": {
+    "message": "최근 답글 및 맥락"
+  },
+  "variable_review_count": {
+    "message": "표본 수"
+  },
+  "ui_review_prompt_editor": {
+    "message": "종합 판정 · 사용자 지정 프롬프트"
+  },
+  "ui_cumulative_prompt_editor": {
+    "message": "누적 판정 · 사용자 지정 프롬프트"
   }
 }

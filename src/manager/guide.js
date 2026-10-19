@@ -1,7 +1,8 @@
+import { LEGAL_VERSION, LEGAL_SECTIONS } from "../lib/legal.js";
 const COMPLETED = "blocksb.setup.completed.v1";
 /** Setup writes model configuration on Connect and selected policies on Finish.
  * Secrets are transient. onConnect requests host access within the submit gesture. */
-export function mountGuide({ t, getSettings, onConnect, onSave }) {
+export function mountGuide({ t, getSettings, onConnect, onSave, onAccept }) {
   const node = (tag, cls = "", text = "") => { const n = document.createElement(tag); n.className = cls; n.textContent = text; return n; };
   const btn = (key, fn, cls = "subtle") => { const b = node("button", cls, t(key)); b.type = "button"; b.onclick = fn; return b; };
   const dialog = node("dialog", "bs-setup"), title = node("h2"), count = node("span", "muted");
@@ -11,7 +12,8 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
   const close = btn("ui_close", () => dismiss(false)), back = btn("guide_previous", () => { capture(); step--; render(-1); });
   const skip = btn("guide_skip", () => dismiss(true), "text-button");
   const next = node("button", "primary"); next.type = "submit";
-  header.append(title, close); footer.append(skip, back, count, next); dialog.append(header, body, error); document.body.append(dialog);
+  const steps = node("ol", "setup-steps");
+  header.append(title, close); footer.append(skip, back, count, next); dialog.append(header, steps, body, error); document.body.append(dialog);
   let step = 0, busy = false, values, fields = {}, notice, focus, previewMode = false;
   const animations = new Set(), timers = new Set();
   let sceneVersion = 0;
@@ -33,8 +35,8 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
     input.autocomplete = "off"; input.spellcheck = false; fields[key] = input; row.append(input); return row;
   }
   function select(key, label, choices, value) {
-    if (["preset", "observerPreset", "scope", "animationEffect", "mode"].includes(key)) {
-      const row = node("div", "compact-row"), group = node("div", "segments"); row.append(node("span", "", t(label)), group);
+    if (["preset", "observerPreset", "scope", "animationEffect", "mode", "minHitsChoice"].includes(key)) {
+      const row = node("div", "compact-row setup-choice-row"), group = node("div", "segments"); group.style.setProperty("--choice-count", choices.length); row.append(node("span", "", t(label)), group);
       for (const [id, text] of choices) { const item = node("label"), input = node("input"); input.type = "radio"; input.name = "setup-" + key; input.value = id; input.checked = id === value; item.append(input, node("span", "", t(text))); group.append(item); }
       Object.defineProperty(group, "value", { get: () => group.querySelector("input:checked")?.value || value });
       fields[key] = group; return row;
@@ -44,7 +46,7 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
     input.value = value; fields[key] = input; row.append(input); return row;
   }
   function capture() {
-    if (step === 1) { for (const key of ["scope", "observerPreset", "mode"]) values[key] = fields[key].value; values.enabled = fields.enabled.checked; }
+    if (step === 1) { for (const key of ["scope", "observerPreset", "mode"]) values[key] = fields[key].value; values.enabled = fields.enabled.checked; values.minHits = Number(fields.minHitsChoice.value === "custom" ? fields.minHits.value : fields.minHitsChoice.value); values.skipFollowing = fields.skipFollowing.checked; }
     if (step === 2) values.preset = fields.preset.value;
     if (step === 3) values.animationEffect = fields.animationEffect.value;
   }
@@ -65,14 +67,14 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
       for (const path of ["M20 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 18 0Z", "m5 7 3-3 3 3M8 4v13h10m1 0-3 3-3-3M16 20V7H6", "M12 20 3 11C-2 3 8 0 12 6c4-6 14-3 9 5Z", "M5 20V12m7 8V4m7 16V8"]) { const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg"); icon.setAttribute("viewBox", "0 0 24 24"); const p = document.createElementNS(icon.namespaceURI, "path"); p.setAttribute("d", path); icon.append(p); icons.append(icon); }
       content.append(icons); row.append(avatar, content); return { row, line, content };
     }
-    const original = tweet("example", t(page === 2 ? "setup_stance_original" : "setup_original_text"), true); screen.append(original.row);
+    const original = tweet("example", t(page >= 2 ? "setup_stance_original" : "setup_original_text"), true); screen.append(original.row);
     const more = btn("setup_demo_menu", () => { menu.hidden = !menu.hidden; more.setAttribute("aria-expanded", String(!menu.hidden)); }, "guide-x-more");
     more.setAttribute("aria-label", t("ui_reply_actions")); more.setAttribute("aria-expanded", "false"); original.line.append(more);
     const menu = node("div", "guide-x-menu"); menu.hidden = true; screen.append(menu);
     menu.append(node("div", "guide-x-menu-native", t("setup_native_block")));
-    const slot = node("div", "setup-demo-slot"), reply = tweet("reader", t(page === 2 ? "setup_stance_support" : "setup_sample_text")), card = reply.row;
+    const slot = node("div", "setup-demo-slot"), reply = tweet("reader", t(page >= 2 ? "setup_stance_support" : "setup_sample_text")), card = reply.row;
     slot.append(card); screen.append(slot);
-    const following = tweet("visitor", t(page === 2 ? "setup_stance_oppose" : "setup_other_reply")); screen.append(following.row);
+    const following = tweet("visitor", t(page >= 2 ? "setup_stance_oppose" : "setup_other_reply")); screen.append(following.row);
     const tools = node("span", "guide-x-tools"); tools.hidden = page === 2;
     const probability = btn("agreement_probability", () => { panel.hidden = !panel.hidden; }, "text-button"); probability.textContent = t(page === 1 ? "observer_category_ai_generated" : "agreement_probability") + " 96%";
     const manual = btn("ui_block", remove, "text-button"); tools.append(probability, manual); reply.line.append(tools);
@@ -118,7 +120,31 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
   function render(direction = 1) {
     stopAnimations();
     clearSecret(); fields = {}; error.textContent = ""; body.replaceChildren();
-    title.textContent = t(["setup_connect", "ui_observer_settings", "ui_support_settings", "ui_display_animation", "setup_confirm"][step]); count.textContent = `${step + 1} / 5`; back.hidden = step === 0;
+    steps.replaceChildren();
+    ["legal_step", "setup_connect", "ui_observer_title", "block_history", "ui_display_animation", "setup_confirm"].forEach((key, index) => { const item = node("li", index === step + 1 ? "active" : index < step + 1 ? "complete" : ""); item.append(node("span", "", String(index + 1)), node("small", "", t(key))); steps.append(item); });
+    skip.hidden = step === -1;
+    if (step === -1) {
+      title.textContent = t("legal_title"); count.textContent = "1 / 6"; back.hidden = true;
+      next.textContent = t("legal_continue");
+      const notice = node("div", "legal-notice");
+      for (const key of LEGAL_SECTIONS) {
+        const section = node("section"); section.append(node("h3", "", t(key + "_title")), node("p", "", t(key))); notice.append(section);
+      }
+      const license = node("details", "legal-license"), licenseTitle = node("summary", "", t("legal_full_license"));
+      const full = node("pre"); full.tabIndex = 0; let loaded = false;
+      license.append(licenseTitle, full); license.ontoggle = async () => {
+        if (!license.open || loaded) return;
+        try { const response = await fetch(chrome.runtime.getURL("LICENSE")); if (!response.ok) throw new Error(); full.textContent = await response.text(); loaded = true; }
+        catch { full.textContent = t("legal_load_failed"); }
+      };
+      notice.append(license); body.append(notice);
+      const checkbox = node("input"); checkbox.type = "checkbox"; checkbox.required = true; checkbox.checked = getSettings().legalAcceptance?.version === LEGAL_VERSION;
+      fields.accept = checkbox; const consent = node("label", "legal-consent"); consent.append(checkbox, node("span", "", t("legal_acknowledge"))); body.append(consent);
+      next.disabled = !checkbox.checked; checkbox.onchange = () => { next.disabled = !checkbox.checked; };
+      body.append(footer); checkbox.focus(); return;
+    }
+    next.disabled = false;
+    title.textContent = t(["setup_connect", "ui_observer_settings", "ui_support_settings", "ui_display_animation", "setup_confirm"][step]); count.textContent = `${step + 2} / 6`; back.hidden = false;
     next.textContent = t(step === 4 ? "setup_finish" : step === 0 && !getSettings().configured ? "setup_connect_next" : "guide_next");
     body.append(node("p", "setup-page-description", t(["setup_connect_description", "setup_auto_hint", "setup_manual_stance", "setup_display_description", "setup_finish_description"][step])));
     if (step > 0 && step < 4) body.append(demo(step));
@@ -134,8 +160,12 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
       const row = node("label", "switch-row", t("setup_auto_observe")), toggle = node("input"); toggle.type = "checkbox"; toggle.checked = values.enabled; toggle.setAttribute("role", "switch"); fields.enabled = toggle; row.append(toggle); body.append(row);
       body.append(select("scope", "ui_observer_scope", [["blue", "ui_observer_blue"], ["all", "ui_observer_all"]], values.scope));
       body.append(select("mode", "ui_observer_mode", [["cumulative", "ui_mode_cumulative"], ["combined", "ui_mode_combined"]], values.mode));
+      const countChoice = select("minHitsChoice", "ui_observer_conditions", [["1","ui_hits_one"],["2","ui_hits_two"],["custom","ui_custom"]], [1,2].includes(values.minHits) ? String(values.minHits) : "custom"); body.append(countChoice);
+      const customCount = field("minHits", "ui_observer_hits", "number", values.minHits); fields.minHits.min = "1"; fields.minHits.max = "100"; body.append(customCount);
+      const followingRow = node("label", "switch-row", t("ui_skip_following")), following = node("input"); following.type="checkbox"; following.setAttribute("role","switch"); following.checked=values.skipFollowing; fields.skipFollowing=following; followingRow.append(following); body.append(followingRow);
       const policy = select("observerPreset", "ui_detection_policy", policies, values.observerPreset); policy.hidden = values.mode === "combined"; body.append(policy);
-      fields.mode.onchange = () => { capture(); policy.hidden = values.mode === "combined"; };
+      const updateMode = () => { policy.hidden = fields.mode.value === "combined"; countChoice.hidden = fields.mode.value === "combined"; customCount.hidden = fields.mode.value === "combined" || fields.minHitsChoice.value !== "custom"; fields.minHits.disabled = customCount.hidden; };
+      fields.mode.onchange = updateMode; fields.minHitsChoice.onchange = updateMode; updateMode();
 
     } else if (step === 2) {
       body.append(select("preset", "ui_support_settings", policies, values.preset));
@@ -161,6 +191,10 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
     event.preventDefault(); if (busy || previewMode) return; capture();
     let operation;
     try {
+      if (step === -1) {
+        if (!fields.accept.checked) return;
+        busy = true; next.disabled = true; await onAccept(); busy = false; step = 0; render(); return;
+      }
       if (step === 0 && (!getSettings().configured || fields.key.value || fields.endpoint.value !== getSettings().endpoint || fields.model.value !== getSettings().model)) {
         operation = onConnect({ key: fields.key.value, endpoint: fields.endpoint.value, model: fields.model.value });
       } else if (step === 4) operation = onSave(values);
@@ -174,8 +208,8 @@ export function mountGuide({ t, getSettings, onConnect, onSave }) {
   };
   function open() {
     if (!getSettings()) return;
-    const s = getSettings(); values = { enabled: !!s.observer?.enabled, scope: s.observer?.scope || "blue", observerPreset: s.observer?.preset || "careful", mode: s.observer?.mode || "cumulative", preset: s.preset || "careful", animationEffect: s.animationEffect || "fly" };
-    focus = document.activeElement; step = 0; previewMode = false; if (!dialog.open) dialog.showModal(); render();
+    const s = getSettings(); values = { minHits: s.observer?.minHits || 3, skipFollowing: s.observer?.skipFollowing !== false, enabled: !!s.observer?.enabled, scope: s.observer?.scope || "blue", observerPreset: s.observer?.preset || "careful", mode: s.observer?.mode || "cumulative", preset: s.preset || "careful", animationEffect: s.animationEffect || "fly" };
+    focus = document.activeElement; step = -1; previewMode = false; if (!dialog.open) dialog.showModal(); render();
   }
   let done = false; try { done = localStorage.getItem(COMPLETED) === "1"; } catch {}
   if (!done) {

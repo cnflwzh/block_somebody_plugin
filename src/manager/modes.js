@@ -19,18 +19,19 @@ function renderExample() {
   $("replies").replaceChildren();
   for (let index = 0; index < 3; index++) {
     const row = document.createElement("li");
-    row.className = index < count ? "seen" : "";
+    row.className = count > 0 ? "seen" : "";
     const label = document.createElement("strong"); label.textContent = t("modes_reply", index + 1, String.fromCharCode(65 + index));
-    const text = document.createElement("span"); text.textContent = index < count ? t("modes_reply_score", mixed && index === 2 ? 8 : [94, 92, 96][index]) : t("modes_unseen");
+    const text = document.createElement("span"); text.textContent = index < count ? t("modes_reply_score", mixed && index === 2 ? 8 : [94, 92, 96][index]) : count > 0 ? t("modes_fetched_reply") : t("modes_unseen");
     row.append(label, text); $("replies").append(row);
   }
   $("c-requests").textContent = count;
-  $("b-requests").textContent = completed ? 1 : 0;
-  $("c-progress").textContent = t("modes_hit_progress", hits, hits);
-  $("b-progress").textContent = t("modes_collect_progress", count, count);
+  $("b-requests").textContent = count > 0 ? 1 : 0;
+  $("c-progress").textContent = t("modes_hit_progress", hits);
+  $("b-progress").textContent = t("modes_collect_progress", count > 0 ? 3 : 0, count > 0 ? 3 : 0);
   $("c-status").textContent = t(completed && !mixed ? "modes_queued" : "modes_wait_hits");
-  $("b-status").textContent = completed ? t(mixed ? "modes_batch_no" : "modes_batch_yes") : t("modes_wait_collect");
-  for (const id of ["c-status", "b-status"]) $(id).classList.toggle("qualified", completed && !mixed);
+  $("b-status").textContent = count > 0 ? t(mixed ? "modes_batch_no" : "modes_batch_yes") : t("modes_wait_collect");
+  $("c-status").classList.toggle("qualified", completed && !mixed);
+  $("b-status").classList.toggle("qualified", count > 0 && !mixed);
   $("next").disabled = completed;
 }
 $("next").addEventListener("click", () => { count = Math.min(3, count + 1); renderExample(); });

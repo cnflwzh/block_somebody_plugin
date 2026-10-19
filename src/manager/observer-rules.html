@@ -5,11 +5,12 @@
   <title data-i18n="ui_observer_settings"></title>
   <link rel="icon" href="../../assets/brand.svg" type="image/svg+xml">
   <link rel="stylesheet" href="rules.css"><script src="rules.js" type="module"></script>
+  <link rel="stylesheet" href="ui-foundations.css">
 </head>
 <body data-rule-module="observer">
   <main class="editor">
     <header class="page-header"><a class="brand" href="manager.html?tab=settings&amp;section=observer"><img src="../../assets/brand.svg" alt="" width="28" height="28">block s.b.</a><span id="save-state" role="status" data-i18n="ui_loading"></span></header>
-    <div class="title-row"><div><h1 data-i18n="ui_observer_settings"></h1></div><div class="mode-switch" aria-label="" data-i18n-aria-label="ui_editing_mode"><button type="button" id="visual-mode" aria-pressed="true" disabled data-i18n="ui_visual"></button><button type="button" id="raw-mode" aria-pressed="false" disabled>Raw</button></div></div>
+    <div class="title-row"><div><h1 data-i18n="ui_prompt_settings"></h1></div><div class="mode-switch" aria-label="" data-i18n-aria-label="ui_editing_mode"><button type="button" id="visual-mode" aria-pressed="true" disabled data-i18n="ui_visual"></button><button type="button" id="raw-mode" aria-pressed="false" disabled>Raw</button></div></div>
     <div id="error" class="error" role="alert" hidden></div>
     <div id="conflict" class="conflict" hidden><span data-i18n="ui_settings_changed_in_another_window_your_draft_is_kept_copy"></span><button type="button" id="reload-rule" data-i18n="ui_load_latest_settings"></button></div>
     <button type="button" id="retry-load" hidden data-i18n="ui_reload"></button>

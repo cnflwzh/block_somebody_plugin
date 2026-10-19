@@ -1,10 +1,11 @@
 import "./helpers/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { ACCOUNT_REVIEW_VERSION } from "../src/lib/observer-review.js";
 import { DEFAULTS } from "../src/lib/core.js";
 
 test("passive observer persists distinct evidence, queues independently, and honors cancellation and dry-run", async t => {
-  let receive, jevCalls = 0, blockCalls = 0, modelChoice = "ai_generated", serviceFailure = false, reviewCalls = 0;
+  let receive, jevCalls = 0, blockCalls = 0, modelChoice = "ai_generated", serviceFailure = false, reviewCalls = 0, recentReplies = [], recentReads = 0;
   const data = { jevKey: "fixture-key-not-a-secret", state: { settings: { ...DEFAULTS, observer: { ...DEFAULTS.observer, enabled: true, minThreads: 2 } }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: Date.now() + 3600000, queueError: "", modelError: "" } };
   const originalFetch = globalThis.fetch, originalNow = Date.now;
   let clockOffset = 0;
@@ -21,13 +22,14 @@ test("passive observer persists distinct evidence, queues independently, and hon
   };
   const rpc = (type, payload = {}, sender = web) => new Promise((resolve, reject) => receive({ type, ...payload }, sender, answer => answer.ok ? resolve(answer.data) : reject(new Error(answer.error))));
   globalThis.fetch = async (url, options) => {
+    if (url.includes("/UserRepliesTimeline?")) { recentReads++; return Response.json({ data: { user: { result: { timeline_v2: { timeline: { instructions: [{ entries: recentReplies }] } } } } } }); }
     if (url.startsWith("https://x.com/")) { blockCalls++; throw new Error("No real block should be submitted in this fixture"); }
     assert.equal(url, "https://api.typesafe.ai/v1/systemone");
     jevCalls++;
     if (serviceFailure) return new Response("Unavailable", { status: 503 });
     const body = JSON.parse(options.body);
     assert.equal(JSON.stringify(body).includes("900001"), false);
-    const review = body.questions.stance.instructions.includes("account-review-v2"); if (review) reviewCalls++;
+    const review = body.questions.stance.instructions.includes(ACCOUNT_REVIEW_VERSION); if (review) reviewCalls++;
     const choice = review ? "ai_generated" : modelChoice;
     return Response.json({ answers: { stance: { type: "choice", choice, confidence: .99, probabilities: { ai_generated: choice === "ai_generated" ? .98 : .01, human_like: choice === "human_like" ? .98 : .01, uncertain: .01 } } } });
   };
@@ -154,7 +156,7 @@ test("passive observer persists distinct evidence, queues independently, and hon
     await t.test("policy changes revoke obsolete observer jobs but preserve shared and submitted operations", async () => {
       const baseline = structuredClone(data.state.settings.observer);
       let index = 10;
-      for (const policy of [{ scope: "all" }, { threshold: .99 }, { confidence: .99 }, { minHits: 4 }, { minThreads: 3 }, { hitRate: 1 }, { retentionDays: 7 }, { skipFollowing: false }]) {
+      for (const policy of [{ scope: "all" }, { threshold: .99 }, { confidence: .99 }, { minHits: 4 }, { skipFollowing: false }]) {
         await rpc("SAVE_SETTINGS", { value: { observer: baseline } }, ui);
         const fixture = await seedObserverJob(String(index++));
         await rpc("SAVE_SETTINGS", { value: { observer: policy } }, ui);
@@ -257,7 +259,7 @@ test("passive observer persists distinct evidence, queues independently, and hon
       assert.equal(result.count, 0); assert.equal(result.skipped, 1);
       assert.equal(data.state.jobs.find(j => j.historyId === queued.historyId).status, "pending");
     });
-    await t.test("combined mode collects without single calls and analyzes once at its independent counts", async () => {
+    await t.test("combined mode analyzes available local samples when the reply list is empty", async () => {
       const { readObserverUser } = await import("../src/lib/observer-store.js");
       modelChoice = "human_like";
       await rpc("DEBUG_DRY_RUN", { enabled: true });
@@ -267,16 +269,37 @@ test("passive observer persists distinct evidence, queues independently, and hon
       for (const n of [501, 502, 503]) {
         const input = observation(n, "920501"); input.root.id = n === 501 ? "700000" : "800000"; input.root.conversationId = input.root.id; input.reply.parentId = input.root.id; input.reply.conversationId = input.root.id;
         last = input; const result = await rpc("OBSERVE_REPLY", input);
-        if (n < 503) assert.equal(jevCalls, beforeCollection, "collection must not call the model");
+        if (n === 501) assert.equal(jevCalls, beforeCollection + 1, "one available reply is analyzed immediately");
         if (n === 503) { assert.equal(jevCalls, beforeCollection + 1, "one grouped request only"); assert.equal(result.status, "simulated"); assert.equal(result.label, "collected"); }
       }
       assert.equal(reviewCalls, 1);
       const calls = jevCalls; await rpc("OBSERVE_REPLY", last); assert.equal(jevCalls, calls);
       const snapshot = await rpc("SNAPSHOT", {}, ui), account = snapshot.observer.accounts.find(e => e.userId === "920501");
-      assert.equal(account.accountReview.samples, 3); assert.equal(account.hits, 0);
+      assert.equal(account.accountReview.samples, 1); assert.equal(account.hits, 0);
       await rpc("SAVE_SETTINGS", { value: { observer: { mode: "cumulative" } } }, ui);
       assert.ok((await readObserverUser("viewer", "920501")).every(e => !e.reviewContext && !e.accountReview));
       await rpc("DEBUG_DRY_RUN", { enabled: false }); modelChoice = "ai_generated";
+    });
+    await t.test("combined mode fetches complete replies on first encounter and sends only one grouped request", async () => {
+      await rpc("DEBUG_DRY_RUN", { enabled: true });
+      await rpc("SAVE_SETTINGS", { value: { observer: { enabled: true, mode: "combined", reviewMinReplies: 3, reviewMinThreads: 3 } } }, ui);
+      const make = (id, author, root = id) => ({ __typename: "Tweet", rest_id: id,
+        core: { user_results: { result: { rest_id: author, core: { screen_name: author === "920777" ? "user920777" : "syntheticparent", name: "Synthetic" }, is_blue_verified: true, relationship_perspectives: { following: false } } } },
+        legacy: { full_text: `Synthetic active-context ${id}`, created_at: new Date(Date.now()).toUTCString(), conversation_id_str: root, ...(root !== id ? { in_reply_to_status_id_str: root } : {}) } });
+      recentReplies = [make("777001", "800777"), make("777002", "920777", "777001"), make("777003", "800777"), make("777004", "920777", "777003"), make("777005", "800777"), make("777006", "920777", "777005")];
+      const initialCalls = jevCalls, initialReads = recentReads, input = observation(777, "920777");
+      const result = await rpc("OBSERVE_REPLY", input);
+      assert.equal(recentReads, initialReads + 1);
+      assert.equal(jevCalls, initialCalls + 1, "no single-reply request before combined analysis");
+      assert.equal(result.status, "simulated");
+      const snap = await rpc("SNAPSHOT", {}, ui), row = snap.observer.accounts.find(e => e.userId === "920777");
+      assert.equal(row.accountReview.samples, 3); assert.ok(row.collectedThreads >= 3);
+      await rpc("OBSERVE_REPLY", input);
+      assert.equal(recentReads, initialReads + 1, "refresh reuses account result");
+      assert.equal(jevCalls, initialCalls + 1);
+      await rpc("SAVE_SETTINGS", { value: { observer: { mode: "cumulative" } } }, ui);
+      await rpc("DEBUG_DRY_RUN", { enabled: false });
+      recentReplies = [];
     });
     assert.equal(blockCalls, 0);
     await rpc("SAVE_SETTINGS", { value: { observer: { enabled: false } } }, ui);

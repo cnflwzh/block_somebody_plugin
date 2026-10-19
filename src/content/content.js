@@ -46,6 +46,7 @@
   // Browser-local observation is independent of an explicitly armed agreement task.
   // Only reply IDs and decisions live here; the worker owns durable evidence/limits.
   const observerDecisions = new Map(), observerLoaded = new Set(), observerRetries = new Map();
+  const observerAccountReviews = new Map();
   const observerHistory = new Map(), nameHistory = new Map(), nameResults = new Map();
   const nameSeen = new WeakMap();
   let nameFlight = null, nameEpoch = 0, nameConfig = "";
@@ -86,7 +87,7 @@
   const skipFollowing = p => state?.settings.skipFollowing && followingStatus(p) !== false;
   const kept = p => { const prefix = `${viewer()}:${route() || p.conversationId}:`; return keptReplies.has(prefix + p.id) || keptUsers.has(prefix + (p.userId || p.handle)); };
   const observerSurface = () => !!route() || /^\/home\/?$/.test(location.pathname);
-  const nameEnabled = () => !!state?.settings.filterRules?.some(r => r.enabled) && observerSurface() && state.account === viewer();
+  const nameEnabled = () => !!(state?.settings.blockHiddenText || (state?.settings.customFiltersEnabled !== false && [...(state?.settings.filterRules || []), ...(state?.settings.subscriptionRules || [])].some(r => r.enabled))) && observerSurface() && state.account === viewer();
   // Filter first, then allow model analysis only for replies that did not match.
   const nameMatches = p => nameEnabled() && !nameProtected(p) && ((nameResults.get(p.id)?.pendingUntil || 0) > Date.now()
     || nameAuthorization(p) || !!route() && !!nameContext(p) && nameResults.get(p.id)?.result?.action === "mask");
@@ -411,8 +412,9 @@
     const rect = anchor.getBoundingClientRect();
     if (rect.bottom <= 0 || rect.top >= innerHeight || !rect.width) { hideProbabilityPanel(); return; }
     const options = (observer ? state.settings.observer.ruleOptions : state.settings.ruleOptions) || [];
-    const decision = detail.decision, high = observer ? state.settings.observer.threshold : state.settings.high;
-    const confidence = observer ? state.settings.observer.confidence : state.settings.confidence;
+    const combined = observer && detail.combined;
+    const decision = detail.decision, high = observer ? (combined ? state.settings.observer.reviewThreshold : state.settings.observer.threshold) : state.settings.high;
+    const confidence = observer ? (combined ? state.settings.observer.reviewConfidence : state.settings.observer.confidence) : state.settings.confidence;
     const signature = JSON.stringify([detail, options, high, confidence]);
     if (signature !== probabilitySignature) {
       probabilitySignature = signature;
@@ -434,7 +436,7 @@
           : !observer && !state.settings.customRule && ["support", "oppose", "neutral", "uncertain"].includes(option.id) ? t(`category_${option.id}`) : option.name;
         const line = element("div", "probability-option-heading"), name = element("span", "probability-option-name", optionName);
         const tags = element("span", "probability-tags");
-        if (option.block) tags.append(element("span", "probability-tag", t(observer ? "ui_observer_count_evidence" : "ui_block_target")));
+        if (option.block) tags.append(element("span", "probability-tag", t(observer && !combined ? "ui_observer_count_evidence" : "ui_block_target")));
         if (decision?.label === option.id) tags.append(element("span", "probability-tag chosen", t("ui_model_selection")));
         line.append(name, tags, element("strong", "probability-value", known ? probabilityPercent(value) : "—"));
         const bar = element("div", "probability-bar");
@@ -445,13 +447,13 @@
         const fill = element("div", "probability-fill"); fill.style.width = `${known ? value * 100 : 0}%`; bar.append(fill);
         if (option.block) {
           const marker = element("span", "probability-threshold"); marker.style.left = `${high * 100}%`;
-          marker.setAttribute("aria-label", observer ? `${t("ui_observer_single_threshold")} ${probabilityPercent(high)}` : t("ui_block_threshold", probabilityPercent(high))); bar.append(marker);
+          marker.setAttribute("aria-label", observer ? `${t(combined ? "ui_combined_probability" : "ui_observer_single_threshold")} ${probabilityPercent(high)}` : t("ui_block_threshold", probabilityPercent(high))); bar.append(marker);
         }
         const scale = element("div", "probability-scale"); scale.append(element("span", "", "0%"), element("span", "", "100%"));
         row.append(line, bar, scale); list.append(row);
       });
       const legend = element("div", "probability-legend");
-      legend.append(element("span", "probability-legend-marker"), document.createTextNode(t(observer ? "ui_observer_probability_threshold" : "ui_block_threshold_confidence_must_be", probabilityPercent(high), probabilityPercent(confidence))));
+      legend.append(element("span", "probability-legend-marker"), document.createTextNode(t(observer && !combined ? "ui_observer_probability_threshold" : "ui_block_threshold_confidence_must_be", probabilityPercent(high), probabilityPercent(confidence))));
       probabilityPanel.append(list, legend);
       if (missing && decision && !decision.error) probabilityPanel.append(element("p", "probability-note", t("ui_older_results_may_lack_a_full_distribution_missing_values_show")));
       probabilityPanel.append(element("p", "probability-note", detail.explanation));
@@ -539,7 +541,7 @@
     }
     if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:close") closeDrawer();
     if (e.source === iframe.contentWindow && e.origin === new URL(extensionBase).origin && e.data?.type === "blocksb:view"
-      && ["observer", "history", "settings", "whitelist", "name-rules"].includes(e.data.tab)) drawerTab = e.data.tab;
+      && ["dashboard", "observer", "history", "settings", "whitelist", "name-rules", "normal-accounts", "model"].includes(e.data.tab)) drawerTab = e.data.tab;
     if (e.source === window && e.origin === location.origin && e.data?.channel === "blocksb:timeline:v1") {
       const event = e.data;
       if (!/^\d{5,25}$/.test(event.rootId || "") || typeof event.recent !== "boolean" || !Number.isFinite(event.observedAt)) return;
@@ -636,6 +638,9 @@
   };
   function indexObserverSimulations() {
     observerSimulated.clear();
+    observerAccountReviews.clear();
+    // Account scores are presentation-only; never reuse them as per-reply analysis/action results.
+    for (const value of observerDecisions.values()) if (value.accountReview) observerAccountReviews.set(value.userId, value);
     for (const value of observerDecisions.values()) if (value.status === "simulated") observerSimulated.set(value.userId, value);
   }
   /** Render removal only for replies on the current thread, or context-complete feed replies.
@@ -716,6 +721,7 @@
   function nameAuthorization(post) {
     if (!nameEnabled() || nameProtected(post) || !nameContext(post)) return null;
     const h = nameHistory.get(post.userId), local = nameResults.get(post.id)?.result;
+    if (h && state.settings.customFiltersEnabled === false && !(state.settings.blockHiddenText && h.nameRuleIds?.includes("__hidden_text_spam"))) return null;
     if (h) return !h.undoRequested && (h.nameRootIds || [h.rootId]).includes(nameContext(post).root.id) && h.nameOwner && !h.nameRuleWithdrawn && (isBlocked(h) || ["pending", "running"].includes(h.status)) ? h : null;
     // Real removals require the current history authorization. A cached enqueue reply
     // must not resurrect a withdrawn block after its history record is cleared.
@@ -819,19 +825,26 @@
   }
   function observerMarker(article, post) {
     let marker = article.querySelector(".blocksb-observer-marker");
-    const decision = observerDecision(post);
-    if (!observerEnabled() || observerProtected(post) || state.settings.observer.mode === "combined" || !state.settings.observer.showMarkers || !decision || !Number.isFinite(decision.spamScore)) { marker?.remove(); return; }
-    const date = (article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time"))?.closest("a");
-    if (!date) { marker?.remove(); return; }
-    if (!marker) { marker = probabilityBadge("blocksb-observer-marker"); date.after(marker); }
+    const combined = state.settings.observer.mode === "combined";
+    const entry = observerDecision(post), accountResult = observerAccountReviews.get(post.userId);
+    const review = entry?.accountReview || (accountResult?.handle === post.handle ? accountResult.accountReview : null);
+    const decision = combined ? (review && { ...review, spamScore: review.score, score: review.winningScore }) : entry;
+    if (!observerEnabled() || observerProtected(post) || !state.settings.observer.showMarkers || !decision || !Number.isFinite(decision.spamScore)) { marker?.remove(); return; }
+    const header = article.querySelector('[data-testid="User-Name"]');
+    const date = (header?.querySelector("time") || article.querySelector("time"))?.closest("a");
+    // Both modes share X's date row; inserting inside the handle link's column wraps the badge.
+    const anchor = date;
+    if (!anchor) { marker?.remove(); return; }
+    if (!marker) marker = probabilityBadge("blocksb-observer-marker");
+    if (anchor.nextElementSibling !== marker) anchor.after(marker);
     const text = t("observer_content_marker", Math.round(decision.spamScore * 100));
     if (marker.textContent !== text) marker.textContent = text;
     marker.dataset.suspicious = String(!!decision.suspicious);
     marker.dataset.postId = post.id;
     marker.removeAttribute("title");
-    const explanation = t("ui_observer_probability_note");
+    const explanation = combined ? t("observer_combined_marker_note", review.samples) : t("ui_observer_probability_note");
     marker.setAttribute("aria-label", t("ui_view_probabilities_by_option", text, explanation));
-    probabilityDetails.set(marker, { module: "observer", account: viewer(), policy: observerConfig, postId: post.id, revision: state.settings.analysisRevision, decision, explanation });
+    probabilityDetails.set(marker, { module: "observer", account: viewer(), policy: observerConfig, postId: post.id, revision: state.settings.analysisRevision, decision, explanation, combined });
     if (probabilityAnchor === marker) refreshProbabilityPanel();
   }
   function observerMask(article, post) {
@@ -1310,7 +1323,7 @@
         localizeOverlay();
       }
       renderQuickUndo();
-      const nextNames = JSON.stringify([viewer(), state.settings.filterRules, state.settings.debugDryRun, state.settings.paused, state.whitelist, state.contentExceptions]);
+      const nextNames = JSON.stringify([viewer(), state.settings.filterRules, state.settings.subscriptionRules, state.settings.customFiltersEnabled, state.settings.blockHiddenText, state.settings.debugDryRun, state.settings.paused, state.whitelist, state.contentExceptions]);
       if (nameConfig !== nextNames) { nameConfig = nextNames; nameEpoch++; nameResults.clear(); }
       const nextObserverConfig = JSON.stringify([state.settings.observer, state.settings.analysisRevision, state.settings.debugDryRun]);
       if (observerAccount !== viewer() || observerConfig !== nextObserverConfig) {
@@ -1318,7 +1331,7 @@
           for (const [id, p] of observerRelationships) if (p.followingAccount !== viewer()) observerRelationships.delete(id);
         }
         observerAccount = viewer(); observerConfig = nextObserverConfig; observerEpoch++;
-        observerDecisions.clear(); observerSimulated.clear(); observerLoaded.clear(); observerRetries.clear(); observerLookupAt = 0;
+        observerDecisions.clear(); observerAccountReviews.clear(); observerSimulated.clear(); observerLoaded.clear(); observerRetries.clear(); observerLookupAt = 0;
       }
       observerReload = true;
       indexSnapshot();
@@ -1455,7 +1468,7 @@
       if (!article.isConnected || post?.id !== info.id || info.debug && (!animationDebug || !debugRows.has(info.id)) || info.module === "observer" && !observerEnabled() || info.module === "name" && !nameEnabled()) restore(article);
     }
     if (!observerEnabled() || state.settings.observer.mode === "combined") document.querySelectorAll(".blocksb-observer-marker,.blocksb-masked").forEach(node => {
-      if (node.classList.contains("blocksb-observer-marker")) node.remove();
+      if (node.classList.contains("blocksb-observer-marker")) { if (!observerEnabled()) node.remove(); }
       else if (maskState.get(node)?.module === "observer") clearMask(node);
     });
     // Also clean recycled/hidden rows when the task ends or the user leaves its thread.

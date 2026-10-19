@@ -9,7 +9,7 @@ let chain = Promise.resolve();
 export const ready = (async () => {
   await chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
   const { state } = await chrome.storage.local.get("state");
-  cache = state || { version: 1, settings: { ...DEFAULTS }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: 0, queueError: "", modelError: "" };
+  cache = state || { version: 1, onboardingRequired: true, settings: { ...DEFAULTS }, whitelist: [], history: [], jobs: [], sessions: {}, nextActionAt: 0, queueError: "", modelError: "" };
   let dirty = !state;
   const settingsBefore = JSON.stringify(cache.settings);
   cache.settings = { ...DEFAULTS, ...cache.settings };

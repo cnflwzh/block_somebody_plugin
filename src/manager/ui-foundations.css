@@ -1,0 +1,280 @@
+/* Shared product typography and spacing; loaded after each page's layout styles.
+ * Compact desktop UI: 14/22 body, 12/18 metadata, 4px spacing steps.
+ * Keep system fonts local and retain language-specific --font overrides.
+ */
+:root {
+  --ui-text:14px; --ui-small:12px; --ui-section:16px; --ui-title:20px;
+  --ui-space-1:4px; --ui-space-2:8px; --ui-space-3:12px;
+  --ui-space-4:16px; --ui-space-6:24px; --ui-space-8:32px;
+  font-size:var(--ui-text); line-height:1.57;
+}
+body {font-size:var(--ui-text);line-height:1.57}
+/* Reserve the same narrow gutter on short and long pages. Chrome's popup
+ * scrolls its body instead, so only that scroller reserves space there. */
+html {scrollbar-gutter:stable;scrollbar-width:thin}
+html.popup {overflow:hidden;scrollbar-gutter:auto}
+body.popup {scrollbar-gutter:stable;scrollbar-width:thin}
+dialog,.settings-help-panel {scrollbar-gutter:stable;scrollbar-width:thin}
+button,input,select,textarea {font-size:var(--ui-text);line-height:1.5}
+p {line-height:1.6}
+button {font-weight:500}
+strong {font-weight:600}
+.view,.popup .view {padding:24px}
+.brand-row {padding:0 24px;height:64px}
+.brand-row h1 {font-size:24px;line-height:32px;font-weight:750;letter-spacing:-.5px}
+.tabs button {font-size:14px;line-height:20px;height:44px;min-height:44px;font-weight:500}
+.tabs button[aria-selected=true] {font-weight:600;background:transparent}
+.view>h2,.section-heading h2,.page-heading h2,.subhead h2,.filter-editor-heading h2 {font-size:var(--ui-title);line-height:28px;font-weight:650}
+.page-heading,.subhead {margin-bottom:24px}
+.primary,.subtle {min-height:36px;padding:6px 16px;border-radius:8px}
+.text-button {font-size:14px;line-height:20px;padding:6px 0}
+input:not([type=checkbox],[type=radio],[type=range]),select {min-height:36px}
+textarea {line-height:1.6;padding:12px}
+.search-field {height:40px;border-radius:8px}
+.search-field input[type=search] {font-size:14px;line-height:20px}
+.toolbar {margin-bottom:16px;padding-bottom:12px;gap:12px}
+.toolbar>.search-field {margin-bottom:12px}
+.filters {gap:8px}
+.filters button {font-size:12px;line-height:18px;min-height:32px;padding:6px 12px}
+.hint,.muted,.record-meta,.task-meta,.observer-summary,.observer-progress,.evidence-time,.evidence-label,.status {font-size:12px;line-height:18px}
+.stats {padding:16px 0 24px}
+.stats span {font-size:12px;line-height:18px;margin-bottom:4px}
+.stats strong {font-size:28px;line-height:36px;font-weight:650;font-variant-numeric:tabular-nums}
+.dashboard-heading {margin-bottom:16px}
+.dashboard-stats {padding:0 0 24px}
+.dashboard-module {min-height:56px;gap:12px;grid-template-columns:36px minmax(0,1fr) minmax(0,1.4fr) 84px}
+.dashboard-module>strong {font-size:14px;font-weight:600;line-height:22px}
+.dashboard-module>.muted {font-size:12px;line-height:18px;text-align:right;justify-self:stretch;overflow-wrap:anywhere}
+.dashboard-module>:last-child {justify-self:end}
+.dashboard-module .subtle {font-size:12px;min-height:32px;padding:4px 12px}
+.dashboard-record-heading {margin:24px 0 16px}
+.dashboard-record {padding:16px 0;gap:8px;grid-template-columns:minmax(112px,1.1fr) minmax(150px,1.5fr) auto auto 36px;font-size:12px;line-height:18px}
+.dashboard-identity {grid-template-columns:32px minmax(0,1fr);gap:2px 8px}
+.dashboard-identity strong {font-size:14px;line-height:22px;font-weight:600}
+.dashboard-identity .muted,.dashboard-time,.dashboard-record .source-badge,.dashboard-record .status {font-size:12px;line-height:18px}
+.dashboard-reason {gap:4px 8px}
+.dashboard-record .status {padding:3px 8px}
+.dashboard-actions .text-button {font-size:12px;line-height:18px;min-height:32px}
+.observer-heading {padding:16px 0;gap:12px}
+.observer-name,.record-name {font-size:14px;line-height:22px;font-weight:600}
+.observer-summary,.observer-progress {margin-top:4px;font-size:12px;line-height:18px}
+.observer-status {font-size:16px;line-height:24px;font-weight:600}
+.observer-mode-row {padding:8px 0 16px}
+.evidence-row {padding:8px 0;font-size:14px;line-height:22px;gap:8px}
+.evidence-label,.evidence-time {font-size:12px;line-height:18px}
+.record .quote {font-size:14px;line-height:22px}
+.record-actions .subtle,.observer-card-footer .subtle {font-size:12px;min-height:32px}
+.task-card {padding:16px 0}
+.task-heading h3,.task-root {font-size:14px;line-height:22px;font-weight:600}
+.task-actions {gap:12px;flex-wrap:wrap}
+.task-counts {gap:8px}
+.normal-account-row {padding:16px 0;gap:12px}
+.normal-account-row>div {min-width:0}
+.normal-account-row .hint {margin-top:4px}
+#view-settings {padding-top:16px}
+.settings-tabs {margin:0 -24px 16px;padding:0 24px;gap:16px}
+.settings-tabs button {font-size:14px!important;line-height:20px;min-height:40px;font-weight:500}
+.settings-tabs button[aria-selected=true] {font-weight:600}
+.settings-panel>.card,.settings-panel .compact-settings {padding:12px 0}
+.settings-panel h3,.card-heading h3 {font-size:16px;line-height:24px;font-weight:600;padding:0}
+.card-heading {margin:0 0 12px;padding:0}
+.compact-row,.switch-row,#observer-form .compact-row,#observer-form .switch-row {min-height:48px;padding:12px 0;gap:16px}
+.compact-row>span,.switch-row>span,.switch-row>strong,#observer-form .compact-row>span,#observer-form .switch-row>span {font-size:14px;font-weight:500;line-height:22px}
+.policy-row h3 {font-size:14px!important;line-height:22px;font-weight:600!important}
+/* Strategy labels need their intrinsic width; shrinking four equal flex items
+ * wrapped only the longest label and left the selected background shorter. */
+.policy-row .segments,#observer-form .policy-row>.segments {
+  display:grid;grid-template-columns:repeat(4,minmax(max-content,1fr));
+  width:max-content;max-width:100%;flex:0 0 auto;
+}
+.policy-row .segments label {display:flex}
+.policy-row .segments label>span {width:100%;height:100%;white-space:nowrap}
+.observer-beta-notice {
+  display:grid;grid-template-columns:minmax(0,1fr) 32px;align-items:center;
+  gap:12px;padding:12px;margin-bottom:16px;
+}
+.observer-beta-notice>div {gap:8px;align-items:center;min-width:0}
+.observer-beta-notice strong,.observer-beta-notice p,.observer-beta-notice .beta-contribute {
+  margin:0;font-size:12px;line-height:20px;
+}
+.observer-beta-notice strong {padding:0 8px}
+.observer-beta-notice .notice-close {margin:0;align-self:center;justify-self:end}
+.segments {border-radius:8px}
+.segments label>span {min-height:32px;padding:6px 12px;font-size:14px!important;line-height:20px;font-weight:500!important}
+.threshold,#observer-form .threshold {min-height:44px;padding:10px 0;gap:12px;grid-template-columns:minmax(144px,1fr) minmax(110px,1.2fr) 44px}
+.threshold>label,.threshold>.settings-help-label,.threshold-label,#observer-form .threshold-label {font-size:14px!important;line-height:22px;font-weight:500}
+.threshold>output {font-size:14px;line-height:22px;font-weight:500;text-align:right}
+.number-row {min-height:48px;padding:8px 0}
+.full-disclosure {min-height:48px;padding:12px 0}
+.full-disclosure strong {font-size:14px;font-weight:500}
+.full-disclosure .muted {font-size:12px!important}
+.page-save,#observer-form .page-save {padding-top:16px;gap:12px}
+.page-save .primary {height:40px}
+.observer-cumulative:has(.hit-policy) {gap:12px;grid-template-columns:minmax(130px,1fr) minmax(260px,1.7fr)}
+.observer-cumulative:has(.hit-policy)>.settings-help-label h3 {font-size:14px;line-height:22px;padding:0}
+.settings-help-panel {font-size:14px;line-height:22px;padding:16px;border-radius:8px}
+.settings-help-panel strong {font-weight:600}
+#view-settings .settings-help-button {font-size:12px!important;position:relative}
+/* Enlarge the pointer target without making the question mark visually heavy. */
+.settings-help-button::after {content:"";position:absolute;inset:-5px}
+.filter-rule>summary {padding:16px 0;min-height:64px}
+.filter-rule>summary strong {font-size:14px;line-height:22px;font-weight:600}
+.filter-rule>label {font-size:14px;line-height:22px;margin:16px 0}
+.filter-condition {padding:12px;gap:8px}
+.filter-condition select,.filter-condition label {font-size:12px;line-height:18px}
+.filter-rule>details {padding:16px 0;margin-top:24px}
+.filter-rule>details>summary {font-size:16px;line-height:24px;font-weight:600}
+.filter-preview {padding:12px;line-height:22px}
+.editor h1 {font-size:24px;line-height:32px;font-weight:650}
+.editor h2 {font-size:16px;line-height:24px;font-weight:600}
+.editor textarea,.editor input {font-size:14px;line-height:22px}
+.editor .variables button,.editor .option-id,.editor .option-actions button {font-size:12px;line-height:18px}
+.editor .title-row {margin-bottom:24px}
+.bs-setup {padding:24px}
+.bs-setup h2 {font-size:20px;line-height:28px;font-weight:650}
+.setup-page-description {font-size:14px;line-height:22px;margin-bottom:16px}
+.setup-steps {gap:8px;margin:16px 0 24px}
+.setup-steps small {font-size:12px;line-height:18px}
+.bs-setup-footer {gap:12px}
+@media(max-width:520px) {
+  .dashboard-module {grid-template-columns:30px minmax(0,1fr) 84px}
+  .dashboard-module>.module-icon {grid-column:1;grid-row:1/3}
+  .dashboard-module>strong {grid-column:2;grid-row:1}
+  .dashboard-module>.muted {grid-column:2;grid-row:2}
+  .dashboard-module>:last-child {grid-column:3;grid-row:1/3}
+  .view,.popup .view {padding:16px}
+  .brand-row {padding:0 16px}
+  .settings-tabs {margin-left:-16px;margin-right:-16px;padding:0 16px;gap:12px}
+  .dashboard-record {grid-template-columns:minmax(120px,1fr) auto auto}
+  .dashboard-reason {grid-column:1/-1;grid-row:2}
+  .dashboard-time {display:none}
+  .observer-cumulative:has(.hit-policy) {grid-template-columns:1fr}
+  .observer-cumulative #observer-custom-hits {grid-column:1}
+  #general-form .segments {min-width:0}
+  .threshold,#observer-form .threshold {grid-template-columns:minmax(120px,1fr) minmax(80px,1fr) 40px;gap:8px}
+  .segments label>span {padding:6px 8px}
+  .setup-steps {gap:4px}
+}
+
+/* Interaction feedback never animates row height or changes reading position. */
+.filter-master-row{border-bottom:1px solid var(--line);margin-top:-8px;margin-bottom:8px}
+body.filter-editing .filter-master-row{display:none}
+.primary,.subtle,.segments label>span,.filters button{transition:background-color 120ms ease,border-color 120ms ease,color 120ms ease,box-shadow 120ms ease}
+.primary:active,.subtle:active{box-shadow:inset 0 0 0 2px color-mix(in srgb,currentColor 12%,transparent)}
+button[aria-busy=true]{cursor:progress}
+.observer-evidence,.task-records{animation:panel-reveal 140ms ease-out}
+@keyframes panel-reveal{from{opacity:.45}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){body[data-reduce-motion=true] .observer-evidence,body[data-reduce-motion=true] .task-records{animation:none}body[data-reduce-motion=true] button,body[data-reduce-motion=true] .segments label>span{transition:none}}
+
+/* A range is wider than a single percentage; keep both bounds together. */
+.threshold:has(.dual-range){grid-template-columns:minmax(144px,1fr) minmax(80px,1.2fr) 76px}
+.threshold:has(.dual-range)>output{white-space:nowrap}
+@media(max-width:520px){.threshold:has(.dual-range){grid-template-columns:minmax(120px,1fr) minmax(60px,1fr) 72px;gap:8px}}
+/* Rule editor: separate identity, condition builder, action and live test. */
+body.filter-editing #view-name-rules{padding-bottom:24px}
+body.filter-editing .filter-rule[open]{padding:0;margin:0}
+.filter-editor-heading{gap:12px;margin-bottom:24px}
+.rule-identity{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;padding:0 0 24px;border-bottom:1px solid var(--line)}
+.rule-identity>label:first-child{display:grid;gap:8px;font-weight:500}
+.rule-identity>label:last-child{display:flex;align-items:center;gap:12px;min-height:40px;white-space:nowrap}
+.rule-match-section{padding:24px 0}
+.rule-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.rule-section-heading h3{font-size:16px;line-height:24px;font-weight:600;padding:0}
+.rule-section-heading>label{font-size:0}
+.rule-section-heading select{font-size:14px;min-width:170px}
+body.filter-editing .filter-conditions{padding:0;display:grid;gap:12px}
+body.filter-editing .filter-condition{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:16px;margin:0;border:1px solid var(--border);background:var(--surface);border-radius:10px}
+.rule-condition-heading{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rule-condition-heading strong{font-size:12px;color:var(--muted);font-weight:600}
+.rule-condition-heading .subtle{min-height:28px;border:0;padding:4px 8px;font-size:12px;color:var(--muted)}
+body.filter-editing .filter-condition>select{width:100%;font-size:14px;background:var(--bg)}
+body.filter-editing .filter-condition>.rule-match-value{grid-column:1/-1;width:100%;background:var(--bg)}
+body.filter-editing .filter-condition[data-operator=regex]>.rule-match-value{font-family:Consolas,"SFMono-Regular",monospace;font-size:13px}
+body.filter-editing .filter-condition>label{grid-column:1/-1;display:flex;flex-direction:row-reverse;justify-content:flex-end;font-size:12px;gap:8px;margin:0}
+.rule-match-section>.subtle{margin-top:12px;color:var(--blue);border-style:dashed;min-height:36px;width:100%}
+.rule-action-section{padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.rule-action-section>label{display:flex;align-items:center;justify-content:space-between;gap:16px;font-weight:600}
+.rule-action-section select{min-width:170px;font-weight:400}
+body.filter-editing .filter-rule>.rule-test-section{margin:24px 0 0;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.rule-test-section>summary{cursor:pointer}
+.rule-test-section input:not([type=checkbox]),.rule-test-section textarea{background:var(--bg)}
+.rule-test-section .filter-preview{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
+.rule-test-section .filter-preview[data-matched=false] strong{color:var(--muted)}
+body.filter-editing .filter-rule>.rule-delete{margin-top:24px}
+body.filter-editing #name-rules-form>.page-save{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 0;margin-top:16px;z-index:3}
+@media(max-width:440px){.rule-identity{grid-template-columns:1fr;gap:12px}.rule-identity>label:last-child{justify-content:space-between}.rule-section-heading{flex-wrap:wrap}.rule-section-heading select{min-width:0}.rule-action-section select{min-width:140px}}
+.rule-action-section>label{white-space:nowrap}
+.rule-action-section select{width:220px;max-width:65%;flex:0 1 220px}
+/* Filter overview: module control, rules, then activity. Editing keeps its own layout. */
+body:not(.filter-editing) #view-name-rules>.filter-master-row{margin:0 0 24px;padding:0 0 20px;min-height:44px}
+body:not(.filter-editing) #view-name-rules>.filter-master-row>span{font-size:16px;font-weight:600}
+body:not(.filter-editing) #view-name-rules>.page-heading{margin-bottom:12px}
+body:not(.filter-editing) #view-name-rules>.page-heading h2{font-size:16px;line-height:24px}
+body:not(.filter-editing) #filter-rule-list{border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+body:not(.filter-editing) #filter-rule-list:empty{display:none}
+body:not(.filter-editing) .filter-rule{padding:0 16px;margin:0;border:0;border-bottom:1px solid var(--line)}
+body:not(.filter-editing) .filter-rule:last-child{border-bottom:0}
+body:not(.filter-editing) .filter-rule>summary{gap:12px;padding:14px 0;min-height:72px}
+.rule-list-identity{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.rule-list-identity strong{overflow-wrap:anywhere}
+.rule-list-identity small{font-size:12px;line-height:18px;color:var(--muted)}
+#view-name-rules .name-rules-form>.add-row{display:block;margin:12px 0 0;min-height:40px;border:1px dashed var(--border);background:transparent;border-radius:8px;font-size:14px;font-weight:500}
+body.filter-editing #view-name-rules .name-rules-form>.add-row{display:none}
+body:not(.filter-editing) #name-rules-form>.page-save{padding-top:12px;min-height:0;justify-content:flex-end}
+body:not(.filter-editing) #name-rules-form>.page-save .primary{width:auto;min-width:112px;height:36px}
+body:not(.filter-editing) #view-name-rules>.section-title{font-size:16px;line-height:24px;margin-top:24px;padding-top:24px}
+.rule-transfer-actions{display:flex;align-items:center;gap:16px;margin-left:auto}
+.rule-transfer-actions button{font-size:12px;white-space:nowrap}
+.filter-editor-heading{flex-wrap:wrap}
+.rule-transfer-dialog{padding:24px;width:min(480px,calc(100vw - 32px))}
+.rule-transfer-dialog>.rule-section-heading{margin-bottom:12px}
+.rule-transfer-dialog h2{font-size:20px;line-height:28px}
+.rule-transfer-dialog>p{font-size:14px;color:var(--muted);margin-bottom:16px}
+.rule-transfer-dialog label{display:flex;align-items:center;gap:12px;cursor:pointer}
+.rule-transfer-dialog input[type=checkbox]{flex:none}
+.rule-transfer-list{max-height:45vh;overflow:auto;margin:12px 0;scrollbar-width:thin}
+.rule-transfer-list label{padding:12px 0;border-bottom:1px solid var(--line)}
+.rule-transfer-list label>span{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+.rule-transfer-list small{font-size:12px;color:var(--muted)}
+.rule-transfer-footer{display:flex;justify-content:flex-end;gap:12px;padding-top:12px}
+@media(max-width:440px){.rule-transfer-actions{gap:12px}.filter-editor-heading .rule-transfer-actions{width:100%;justify-content:flex-end}}
+.subscription-url-field{display:grid!important;gap:8px;margin:16px 0}
+.subscription-url-field input{width:100%}
+.subscription-preview{max-height:200px;overflow:auto;margin-top:16px}
+.subscription-preview ul{padding-left:20px;margin:8px 0}
+.subscription-card{padding:16px;border:1px solid var(--line);border-radius:10px;margin:12px 0}
+.subscription-url{overflow-wrap:anywhere;font-size:12px;color:var(--muted);margin:6px 0}
+.subscription-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:12px}
+.subscription-actions label{display:flex;align-items:center;gap:8px;margin-right:auto;font-size:12px}
+.subscription-actions button{font-size:12px}
+#filter-subscriptions{margin-top:24px}
+#filter-subscriptions h3{font-size:16px}
+.subscription-card .record-error,.rule-transfer-dialog .record-error{margin:12px 0 0}
+body.filter-editing #filter-subscriptions{display:none}
+#view-name-rules>.page-heading{flex-wrap:wrap}
+.legal-notice{max-height:40vh;overflow:auto;padding:0 12px 0 0;scrollbar-width:thin;margin:16px 0}
+.legal-notice section{margin:0 0 16px}
+.legal-notice h3{font-size:14px;font-weight:600;line-height:22px;margin:0 0 4px}
+.legal-notice p{font-size:14px;line-height:22px;color:var(--muted)}
+.legal-consent{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:22px;margin:16px 0}
+.legal-consent input{flex:none;margin-top:4px}
+.legal-license summary{cursor:pointer;color:var(--blue);font-size:14px;padding:8px 0}
+.legal-license pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/18px Consolas,monospace;padding:12px;background:var(--surface)}
+/* Wizard choices retain their intrinsic text width instead of shrinking only
+ * the longest option. Move the group below its label when the row is narrow. */
+.bs-setup .setup-choice-row{flex-wrap:wrap;gap:12px 16px}
+.bs-setup .setup-choice-row>.segments{display:grid;grid-template-columns:repeat(var(--choice-count),minmax(max-content,1fr));flex:0 0 auto;width:max-content;max-width:100%;margin-left:auto;overflow-x:auto}
+.bs-setup .setup-choice-row>.segments label{display:flex}
+.bs-setup .setup-choice-row>.segments label>span{width:100%;height:100%;white-space:nowrap}
+/* All activity rows share columns, including rows with longer action labels. */
+#dashboard-records{display:grid;grid-template-columns:minmax(110px,1fr) minmax(180px,1.8fr) 64px 64px 36px;column-gap:8px}
+#dashboard-records>.dashboard-record{grid-column:1/-1;grid-template-columns:subgrid;column-gap:8px}
+.dashboard-reason{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:8px}
+.dashboard-sources{min-width:0}
+.dashboard-record .status{justify-self:start;white-space:normal;text-align:center}
+.dashboard-actions .text-button{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:520px){
+  #dashboard-records{grid-template-columns:minmax(120px,1fr) 64px 64px}
+  #dashboard-records .dashboard-reason{grid-column:1/-1;grid-row:2}
+  #dashboard-records .dashboard-time{display:none}
+}

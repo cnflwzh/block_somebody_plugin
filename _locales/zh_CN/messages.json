@@ -2486,7 +2486,7 @@
     "message": "分类结果"
   },
   "setup_sample_text": {
-    "message": "这个角度挺有意思，我也想试试看。"
+    "message": "公园散步的价值不只是运动，更是给大脑留出缓冲。建议从路线、时长和天气三个维度规划。你更偏向放松还是锻炼？"
   },
   "setup_demo_probability": {
     "message": "概率 96%"
@@ -2516,7 +2516,7 @@
     "message": "试播删除动画"
   },
   "setup_auto_hint": {
-    "message": "浏览时自动收集和判断回复。累计模式逐条分析并累计可疑评论；综合模式先收集足够回复，再一起判断账号。"
+    "message": "浏览时自动识别回复。累计模式逐条分析并累计可疑评论；综合模式首次遇到账号后，在后台获取近期回复，再一起判断。"
   },
   "setup_connect_description": {
     "message": "先连接用于识别评论的模型。输入 API Key 后点击“连接并继续”；已有连接可以直接进入下一步。"
@@ -2573,16 +2573,16 @@
     "message": "**决定观察哪些账号。** 需先开启自动观察。\n\n选“仅蓝 V”会跳过未确认蓝标的账号。蓝标只决定是否观察，不是判断 AI 的依据。"
   },
   "help_policy": {
-    "message": "**快速调整概率和置信度两条滑杆。** 手动拖动后会切换为“自定义”。\n\n不会改变评论条数、不同原帖数或近期可疑比例。"
+    "message": "**快速调整概率和置信度两条滑杆。** 手动拖动后切换为自定义；不改变累计条数。"
   },
   "help_suspect": {
-    "message": "**一条评论多像你要屏蔽的内容。** 数值越高，越难计为可疑。\n\n还要达到模型置信度；累计够可疑评论、不同原帖和近期比例，才会屏蔽账号。"
+    "message": "**评论符合可疑类别的概率门槛。** 同时达到模型置信度才计为可疑；累计到所选条数后屏蔽账号。"
   },
   "help_confidence": {
     "message": "**模型对自己的分类有多大把握。**\n\n它与可疑概率是两个条件，必须同时达标。屏蔽伪人的累计模式还要满足数量和比例要求。"
   },
   "help_hits": {
-    "message": "**同一个账号要出现多少条可疑评论。** 评论的概率与置信度都达标，才计入。\n\n还需满足不同原帖数、近期命中占比。重复刷到同一条不会重复计数。"
+    "message": "**同一账号累计多少条可疑评论后屏蔽。** 每条都须达到概率和置信度门槛。\n\n可选 1 条、2 条或自定义 1–100 条。只统计最近 30 天的不同评论，重复刷到同一条不重复计数；可以来自同一评论区。"
   },
   "help_threads": {
     "message": "**可疑评论要分布在多少个原帖下。** 同一评论区有很多回复，也只算 1 个原帖。\n\n例如设为 3，需要在 3 个原帖下都遇到可疑回复。调高会更难触发，不能超过可疑评论条数。"
@@ -2600,7 +2600,7 @@
     "message": "**保留你已关注的账号。** 无法确认关注状态时，也暂不处理。\n\n两个模块各自设置，白名单始终优先。"
   },
   "help_markers": {
-    "message": "**在评论旁显示识别标记，悬停可看各类概率。**\n\n仅累计模式可用。综合模式没有单条分数，所以禁用；切回累计模式会恢复原选择。"
+    "message": "**累计模式可开启单条概率标记，悬停查看各类概率。**\n\n综合模式完成判断后，会自动在用户名旁显示账号综合 AI 概率；不受此开关控制。"
   },
   "help_observer_mask": {
     "message": "**账号尚未达到累计屏蔽条件时，先遮住可疑评论。** 保留原高度，不挤动页面。\n\n需要单条概率与置信度达标。综合模式没有单条分数，不能提前遮罩；达到整组屏蔽条件后仍正常播放删除动画。"
@@ -2639,7 +2639,7 @@
     "message": "收集与判定条件"
   },
   "ui_collect_replies": {
-    "message": "收集评论数"
+    "message": "最多分析条数"
   },
   "ui_combined_probability": {
     "message": "综合可疑概率"
@@ -2648,22 +2648,22 @@
     "message": "样本命中占比"
   },
   "ui_collected_unanalysed": {
-    "message": "已收集，未单独分析"
+    "message": "综合样本"
   },
   "ui_collection_progress": {
-    "message": "已收集 $1/$2 条 · 原帖 $3/$4"
+    "message": "已收集 $1 条 · 每次最多分析 $2 条 · 来自 $3 个原帖"
   },
   "help_observer_mode": {
-    "message": "**累计判定：每条分别判断，再数可疑评论。**\n\n**综合判定：先收集，够数后一起判断。** 只收集正常浏览遇到的回复，不会去对方主页抓取。\n\n两种模式分别保存设置，切换后不混用原来的判断。"
+    "message": "**累计判定：逐条分析，累计可疑评论。**\n\n**综合判定：首次遇到后，后台补充近期回复，再一起分析。** 不打开主页、不跳转页面；两种模式的设置独立保存。"
   },
   "help_collect_replies": {
-    "message": "**先攒够多少条回复，再一起分析。** 可设 3–5 条，不需要先判为可疑。\n\n只收集你浏览时遇到的回复，不会去对方主页抓取。还要满足不同原帖数；没攒够不调用模型。"
+    "message": "最多使用多少条近期回复，可设 1–10 条。跳过上下文缺失的回复继续寻找；读取结束后有几条可用就分析几条，不要求凑满。"
   },
   "help_collect_threads": {
-    "message": "**收集的回复要来自多少个原帖。** 可设 2–5 个，不能超过收集评论数。\n\n例如设为 3：即使同一评论区收集了 5 条，也不够，仍需遇到其他原帖下的回复。"
+    "message": "**样本至少来自多少个不同原帖。** 可设 2–5 个，不超过综合分析条数。\n\n同一评论区只算一个原帖。后台最多读取两页近期回复，仍不足时等待后续补充。"
   },
   "help_combined_probability": {
-    "message": "**整组回复有多像你要屏蔽的内容。**\n\n收集够数才会分析。整组概率和置信度都达标，才加入屏蔽队列；不为每条回复分别打分。"
+    "message": "模型根据本次所有可用资料作整体分类。所选屏蔽类别的概率和模型置信度都达标，才进入屏蔽队列。"
   },
   "help_combined_confidence": {
     "message": "**模型对整组判断有多大把握。**\n\n必须和综合可疑概率同时达标。它与累计模式的置信度设置分开保存。"
@@ -2675,34 +2675,34 @@
     "message": "两种模式怎么选？"
   },
   "modes_intro": {
-    "message": "都在你正常浏览时工作。区别在于：是每条分别判断，还是攒够几条一起判断。"
+    "message": "累计模式逐条观察；综合模式在首次遇到后主动获取近期回复，不需要你反复刷到同一个人。"
   },
   "modes_default": {
     "message": "默认使用"
   },
   "modes_together": {
-    "message": "先收集，再分析"
+    "message": "首次遇到，主动补充"
   },
   "modes_cumulative": {
-    "message": "**每看到一条，就判断一条。**\n\n同一个账号多次被判为可疑，而且符合你设置的数量和比例，才加入屏蔽队列。"
+    "message": "**浏览到一条回复，就单独判断一次。**\n\n达到概率和置信度门槛才计为可疑。选择 1 条、2 条或自定义条数，累计够数后加入屏蔽队列。"
   },
   "modes_combined": {
-    "message": "**先攒评论，够数后一起判断。**\n\n只收集你正常浏览时遇到的回复，不会进入对方主页抓取。收集期间不调用 Jev，也不给单条评论打分。"
+    "message": "**首次遇到，综合分析这个账号。**\n\n后台补充近期回复，结合昵称、简介、跨原帖的表达结构与发布节奏判断。资料或上下文不足时保留未知，不打开个人主页。"
   },
   "modes_c1": {
     "message": "遇到一条回复 → 单独分析"
   },
   "modes_c2": {
-    "message": "可疑评论够多、来自足够多的原帖"
+    "message": "计入一条可疑评论"
   },
   "modes_c3": {
-    "message": "近期可疑比例也达标 → 加入屏蔽队列"
+    "message": "达到所选条数 → 加入屏蔽队列"
   },
   "modes_b1": {
-    "message": "遇到回复 → 先保存在本地"
+    "message": "首次遇到回复 → 检查本地材料"
   },
   "modes_b2": {
-    "message": "评论条数和不同原帖数都够了 → 一起分析"
+    "message": "跳过残缺回复 → 用取得的可用样本分析"
   },
   "modes_b3": {
     "message": "整组概率和置信度达标 → 加入屏蔽队列"
@@ -2711,7 +2711,7 @@
     "message": "点几下，看它怎么运作"
   },
   "modes_demo_intro": {
-    "message": "假设你在原帖 A、B、C 下，分别遇到同一个人的一条回复。两边同时演示，方便比较。"
+    "message": "假设同一账号在原帖 A、B、C 下各有一条回复。点一次，累计模式只处理你遇到的那条；综合模式演示后台补齐其余两条后一起分析。"
   },
   "modes_scenario": {
     "message": "选择例子"
@@ -2729,7 +2729,7 @@
     "message": "重新演示"
   },
   "modes_demo_note": {
-    "message": "演示固定使用：3 条评论、3 个原帖、可疑概率 90%、置信度 80%、占比 75%。分数是预设示例，不会请求模型或屏蔽账号，也不修改你的设置。"
+    "message": "示例设为累计 3 条可疑评论，综合模式最多分析 3 条；概率门槛 90%、置信度 80%。分数为预设，不会改变设置或操作账号。"
   },
   "modes_requests": {
     "message": "次分析请求"
@@ -2738,28 +2738,28 @@
     "message": "设置里的数字怎么看？"
   },
   "modes_counts_title": {
-    "message": "“3 条、3 个原帖”分别数什么？"
+    "message": "两种模式的条数有什么区别？"
   },
   "modes_counts": {
-    "message": "**累计判定：数可疑评论。** 要有 3 条符合条件的可疑评论，且来自 3 个不同原帖；近期可疑比例还要达标。\n\n**综合判定：数收集的评论。** 不要求事先判为可疑。收集到 3 条、来自 3 个原帖，才开始整组分析。\n\n同一个评论区的多条回复只算 1 个原帖。刷新看到同一条，不重复计数。"
+    "message": "**累计：条数是屏蔽门槛。** 选 2 条，同账号有 2 条不同评论达标就屏蔽，不要求来自不同原帖。\n\n**综合：条数是分析上限。** 设 7 条，只有 5 条可用就分析 5 条；缺上下文的跳过，零条时不分析。"
   },
   "modes_scores_title": {
-    "message": "概率、置信度、占比有什么区别？"
+    "message": "概率和置信度"
   },
   "modes_scores": {
-    "message": "**概率：有多像你要屏蔽的内容。**\n\n**置信度：模型对这个分类有多大把握。** 两项都达到设置值才算通过，不是达到其中一项就屏蔽。\n\n**累计占比：最近最多 5 条有效判断中，可疑的比例。** 例如 4 条有效判断里有 3 条可疑，就是 75%；无法可靠判断的不计入。\n\n**综合占比：要求可疑特征覆盖多少条样本。** 例如 3 条的 75% 向上取整是 3 条；不是把单条概率取平均。"
+    "message": "**概率：内容有多像要屏蔽的类别。**\n\n**置信度：模型对分类有多大把握。** 两项都达到设置值才计为可疑，随后按所选条数累计。"
   },
   "modes_marks_title": {
     "message": "为什么综合模式不能显示单条概率？"
   },
   "modes_marks": {
-    "message": "**没有逐条分析，就没有逐条分数。** 因此综合模式下，“显示识别标记”和“提前遮罩可疑评论”不可用。\n\n整组判定达到屏蔽条件后，删除动画和后台队列仍会正常执行。切回累计模式，会恢复这两个选项原来的选择。"
+    "message": "**综合模式显示账号综合概率，不是单条回复分数。** 判定完成后，用户名旁会显示标记，悬停可查看各类概率、置信度和分析条数。\n\n提前遮罩仍不可用；达到屏蔽条件后正常播放删除动画。"
   },
   "modes_cost_title": {
     "message": "哪一种更省请求？"
   },
   "modes_cost": {
-    "message": "**累计：每条符合观察条件的评论分别分析。**\n\n**综合：收集期间 0 次，够数后整组分析 1 次。** 一次包含多条内容，费用不能简单按请求次数等比例比较。\n\n相同请求可复用缓存。综合再次分析同一账号，至少间隔 1 小时，并且新增 2 条回复；两种模式都受每日分析上限限制。"
+    "message": "**累计：逐条分析，再累计判断。**\n\n**综合：在读取范围内收集可用回复，最多达到设置上限，然后整体分析一次。** 不等待凑满，不按命中条数或比例投票。\n\n相同结果复用缓存；明确判为自然交流的账号长期保存在本地，后续跳过。"
   },
   "modes_shared": {
     "message": "**共同前提：先开启自动观察。** 白名单和已开启的关注保护都生效，官方 @grok 保留。过期评论不再参与判断；切换模式不混用原模式的判断。\n\n概率是模型的判断，不代表身份已经得到证实。"
@@ -2774,10 +2774,10 @@
     "message": "还没有遇到"
   },
   "modes_hit_progress": {
-    "message": "可疑 $1/3 条 · 来自 $2/3 个原帖"
+    "message": "可疑 $1/3 条"
   },
   "modes_collect_progress": {
-    "message": "已收集 $1/3 条 · 来自 $2/3 个原帖"
+    "message": "本次可用 $1 条 · $2 个原帖"
   },
   "modes_queued": {
     "message": "条件已满足 → 加入屏蔽队列"
@@ -2792,6 +2792,330 @@
     "message": "整组概率 96%、置信度 90% → 加入屏蔽队列"
   },
   "modes_wait_collect": {
-    "message": "先收集，暂不请求模型"
+    "message": "遇到账号后才开始后台补充"
+  },
+  "modes_fetched_reply": {
+    "message": "综合模式已在后台获取；累计模式尚未遇到"
+  },
+  "ui_collection_fetching": {
+    "message": "正在后台获取近期回复"
+  },
+  "ui_collection_insufficient": {
+    "message": "未取得可用回复"
+  },
+  "ui_collection_limited": {
+    "message": "X 读取已限流，稍后自动恢复"
+  },
+  "ui_collection_unavailable": {
+    "message": "近期回复暂不可用，稍后再试"
+  },
+  "ui_block_hidden_text": {
+    "message": "屏蔽隐藏字符垃圾评论"
+  },
+  "help_block_hidden_text": {
+    "message": "自动屏蔽在评论中大量插入隐藏字符的账号。"
+  },
+  "ui_account_material": {
+    "message": "本次分析资料"
+  },
+  "ui_account_profile_available": {
+    "message": "参考昵称与简介"
+  },
+  "ui_account_profile_unknown": {
+    "message": "昵称或简介信息不完整"
+  },
+  "ui_account_observed": {
+    "message": "节奏样本：$1 条回复 · $2 个原帖"
+  },
+  "ui_account_rhythm": {
+    "message": "观测间隔中位数 $1 秒 · 最密集 5 分钟 $2 条／$3 个原帖"
+  },
+  "ui_account_rhythm_unknown": {
+    "message": "节奏样本不足"
+  },
+  "modes_account_dimensions": {
+    "message": "**账号资料：** 昵称、简介与回复表现是否相符，是否明确说明自动回复。\n\n**历史内容：** 不同原帖下是否反复使用相同的点评结构、个人经历铺垫和固定追问。\n\n**发布节奏：** 结合回复间隔、密集程度、文字长度与不同原帖数，区分短句互关和跨话题完整点评。\n\n综合这些线索判断账号的持续行为。缺失资料标为未知；昵称含 AI、单纯高频或简介自称真人都不能单独决定结果。"
+  },
+  "ui_normal_accounts": {
+    "message": "已判为正常的账号"
+  },
+  "ui_normal_remove": {
+    "message": "移出列表"
+  },
+  "ui_normal_empty": {
+    "message": "暂无记录"
+  },
+  "ui_normal_help": {
+    "message": "明确判为自然交流的账号会保存在本地，后续跳过综合分析。移出列表后可重新判断。"
+  },
+  "ui_more_judgment_options": {
+    "message": "高级判定选项"
+  },
+  "ui_reply_preview_incomplete": {
+    "message": "这条记录只保留了部分内容，可点击右侧箭头查看原回复。"
+  },
+  "observer_combined_marker": {
+    "message": "综合 AI 概率 $1%"
+  },
+  "observer_combined_marker_note": {
+    "message": "账号综合判定 · 分析 $1 条回复"
+  },
+  "ui_normal_search": {
+    "message": "搜索昵称或 @用户名"
+  },
+  "ui_normal_count": {
+    "message": "共 $1 个账号"
+  },
+  "ui_hits_one": {
+    "message": "1 条即屏蔽"
+  },
+  "ui_hits_two": {
+    "message": "2 条可疑评论"
+  },
+  "ui_hits_progress": {
+    "message": "可疑评论 $1 / $2 条"
+  },
+  "dash_title": {
+    "message": "仪表板"
+  },
+  "dash_overview": {
+    "message": "今日概览"
+  },
+  "dash_analyzed": {
+    "message": "已分析"
+  },
+  "dash_recent": {
+    "message": "最近处理"
+  },
+  "dash_search": {
+    "message": "搜索账号或命中规则"
+  },
+  "dash_combined_score": {
+    "message": "综合判定 $1%"
+  },
+  "dash_ai_score": {
+    "message": "可疑概率 $1%"
+  },
+  "dash_support_score": {
+    "message": "支持原帖 $1%"
+  },
+  "dash_observation": {
+    "message": "观察记录"
+  },
+  "dash_skipped": {
+    "message": "已跳过"
+  },
+  "dash_masked": {
+    "message": "已遮罩"
+  },
+  "dash_withdraw": {
+    "message": "撤回"
+  },
+  "dash_undo": {
+    "message": "撤销"
+  },
+  "dash_empty": {
+    "message": "暂无处理记录"
+  },
+  "dash_count_note": {
+    "message": "今日保留记录中的分析结果，含缓存复用；不是 API 请求次数。"
+  },
+  "dash_tasks": {
+    "message": "$1 个进行中任务"
+  },
+  "dash_no_tasks": {
+    "message": "未启动任务"
+  },
+  "dash_combined_watching": {
+    "message": "综合判定 · 观察中"
+  },
+  "dash_cumulative_watching": {
+    "message": "累计判定 · 观察中"
+  },
+  "dash_view_tasks": {
+    "message": "查看任务"
+  },
+  "dash_manage": {
+    "message": "管理"
+  },
+  "dash_running": {
+    "message": "运行中"
+  },
+  "dash_task_records": {
+    "message": "任务记录"
+  },
+  "dash_detection_settings": {
+    "message": "识别设置"
+  },
+  "dash_my_rules": {
+    "message": "我的规则"
+  },
+  "dash_edit_rule": {
+    "message": "编辑规则"
+  },
+  "ui_custom_filters_enabled": {
+    "message": "启用自定义过滤"
+  },
+  "ui_custom_filters_off": {
+    "message": "自定义过滤已关闭"
+  },
+  "ui_custom_filters_toggle_help": {
+    "message": "关闭后停止匹配自定义规则，并取消尚未发送的相关屏蔽。保留每条规则的开关；已提交的屏蔽不撤销。通用设置中的隐藏字符过滤独立运行。"
+  },
+  "ui_rule_conditions": {
+    "message": "匹配条件"
+  },
+  "ui_rule_condition_number": {
+    "message": "条件 $1"
+  },
+  "ui_rules_import": {
+    "message": "导入 JSON"
+  },
+  "ui_rules_export": {
+    "message": "导出 JSON"
+  },
+  "ui_rules_export_one": {
+    "message": "导出此规则"
+  },
+  "ui_rules_select_all": {
+    "message": "全选"
+  },
+  "ui_rules_import_note": {
+    "message": "导入的规则会追加到现有列表，点击保存后生效。"
+  },
+  "ui_rules_import_count": {
+    "message": "导入 $1 条"
+  },
+  "ui_rules_export_count": {
+    "message": "导出 $1 条"
+  },
+  "ui_rules_import_ready": {
+    "message": "已导入 $1 条规则，请保存设置。"
+  },
+  "ui_rules_file_invalid": {
+    "message": "文件格式或规则无效，请检查 JSON、条件和正则表达式。每次最多导入 50 条。"
+  },
+  "ui_rules_file_large": {
+    "message": "文件总大小不能超过 1 MB，每次最多选择 50 个文件。"
+  },
+  "ui_rules_export_empty": {
+    "message": "暂无可导出的规则。"
+  },
+  "ui_subscription_add": {
+    "message": "URL 订阅"
+  },
+  "ui_subscription_title": {
+    "message": "规则订阅"
+  },
+  "ui_subscription_daily": {
+    "message": "每天自动更新"
+  },
+  "ui_subscription_apply": {
+    "message": "添加订阅"
+  },
+  "ui_subscription_load": {
+    "message": "读取规则"
+  },
+  "ui_subscription_count": {
+    "message": "$1 条规则"
+  },
+  "ui_subscription_notice": {
+    "message": "订阅规则会直接生效。开启自动更新后，来源新增、修改或删除的规则会自动应用；不会覆盖本地规则。"
+  },
+  "ui_subscription_url_invalid": {
+    "message": "请输入 HTTPS JSON 地址，不要包含账号密码或 # 片段。"
+  },
+  "ui_subscription_permission": {
+    "message": "未获得此网站的访问权限。"
+  },
+  "ui_subscription_checked": {
+    "message": "检查于 $1"
+  },
+  "ui_subscription_update_failed": {
+    "message": "更新失败，已保留上一次有效规则。"
+  },
+  "ui_subscription_refresh": {
+    "message": "立即更新"
+  },
+  "ui_subscription_remove": {
+    "message": "移除订阅及规则"
+  },
+  "ui_subscription_failed": {
+    "message": "无法读取或应用订阅。请检查网址、权限、JSON 格式或规则数量；不能重复订阅同一地址，所有规则合计最多 50 条。"
+  },
+  "legal_title": {
+    "message": "使用须知与许可"
+  },
+  "legal_continue": {
+    "message": "同意并继续"
+  },
+  "legal_full_license": {
+    "message": "查看 AGPL-3.0 许可全文"
+  },
+  "legal_load_failed": {
+    "message": "暂时无法读取许可文件，请重新打开。"
+  },
+  "legal_acknowledge": {
+    "message": "我已阅读使用须知，并了解 AGPL-3.0 开源许可。"
+  },
+  "legal_risk_title": {
+    "message": "识别结果可能出错"
+  },
+  "legal_risk": {
+    "message": "AI 概率不代表账号身份已经得到证实，可能出现误判和漏判。请根据自己的判断设置规则，并及时复核处理记录。"
+  },
+  "legal_actions_title": {
+    "message": "屏蔽操作会影响你的账号"
+  },
+  "legal_actions": {
+    "message": "启用自动处理后，插件可能使用当前登录的 X 账号提交屏蔽请求。已发送的请求不能保证撤回；你可以在记录中尝试取消屏蔽。"
+  },
+  "legal_data_title": {
+    "message": "数据与密钥"
+  },
+  "legal_data": {
+    "message": "分析所需的原帖、回复及必要账号资料会发送到你配置的模型 API。API Key、规则和处理记录保存在本机浏览器中。X 登录凭据仅用于 X 请求，不发送给模型服务。"
+  },
+  "legal_cost_title": {
+    "message": "第三方费用与可用性"
+  },
+  "legal_cost": {
+    "message": "模型调用可能产生费用，具体以服务提供方计费为准。X 或模型接口变化、限流和网络故障都可能使功能暂时不可用。"
+  },
+  "legal_sources_title": {
+    "message": "订阅与本地确认记录"
+  },
+  "legal_sources": {
+    "message": "请只订阅可信来源。自动更新可能改变实际处理规则。这里的确认只在本地记录文档版本和时间，不收集姓名，不会上传签署信息。"
+  },
+  "legal_license_title": {
+    "message": "开源许可与责任边界"
+  },
+  "legal_license": {
+    "message": "项目采用 AGPL-3.0-only 许可，按现状提供，不保证识别准确性或服务持续可用。运行程序本身不要求接受 AGPL；复制、修改和分发等行为适用其条款。本页确认不增加 AGPL 之外的许可限制。"
+  },
+  "legal_step": {
+    "message": "使用须知"
+  },
+  "variable_review_account": {
+    "message": "账号资料与发布节奏"
+  },
+  "variable_review_profile": {
+    "message": "昵称与简介"
+  },
+  "variable_review_activity": {
+    "message": "回复时间统计"
+  },
+  "variable_review_samples": {
+    "message": "近期回复及上下文"
+  },
+  "variable_review_count": {
+    "message": "样本条数"
+  },
+  "ui_review_prompt_editor": {
+    "message": "综合判定 · 自定义提示词"
+  },
+  "ui_cumulative_prompt_editor": {
+    "message": "累计判定 · 自定义提示词"
   }
 }

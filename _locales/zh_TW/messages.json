@@ -2486,7 +2486,7 @@
     "message": "分類結果"
   },
   "setup_sample_text": {
-    "message": "這個角度滿有意思，我也想試試看。"
+    "message": "去公園散步不只是運動，也是讓大腦休息。建議從路線、時間和天氣三個面向規劃。你比較想放鬆還是鍛鍊？"
   },
   "setup_demo_probability": {
     "message": "機率 96%"
@@ -2516,7 +2516,7 @@
     "message": "試播刪除動畫"
   },
   "setup_auto_hint": {
-    "message": "瀏覽時自動收集與判斷回覆。累計模式逐則分析並累積可疑留言；綜合模式先收集足夠回覆，再一起判斷帳號。"
+    "message": "瀏覽時自動辨識回覆。累計模式逐則分析並累計可疑留言；綜合模式首次遇到帳號後，會在背景取得近期回覆，再一起判斷。"
   },
   "setup_connect_description": {
     "message": "先連接用來辨識留言的模型。輸入 API Key 後點選「連接並繼續」；已有連線可直接進入下一步。"
@@ -2573,16 +2573,16 @@
     "message": "**選擇自動觀察的帳號範圍。**\n\n僅藍勾勾會略過無法確認藍勾勾的帳號；藍勾勾不作為 AI 判定依據。\n\n需先開啟自動觀察。"
   },
   "help_policy": {
-    "message": "**預設只調整機率與模型信心度。**\n\n手動調整滑桿會切換為自訂，不會改變累計則數、不同原始貼文數或近期命中比例。"
+    "message": "**快速調整機率與信心程度。** 手動拖曳後切換為自訂；不更動累計則數。"
   },
   "help_suspect": {
-    "message": "**累計模式中留言符合可疑類別的機率門檻，還需符合單則信心度才計入可疑則數。**\n\n封鎖另需累計條件。\n\n綜合模式使用獨立機率。"
+    "message": "**回覆符合可疑類別的機率門檻。** 同時達到模型信心門檻才計入，累計達指定則數後封鎖。"
   },
   "help_confidence": {
     "message": "**模型對單則分類的確信程度，與類別機率不同，兩項須同時符合。**\n\nAI累計模式還需累計條件；綜合模式另設信心度。"
   },
   "help_hits": {
-    "message": "**同一帳號需累計多少則達到機率與信心度門檻的獨立留言。**\n\n還需同時符合不同原始貼文數與近期命中比例。\n\n重新整理或快取命中不會重複計算。"
+    "message": "**同一帳號累計多少則可疑回覆後封鎖。** 每則都須達到機率與信心門檻。\n\n可選 1 則、2 則或自訂 1–100 則。只計入最近 30 天的不同回覆；重複看到同一則不重複計算，也可來自同一討論串。"
   },
   "help_threads": {
     "message": "**可疑留言至少需來自多少篇不同原始貼文。**\n\n同一留言區只算一篇，須與可疑則數及近期命中比例同時符合。\n\n數值越大越難觸發，且不能超過可疑則數。"
@@ -2600,7 +2600,7 @@
     "message": "**略過已追蹤帳號；無法確認追蹤狀態時也暫不處理。**\n\n兩個模組分別設定，白名單始終優先。"
   },
   "help_markers": {
-    "message": "**僅累計模式可用：顯示單則判定，停留查看機率。**\n\n綜合模式不做個別分析，沒有個別分數，因此停用；切回後保留原選擇。"
+    "message": "**累計模式可開啟單則機率標記，游標移上即可查看各類機率。**\n\n綜合模式完成判定後，會自動在使用者名稱旁顯示帳號綜合 AI 機率，不受此開關控制。"
   },
   "help_observer_mask": {
     "message": "**僅累計模式可用：單則機率及信心度達標後以等高遮罩提前隱藏。**\n\n綜合模式沒有個別判定，因此停用；綜合符合封鎖條件後仍正常播放刪除動畫。"
@@ -2639,7 +2639,7 @@
     "message": "收集與判定條件"
   },
   "ui_collect_replies": {
-    "message": "收集留言數"
+    "message": "分析則數上限"
   },
   "ui_combined_probability": {
     "message": "綜合可疑機率"
@@ -2648,22 +2648,22 @@
     "message": "樣本命中比例"
   },
   "ui_collected_unanalysed": {
-    "message": "已收集，未個別分析"
+    "message": "綜合樣本"
   },
   "ui_collection_progress": {
-    "message": "已收集 $1/$2 則 · 原始貼文 $3/$4"
+    "message": "已收集 $1 則 · 每次最多分析 $2 則 · 來自 $3 篇原始貼文"
   },
   "help_observer_mode": {
-    "message": "**累計判定逐則請求模型，累積可疑留言後封鎖。**\n\n綜合判定先收集同帳號回覆，達到數量才一起分析，不發送個別請求。\n\n兩種模式條件分開保存，不混用舊模式證據。"
+    "message": "**累計：個別分析，累積可疑回覆。**\n\n**綜合：首次遇到後，在背景補充近期回覆，再一起分析。** 不開啟個人檔案、不跳轉頁面。兩種模式各自儲存設定。"
   },
   "help_collect_replies": {
-    "message": "**綜合模式先收集的獨立留言數，範圍3–5。**\n\n無須先判為可疑；還需符合不同原始貼文數才發送綜合請求。\n\n不受累計模式可疑則數影響。"
+    "message": "最多使用幾則近期回覆，可設 1–10 則。略過脈絡缺失的回覆並繼續尋找；讀取結束後有幾則可用就分析幾則，不必湊滿。"
   },
   "help_collect_threads": {
-    "message": "**收集的回覆至少來自幾篇不同原始貼文，範圍2–5，不可超過收集留言數。**\n\n僅統計綜合模式內容，同一留言區只算一篇。"
+    "message": "**樣本至少來自幾篇不同原始貼文。** 可設 2–5 篇，不能超過分析則數。\n\n同一討論串只算一篇。背景最多讀取兩頁，不足時等待後續補充。"
   },
   "help_combined_probability": {
-    "message": "**多則留言共同分析後，所選可疑類別須達到的機率。**\n\n還需符合綜合模型信心度；與累計模式單則機率獨立，不產生個別分數。"
+    "message": "模型根據本次可用資料作整體分類。選定封鎖類別的機率與信心程度都達標後，才排入封鎖佇列。"
   },
   "help_combined_confidence": {
     "message": "**模型對綜合分類的確信程度，須與綜合可疑機率同時符合才封鎖。**\n\n與累計模式信心度分開保存。"
@@ -2675,34 +2675,34 @@
     "message": "兩種模式怎麼選？"
   },
   "modes_intro": {
-    "message": "兩種模式都會在你瀏覽時運作。差別是逐則判斷，還是收集足夠的回覆後一起判斷。"
+    "message": "累計模式逐則觀察；綜合模式首次遇到後主動取得近期回覆，不必反覆遇到同一人。"
   },
   "modes_default": {
     "message": "預設模式"
   },
   "modes_together": {
-    "message": "先收集，再分析"
+    "message": "首次遇到，主動補充"
   },
   "modes_cumulative": {
-    "message": "**每看到一則，就判斷一則。**\n\n同一個帳號多次被判為可疑，且符合你設定的數量與比例，才排入封鎖佇列。"
+    "message": "**看到一則回覆，就個別判斷一次。**\n\n機率與信心門檻都達標才計入。選擇 1 則、2 則或自訂則數，累計達標後加入封鎖佇列。"
   },
   "modes_combined": {
-    "message": "**先收集回覆，數量足夠後一起判斷。**\n\n只收集你瀏覽時遇到的回覆，不會前往對方的個人檔案抓取內容。收集期間不呼叫 Jev，也不提供單則分數。"
+    "message": "**首次遇到，綜合分析這個帳號。**\n\n在背景補充近期回覆，結合暱稱、自我介紹、跨貼文的表達結構與發布節奏判斷。資料或脈絡不足時保留未知，不開啟個人檔案。"
   },
   "modes_c1": {
     "message": "遇到一則回覆 → 個別分析"
   },
   "modes_c2": {
-    "message": "可疑回覆夠多，且來自足夠的原始貼文"
+    "message": "計入一則可疑回覆"
   },
   "modes_c3": {
-    "message": "近期可疑比例也達標 → 排入封鎖佇列"
+    "message": "達到指定則數 → 加入封鎖佇列"
   },
   "modes_b1": {
-    "message": "遇到回覆 → 先儲存在本機"
+    "message": "首次遇到 → 檢查本機資料"
   },
   "modes_b2": {
-    "message": "回覆數與原始貼文數都足夠 → 一起分析"
+    "message": "略過不完整回覆 → 分析可用樣本"
   },
   "modes_b3": {
     "message": "整組機率與信心程度達標 → 排入封鎖佇列"
@@ -2711,7 +2711,7 @@
     "message": "動手試試看"
   },
   "modes_demo_intro": {
-    "message": "假設你在原始貼文 A、B、C 下，各遇到同一個人的一則回覆。下方同時演示兩種模式。"
+    "message": "假設同一人在原始貼文 A、B、C 各有一則回覆。點一下，累計只分析遇到的那則；綜合示範在背景補齊另兩則後一起分析。"
   },
   "modes_scenario": {
     "message": "選擇範例"
@@ -2729,7 +2729,7 @@
     "message": "重新演示"
   },
   "modes_demo_note": {
-    "message": "固定範例：3 則回覆、3 篇原始貼文、可疑機率 90%、信心程度 80%、占比 75%。分數僅供示意，不會呼叫模型、封鎖帳號或變更設定。"
+    "message": "範例設定為累計 3 則可疑留言，綜合模式最多分析 3 則；機率門檻 90%、信心程度 80%。分數為預設，不會變更設定或操作帳號。"
   },
   "modes_requests": {
     "message": "次分析請求"
@@ -2738,28 +2738,28 @@
     "message": "設定裡的數字怎麼看？"
   },
   "modes_counts_title": {
-    "message": "「3 則、3 篇」在計算什麼？"
+    "message": "兩種模式的則數有何差別？"
   },
   "modes_counts": {
-    "message": "**累計判定：計算可疑回覆。** 需要 3 則符合條件的可疑回覆，來自 3 篇不同的原始貼文，近期占比也須達標。\n\n**綜合判定：計算收集的回覆。** 不必事先判為可疑。收集滿 3 則、來自 3 篇原始貼文，才進行整組分析。\n\n同一討論串的多則回覆只算一篇原始貼文。重新整理不會重複計算。"
+    "message": "**累計：則數是封鎖門檻。** 選 2 則，同帳號有 2 則不同回覆達標就封鎖，不要求來自不同原始貼文。\n\n**綜合：則數是分析上限。** 設 7 則但只有 5 則可用，就分析 5 則；跳過缺少上下文的回覆，沒有樣本時不分析。"
   },
   "modes_scores_title": {
-    "message": "機率、信心程度與占比有什麼差別？"
+    "message": "機率與信心程度"
   },
   "modes_scores": {
-    "message": "**機率：內容有多像你要封鎖的類別。**\n\n**信心程度：模型對分類有多大把握。** 兩項都必須達標。\n\n**累計占比：最近最多 5 次有效判斷中，可疑回覆的比例。** 4 則裡有 3 則可疑就是 75%；無法可靠判斷的不列入。\n\n**綜合占比：可疑特徵需要出現在多少則樣本中。** 3 則的 75% 無條件進位為 3 則，不是單則分數的平均值。"
+    "message": "**機率：內容有多像要封鎖的類別。**\n\n**信心程度：模型對分類有多大把握。** 兩項都達標才計為可疑，再依指定則數累計。"
   },
   "modes_marks_title": {
     "message": "為什麼綜合模式沒有單則機率？"
   },
   "modes_marks": {
-    "message": "**沒有個別分析，就沒有個別分數。** 因此綜合模式無法使用識別標記與提前遮罩。\n\n整組符合封鎖條件後，刪除動畫和背景佇列仍會正常運作。切回累計模式會恢復原本的標記與遮罩選擇。"
+    "message": "**綜合模式顯示帳號綜合機率，而非單則回覆分數。** 判定後在使用者名稱旁顯示標記，游標移上可查看各類機率、信心程度及分析則數。\n\n提前遮罩仍無法使用；達到封鎖條件後正常播放刪除動畫。"
   },
   "modes_cost_title": {
     "message": "哪種模式請求次數較少？"
   },
   "modes_cost": {
-    "message": "**累計：每則符合觀察條件的回覆個別分析。**\n\n**綜合：收集期間 0 次，數量足夠後整組分析 1 次。** 單次文字較多，費用不會與請求次數等比例減少。\n\n相同請求可使用快取。再次綜合分析同一帳號，至少須間隔 1 小時並新增 2 則回覆。兩種模式都受每日上限限制。"
+    "message": "**累計：逐則分析，再累積判斷。**\n\n**綜合：在讀取範圍內收集可用回覆，最多達到上限後整體分析一次。** 不等待湊滿，也不按命中則數或比例投票。\n\n相同結果使用快取；明確判為自然交流的帳號會長期儲存在本機，之後略過。"
   },
   "modes_shared": {
     "message": "**先開啟自動觀察。** 白名單與已啟用的追蹤保護都會生效，官方 @grok 不會被處理。過期回覆不再計算；切換模式不會混用舊模式的判斷。\n\n模型機率是判斷結果，並不是作者身分的證明。"
@@ -2774,10 +2774,10 @@
     "message": "尚未遇到"
   },
   "modes_hit_progress": {
-    "message": "可疑 $1/3 則 · $2/3 篇原始貼文"
+    "message": "可疑 $1/3 則"
   },
   "modes_collect_progress": {
-    "message": "已收集 $1/3 則 · $2/3 篇原始貼文"
+    "message": "本次可用 $1 則 · $2 篇原始貼文"
   },
   "modes_queued": {
     "message": "條件達標 → 排入封鎖佇列"
@@ -2792,6 +2792,330 @@
     "message": "整組機率 96%、信心程度 90% → 排入封鎖佇列"
   },
   "modes_wait_collect": {
-    "message": "先收集，尚未向模型送出請求"
+    "message": "首次遇到後才開始背景補充"
+  },
+  "modes_fetched_reply": {
+    "message": "綜合模式已在背景取得；累計模式尚未遇到"
+  },
+  "ui_collection_fetching": {
+    "message": "正在背景取得近期回覆"
+  },
+  "ui_collection_insufficient": {
+    "message": "未取得可用回覆"
+  },
+  "ui_collection_limited": {
+    "message": "X 讀取受到限流，稍後恢復"
+  },
+  "ui_collection_unavailable": {
+    "message": "暫時無法取得近期回覆，稍後再試"
+  },
+  "ui_block_hidden_text": {
+    "message": "封鎖隱藏字元垃圾回覆"
+  },
+  "help_block_hidden_text": {
+    "message": "自動封鎖在回覆中大量插入隱藏字元的帳號。"
+  },
+  "ui_account_material": {
+    "message": "本次分析資料"
+  },
+  "ui_account_profile_available": {
+    "message": "參考暱稱與自我介紹"
+  },
+  "ui_account_profile_unknown": {
+    "message": "暱稱或自我介紹資料不完整"
+  },
+  "ui_account_observed": {
+    "message": "節奏樣本：$1 則回覆 · $2 篇原始貼文"
+  },
+  "ui_account_rhythm": {
+    "message": "觀測間隔中位數 $1 秒 · 最密集 5 分鐘 $2 則／$3 篇原始貼文"
+  },
+  "ui_account_rhythm_unknown": {
+    "message": "節奏樣本不足"
+  },
+  "modes_account_dimensions": {
+    "message": "**帳號資料：** 暱稱、自我介紹是否與回覆表現一致，是否明示自動回覆。\n\n**歷史內容：** 不同貼文下是否反覆使用相同的評論結構、個人經驗鋪陳與固定追問。\n\n**發布節奏：** 結合間隔、密度、字數與不同原始貼文數，區分互追短句與跨話題完整評論。\n\n綜合線索判斷持續行為。缺少資料視為未知；名稱含 AI、單純高頻或自稱真人都不能單獨決定結果。"
+  },
+  "ui_normal_accounts": {
+    "message": "已判為正常的帳號"
+  },
+  "ui_normal_remove": {
+    "message": "移出清單"
+  },
+  "ui_normal_empty": {
+    "message": "目前沒有紀錄"
+  },
+  "ui_normal_help": {
+    "message": "明確判為自然交流的帳號會儲存在本機，之後略過綜合分析。移出清單後可重新判斷。"
+  },
+  "ui_more_judgment_options": {
+    "message": "進階判定選項"
+  },
+  "ui_reply_preview_incomplete": {
+    "message": "這筆紀錄僅保留部分內容，可點選右側箭頭查看原回覆。"
+  },
+  "observer_combined_marker": {
+    "message": "綜合 AI 機率 $1%"
+  },
+  "observer_combined_marker_note": {
+    "message": "帳號綜合判定 · 分析 $1 則回覆"
+  },
+  "ui_normal_search": {
+    "message": "搜尋暱稱或 @使用者名稱"
+  },
+  "ui_normal_count": {
+    "message": "共 $1 個帳號"
+  },
+  "ui_hits_one": {
+    "message": "1 則即封鎖"
+  },
+  "ui_hits_two": {
+    "message": "2 則可疑回覆"
+  },
+  "ui_hits_progress": {
+    "message": "可疑回覆 $1 / $2 則"
+  },
+  "dash_title": {
+    "message": "儀表板"
+  },
+  "dash_overview": {
+    "message": "今日概覽"
+  },
+  "dash_analyzed": {
+    "message": "已分析"
+  },
+  "dash_recent": {
+    "message": "最近處理"
+  },
+  "dash_search": {
+    "message": "搜尋帳號或符合的規則"
+  },
+  "dash_combined_score": {
+    "message": "綜合判定 $1%"
+  },
+  "dash_ai_score": {
+    "message": "可疑機率 $1%"
+  },
+  "dash_support_score": {
+    "message": "支持原始貼文 $1%"
+  },
+  "dash_observation": {
+    "message": "觀察紀錄"
+  },
+  "dash_skipped": {
+    "message": "已略過"
+  },
+  "dash_masked": {
+    "message": "已遮罩"
+  },
+  "dash_withdraw": {
+    "message": "撤回"
+  },
+  "dash_undo": {
+    "message": "復原"
+  },
+  "dash_empty": {
+    "message": "尚無處理紀錄"
+  },
+  "dash_count_note": {
+    "message": "今日保留紀錄中的分析結果，含快取重用；並非 API 請求次數。"
+  },
+  "dash_tasks": {
+    "message": "$1 個進行中任務"
+  },
+  "dash_no_tasks": {
+    "message": "尚未啟動任務"
+  },
+  "dash_combined_watching": {
+    "message": "綜合判定 · 觀察中"
+  },
+  "dash_cumulative_watching": {
+    "message": "累計判定 · 觀察中"
+  },
+  "dash_view_tasks": {
+    "message": "查看任務"
+  },
+  "dash_manage": {
+    "message": "管理"
+  },
+  "dash_running": {
+    "message": "執行中"
+  },
+  "dash_task_records": {
+    "message": "任務紀錄"
+  },
+  "dash_detection_settings": {
+    "message": "辨識設定"
+  },
+  "dash_my_rules": {
+    "message": "我的規則"
+  },
+  "dash_edit_rule": {
+    "message": "編輯規則"
+  },
+  "ui_custom_filters_enabled": {
+    "message": "啟用自訂過濾"
+  },
+  "ui_custom_filters_off": {
+    "message": "自訂過濾已關閉"
+  },
+  "ui_custom_filters_toggle_help": {
+    "message": "關閉後停止比對自訂規則，並取消尚未送出的相關封鎖。保留各規則的開關；已送出的封鎖不會撤銷。一般設定中的隱藏字元過濾獨立運作。"
+  },
+  "ui_rule_conditions": {
+    "message": "比對條件"
+  },
+  "ui_rule_condition_number": {
+    "message": "條件 $1"
+  },
+  "ui_rules_import": {
+    "message": "匯入 JSON"
+  },
+  "ui_rules_export": {
+    "message": "匯出 JSON"
+  },
+  "ui_rules_export_one": {
+    "message": "匯出此規則"
+  },
+  "ui_rules_select_all": {
+    "message": "全選"
+  },
+  "ui_rules_import_note": {
+    "message": "匯入的規則會新增至現有清單，儲存後生效。"
+  },
+  "ui_rules_import_count": {
+    "message": "匯入 $1 條"
+  },
+  "ui_rules_export_count": {
+    "message": "匯出 $1 條"
+  },
+  "ui_rules_import_ready": {
+    "message": "已匯入 $1 條規則，請儲存設定。"
+  },
+  "ui_rules_file_invalid": {
+    "message": "檔案格式或規則無效，請檢查 JSON、條件和正規表示式。每次最多匯入 50 條。"
+  },
+  "ui_rules_file_large": {
+    "message": "檔案總大小不可超過 1 MB，每次最多選擇 50 個檔案。"
+  },
+  "ui_rules_export_empty": {
+    "message": "沒有可匯出的規則。"
+  },
+  "ui_subscription_add": {
+    "message": "URL 訂閱"
+  },
+  "ui_subscription_title": {
+    "message": "規則訂閱"
+  },
+  "ui_subscription_daily": {
+    "message": "每天自動更新"
+  },
+  "ui_subscription_apply": {
+    "message": "新增訂閱"
+  },
+  "ui_subscription_load": {
+    "message": "讀取規則"
+  },
+  "ui_subscription_count": {
+    "message": "$1 條規則"
+  },
+  "ui_subscription_notice": {
+    "message": "訂閱規則會直接生效。開啟自動更新後，來源新增、修改或刪除的規則會自動套用；不會覆蓋本機規則。"
+  },
+  "ui_subscription_url_invalid": {
+    "message": "請輸入 HTTPS JSON 網址，不要包含帳號密碼或 # 片段。"
+  },
+  "ui_subscription_permission": {
+    "message": "未取得此網站的存取權限。"
+  },
+  "ui_subscription_checked": {
+    "message": "檢查時間：$1"
+  },
+  "ui_subscription_update_failed": {
+    "message": "更新失敗，已保留上一次有效規則。"
+  },
+  "ui_subscription_refresh": {
+    "message": "立即更新"
+  },
+  "ui_subscription_remove": {
+    "message": "移除訂閱及規則"
+  },
+  "ui_subscription_failed": {
+    "message": "無法讀取或套用訂閱。請檢查網址、權限、JSON 格式或規則數量；同一網址不可重複訂閱，所有規則合計最多 50 條。"
+  },
+  "legal_title": {
+    "message": "使用須知與授權"
+  },
+  "legal_continue": {
+    "message": "同意並繼續"
+  },
+  "legal_full_license": {
+    "message": "查看 AGPL-3.0 授權全文"
+  },
+  "legal_load_failed": {
+    "message": "暫時無法讀取授權檔案，請重新開啟。"
+  },
+  "legal_acknowledge": {
+    "message": "我已閱讀使用須知，並了解 AGPL-3.0 開源授權。"
+  },
+  "legal_risk_title": {
+    "message": "辨識結果可能有誤"
+  },
+  "legal_risk": {
+    "message": "AI 機率不代表帳號身分已獲證實，可能誤判或漏判。請依自己的判斷設定規則，並適時檢查處理紀錄。"
+  },
+  "legal_actions_title": {
+    "message": "封鎖操作會影響你的帳號"
+  },
+  "legal_actions": {
+    "message": "開啟自動處理後，擴充功能可能使用目前登入的 X 帳號送出封鎖要求。已送出的要求不保證能撤回；你可以在紀錄中嘗試解除封鎖。"
+  },
+  "legal_data_title": {
+    "message": "資料與金鑰"
+  },
+  "legal_data": {
+    "message": "分析所需的原文、回覆及必要帳號資料會傳送至你設定的模型 API。API Key、規則和處理紀錄儲存在本機瀏覽器。X 登入憑證僅用於 X 要求，不會傳送至模型服務。"
+  },
+  "legal_cost_title": {
+    "message": "第三方費用與可用性"
+  },
+  "legal_cost": {
+    "message": "模型呼叫可能產生費用，以服務供應商的計費方式為準。X 或模型介面變更、流量限制及網路異常都可能造成服務暫時無法使用。"
+  },
+  "legal_sources_title": {
+    "message": "訂閱與本機確認紀錄"
+  },
+  "legal_sources": {
+    "message": "請只訂閱可信的來源。自動更新可能改變實際處理規則。此確認僅在本機記錄文件版本與時間，不收集姓名，也不上傳簽署資訊。"
+  },
+  "legal_license_title": {
+    "message": "開源授權與責任範圍"
+  },
+  "legal_license": {
+    "message": "本專案採用 AGPL-3.0-only 授權，按現狀提供，不保證辨識準確或服務持續可用。執行程式本身不必接受 AGPL；複製、修改及散布等行為適用其條款。本頁確認不增加 AGPL 以外的授權限制。"
+  },
+  "legal_step": {
+    "message": "使用須知"
+  },
+  "variable_review_account": {
+    "message": "帳號資料與發布節奏"
+  },
+  "variable_review_profile": {
+    "message": "暱稱與自我介紹"
+  },
+  "variable_review_activity": {
+    "message": "回覆時間統計"
+  },
+  "variable_review_samples": {
+    "message": "近期回覆與上下文"
+  },
+  "variable_review_count": {
+    "message": "樣本數"
+  },
+  "ui_review_prompt_editor": {
+    "message": "綜合判定 · 自訂提示詞"
+  },
+  "ui_cumulative_prompt_editor": {
+    "message": "累計判定 · 自訂提示詞"
   }
 }

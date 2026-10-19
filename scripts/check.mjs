@@ -17,6 +17,13 @@ for (const file of files) {
   if (result.status !== 0) throw new Error(`Invalid JavaScript: ${file}\n${result.stderr}`);
   if (/apikey_[a-f0-9]{20,}/i.test(readFileSync(resolve(root, file), "utf8"))) throw new Error(`Credential found in distributable source: ${file}`);
   const source = readFileSync(resolve(root, file), "utf8");
+  // UI modules must declare the translation initialization they read at module scope.
+  // Linking alone cannot detect this cold-start ordering error.
+  if (file.startsWith("src/manager/") && /const\s*\{[^}]*\}\s*=\s*globalThis\.BlockSBI18n/.test(source)
+      && !source.includes('import "../lib/i18n.js"')) {
+    throw new Error(`Missing explicit i18n initialization: ${file}`);
+  }
+
   for (const match of source.matchAll(/\bt\(\s*["']([a-z][a-z0-9_]*)["']/g)) {
     if (!Object.hasOwn(messages, match[1])) throw new Error(`Missing message in ${file}: ${match[1]}`);
   }

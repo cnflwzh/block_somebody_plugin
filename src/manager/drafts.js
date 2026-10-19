@@ -2,7 +2,7 @@ const KEY = "blocksb.settings-drafts.v1";
 const GROUPS = Object.freeze({
   general: ["language", "cache-limit", "reduced-motion", "animation-effect"],
   support: ["preset", "high", "confidence", "skip-following", "mask-enabled", "maskThreshold", "auto-load-default"],
-  observer: ["observer-enabled", "observer-scope", "observer-preset", "observer-threshold", "observer-confidence", "observer-minHits", "observer-minThreads", "observer-retentionDays", "observer-dailyLimit", "observer-hitRate", "observer-skipFollowing", "observer-showMarkers", "observer-mask", "observer-mode", "observer-reviewMinReplies", "observer-reviewMinThreads", "observer-reviewThreshold", "observer-reviewConfidence", "observer-reviewHitRate"]
+  observer: ["observer-enabled", "observer-scope", "observer-preset", "observer-threshold", "observer-confidence", "observer-minHits", "observer-hit-policy", "observer-skipFollowing", "observer-showMarkers", "observer-mask", "observer-mode", "observer-reviewMinReplies", "observer-reviewThreshold", "observer-reviewConfidence"]
 });
 /** Return only explicitly allowed UI draft fields; model credentials/configuration are never accepted. */
 export function sanitizeDrafts(value) {
@@ -13,6 +13,10 @@ export function sanitizeDrafts(value) {
     for (const key of fields) {
       const entry = value[group][key];
       if (typeof entry === "boolean" || typeof entry === "string" && entry.length <= 100) clean[key] = entry;
+    }
+    // Older drafts stored only the count; derive its new selector without losing that draft.
+    if (group === "observer" && clean["observer-minHits"] !== undefined && clean["observer-hit-policy"] === undefined) {
+      clean["observer-hit-policy"] = ["1", "2"].includes(clean["observer-minHits"]) ? clean["observer-minHits"] : "custom";
     }
     if (Object.keys(clean).length) result[group] = clean;
   }

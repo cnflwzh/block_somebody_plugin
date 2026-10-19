@@ -79,7 +79,8 @@
    * User prompts, option names, history text and the surrounding X DOM are untouched.
    */
   function localizeDocument(doc) {
-    doc.documentElement.lang = locales[language] || browserLocale;
+    // A dynamically mounted panel can be translated without reinitializing other forms.
+    if (doc.documentElement) doc.documentElement.lang = locales[language] || browserLocale;
     for (const node of doc.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n);
     for (const attr of ["title", "aria-label", "placeholder"]) {
       for (const node of doc.querySelectorAll(`[data-i18n-${attr}]`)) node.setAttribute(attr, t(node.getAttribute(`data-i18n-${attr}`)));

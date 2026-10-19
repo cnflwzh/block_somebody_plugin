@@ -1,9 +1,10 @@
+import { getReviewRule, normalizeReviewRule } from "./observer-review-rule.js";
 import "./i18n.js";
 import { RULE_VARIABLES, normalizeRule, expandRuleTemplate } from "./choice-rule.js";
 const { t } = globalThis.BlockSBI18n;
 /** Independent observer policy. Blue verification selects scope, never increases a score. */
 export const OBSERVER_VERSION = "observer-v1";
-export const OBSERVER_DEFAULTS = Object.freeze({ enabled: false, mode: "cumulative", reviewMinReplies: 3, reviewMinThreads: 3, reviewThreshold: 0.9, reviewConfidence: 0.8, reviewHitRate: 0.75, scope: "blue", minHits: 3, minThreads: 3, hitRate: 0.75, retentionDays: 30, dailyLimit: 200, skipFollowing: true, showMarkers: false, mask: false, preset: "careful", threshold: 0.9, confidence: 0.8, prompt: "", analysisRule: null });
+export const OBSERVER_DEFAULTS = Object.freeze({ enabled: false, mode: "cumulative", reviewMinReplies: 3, reviewThreshold: 0.9, reviewConfidence: 0.8, scope: "blue", minHits: 3, retentionDays: 30, skipFollowing: true, showMarkers: false, mask: false, preset: "careful", threshold: 0.9, confidence: 0.8, prompt: "", analysisRule: null, reviewRule: null });
 // Presets adjust single-reply evidence only; cumulative account conditions stay independent.
 export const OBSERVER_PRESETS = Object.freeze({ careful: Object.freeze({ threshold: 0.9, confidence: 0.8 }), balanced: Object.freeze({ threshold: 0.85, confidence: 0.75 }), active: Object.freeze({ threshold: 0.8, confidence: 0.7 }) });
 // General guidance stays in instructions; category-specific boundaries live in criteria.
@@ -23,6 +24,7 @@ const OBSERVER_INPUT = "原帖：{{original_post}}\n父回复链：{{ancestors}}
 
 /** Same editable choice schema as group blocking; legacy prompt-only settings remain readable. */
 export function getObserverRule(config = {}) {
+  if (config.mode === "combined") return getReviewRule(config);
   if (config.analysisRule) return normalizeObserverRule(config.analysisRule);
   return { version: 1, input: OBSERVER_INPUT, prompt: config.prompt || OBSERVER_PROMPT,
     options: Object.entries(OBSERVER_CRITERIA).map(([id, criterion]) => {
@@ -34,8 +36,7 @@ export function normalizeObserverRule(value) { return normalizeRule(value, OBSER
 
 /** Identify unchanged categories so default requests/cache keys and localized labels stay stable. */
 export function observerBuiltinCategories(rule) {
-  const defaults = getObserverRule().options;
-  return rule.options.length === defaults.length && rule.options.every(o => defaults.some(d => d.id === o.id && d.name === o.name && d.description === o.description));
+  return [getObserverRule().options, getReviewRule().options].some(defaults => rule.options.length === defaults.length && rule.options.every(o => defaults.some(d => d.id === o.id && d.name === o.name && d.description === o.description)));
 }
 export function observerRuleIdentity(config) {
   const rule = getObserverRule(config);
@@ -52,10 +53,13 @@ export function observerSuspicious(entry, config, options = getObserverRule(conf
 
 /** Normalize a partial policy, rejecting invalid input rather than silently weakening guards. */
 export function normalizeObserverSettings(value = {}, current = OBSERVER_DEFAULTS) {
-  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some(k => k !== "accountReview" && !Object.hasOwn(OBSERVER_DEFAULTS, k))) throw new Error(t("observer_error_settings"));
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).some(k => !["accountReview", "reviewMinThreads", "reviewHitRate", "minThreads", "hitRate", "dailyLimit"].includes(k) && !Object.hasOwn(OBSERVER_DEFAULTS, k))) throw new Error(t("observer_error_settings"));
   const next = { ...OBSERVER_DEFAULTS, ...current };
   // Retired optional-review flags never silently opt users into a new charging mode.
-  delete next.accountReview;
+  delete next.accountReview; delete next.reviewMinThreads; delete next.reviewHitRate;
+  // Retired restrictions must not survive invisibly in saved policies or imports.
+  delete next.minThreads; delete next.hitRate; delete next.dailyLimit;
+  next.retentionDays = 30;
   if (value.mode !== undefined) { if (!["cumulative", "combined"].includes(value.mode)) throw new Error(t("observer_error_settings")); next.mode = value.mode; }
   if (value.preset !== undefined) {
     if (!["careful", "balanced", "active", "custom"].includes(value.preset)) throw new Error(t("observer_error_settings"));
@@ -67,15 +71,14 @@ export function normalizeObserverSettings(value = {}, current = OBSERVER_DEFAULT
     next[field] = value[field];
   }
   if (value.scope !== undefined) { if (!["blue", "all"].includes(value.scope)) throw new Error(t("observer_error_settings")); next.scope = value.scope; }
-  for (const [field, min, max] of [["reviewMinReplies", 3, 5], ["reviewMinThreads", 2, 5], ["reviewThreshold", 0.01, 1], ["reviewConfidence", 0.01, 1], ["reviewHitRate", 0.5, 1], ["minHits", 2, 100], ["minThreads", 1, 100], ["retentionDays", 1, 90], ["dailyLimit", 1, 10000], ["hitRate", 0.5, 1], ["threshold", 0.01, 1], ["confidence", 0.01, 1]]) if (value[field] !== undefined) {
+  for (const [field, min, max] of [["reviewMinReplies", 1, 10], ["reviewThreshold", 0.01, 1], ["reviewConfidence", 0.01, 1], ["minHits", 1, 100], ["threshold", 0.01, 1], ["confidence", 0.01, 1]]) if (value[field] !== undefined) {
     const n = value[field];
     if (typeof n !== "number" || !Number.isFinite(n) || n < min || n > max || (max > 1 && !Number.isInteger(n))) throw new Error(t("observer_error_settings"));
     next[field] = n;
   }
-  if (next.reviewMinThreads > next.reviewMinReplies) throw new Error(t("observer_error_threads"));
-  if (next.minThreads > next.minHits) throw new Error(t("observer_error_threads"));
   if (value.prompt !== undefined) { if (typeof value.prompt !== "string" || value.prompt.length > 12000) throw new Error(t("observer_error_prompt")); next.prompt = value.prompt.trim(); }
   if (value.analysisRule !== undefined) next.analysisRule = value.analysisRule === null ? null : normalizeObserverRule(value.analysisRule);
+  if (value.reviewRule !== undefined) next.reviewRule = value.reviewRule === null ? null : normalizeReviewRule(value.reviewRule);
   // Preserve previously saved thresholds on upgrade instead of silently applying a new preset.
   if (next.preset !== "custom" && ["threshold", "confidence"].some(k => next[k] !== OBSERVER_PRESETS[next.preset]?.[k])) next.preset = "custom";
   return next;
@@ -107,17 +110,17 @@ export function parseObserverDecision(payload, config) {
     suspicious: observerSuspicious({ label: answer.choice, score, confidence: answer.confidence }, config, options), valid: (answer.choice !== "uncertain" || option.block) && answer.confidence >= config.confidence };
 }
 
-/** Count unique recent replies under one rule; normal evidence is retained in the denominator. */
+/** Count distinct qualifying replies within 30 days. Repeated sightings never count twice. */
 export function summarizeObserverEvidence(entries, config, fingerprint, now = Date.now()) {
   const options = getObserverRule(config).options, labels = new Set(options.map(o => o.id));
   const uncertainSelected = options.some(o => o.id === "uncertain" && o.block);
   const unique = new Map();
-  for (const e of entries) if (!e.withdrawn && !e.error && (!e.simulation || config.includeDryRun) && e.fingerprint === fingerprint && e.observedAt > now - config.retentionDays * 86400000 && labels.has(e.label) && (e.label !== "uncertain" || uncertainSelected) && e.confidence >= config.confidence) {
+  for (const e of entries) if (!e.withdrawn && !e.error && (!e.simulation || config.includeDryRun) && e.fingerprint === fingerprint && e.observedAt > now - 30 * 86400000 && labels.has(e.label) && (e.label !== "uncertain" || uncertainSelected) && e.confidence >= config.confidence) {
     const old = unique.get(e.replyId); if (!old || old.observedAt < e.observedAt) unique.set(e.replyId, e);
   }
   const all = [...unique.values()].sort((a, b) => b.observedAt - a.observedAt), recent = all.slice(0, 5);
   const hits = all.filter(e => observerSuspicious(e, config, options));
   const recentHits = recent.filter(e => observerSuspicious(e, config, options)).length;
   const threads = new Set(hits.map(e => e.rootId)).size;
-  return { hits: hits.length, valid: all.length, threads, hitRate: recent.length ? recentHits / recent.length : 0, eligible: hits.length >= config.minHits && threads >= config.minThreads && recentHits / recent.length >= config.hitRate, evidence: recent };
+  return { hits: hits.length, valid: all.length, threads, hitRate: recent.length ? recentHits / recent.length : 0, eligible: hits.length >= config.minHits, evidence: recent };
 }
