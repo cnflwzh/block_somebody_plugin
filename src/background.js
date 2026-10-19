@@ -1,25 +1,43 @@
+import { getReviewRule, normalizeReviewRule } from "./lib/observer-review-rule.js";
+import { createSubscriptionService } from "./lib/filter-subscriptions.js";
+import { LEGAL_VERSION } from "./lib/legal.js";
+import { dashboardSnapshot } from "./lib/dashboard.js";
 import "./lib/i18n.js";
 const { t } = globalThis.BlockSBI18n;
 import { read, change, key, ready } from "./lib/store.js";
 import { PRESETS, DEFAULT_ENDPOINT, JEV_CACHE_TTL, STANCE_PROMPT_VERSION, DECISION_VERSION, decideAction, normalizeHandle, sanitizePost, numericId, isWhitelisted, sameTarget, matchingNameRules, updateSettings, buildRequest, parseDecision, validateThread } from "./lib/core.js";
 import { askJev } from "./lib/jev.js";
-import { askJevCached, cleanJevCache, requestKey } from "./lib/jev-cache.js";
+import { askJevCached, cleanJevCache, clearJevCache, requestKey } from "./lib/jev-cache.js";
 import { xSession, postBlock } from "./lib/x-block.js";
-import { getFilterRules, normalizeFilters, filterStamp } from "./lib/filter-rules.js";
+import { getFilterRules, getProcessingFilters, normalizeFilters, filterStamp } from "./lib/filter-rules.js";
 import { evaluateFilters } from "./lib/filter-evaluator.js";
 import { getAnalysisRule, normalizeRule, customRuleEnabled } from "./lib/core.js";
 import { syncThreadContext } from "./lib/thread-context.js";
 import { OBSERVER_VERSION, observerExempt, getObserverRule, normalizeObserverRule, observerBuiltinCategories, observerRuleIdentity, observerSuspicious, normalizeObserverSettings, buildObserverRequest, parseObserverDecision, summarizeObserverEvidence } from "./lib/observer-core.js";
 import { observerUserKey, observerEvidenceKey, readObserverEvidence, readObserverUser, readObserverAll, readObserverReplies, observerEpoch, saveObserverEvidence, markObserverEvaluated, forgetObserverUser, reserveObserverBudget, readObserverBudget, cleanObserverEvidence } from "./lib/observer-store.js";
 
+import { contentExcepted, addContentException } from "./lib/content-exceptions.js";
+import { previewStance } from "./lib/settings-preview.js";
+import { ACCOUNT_REVIEW_VERSION, reviewContext, selectReviewSamples, buildAccountReviewRequest, eligibleAccountReview, reviewPolicyKey, accountReviewConfig } from "./lib/observer-review.js";
+import { reserveAccountReview, saveAccountReview, clearAccountReviewData } from "./lib/observer-store.js";
+import { reserveReplyCollection, finishReplyCollection, readReplyCollection, readReplyCollections } from "./lib/observer-store.js";
+import { collectRecentReplies } from "./lib/observer-collection.js";
+import { summarizeAccountSignals } from "./lib/account-signals.js";
+import { readNormalAccount, saveNormalAccount, listNormalAccounts, removeNormalAccount } from "./lib/observer-store.js";
+
+const subscriptions = createSubscriptionService({ read, change, revoke: invalidateNameJobs, changed: () => { notify(); void drain(); } });
+const filterSeeds = new Map();
 const X_URLS = ["https://x.com/*", "https://twitter.com/*"];
 const flights = new Map();
 const observerFlights = new Map();
 const observerSimulations = new Set();
+// Ephemeral capabilities: a page can undo only its own freshly enqueued batch.
+const quickUndoBatches = new Map();
 let observerFinalizing = Promise.resolve();
 let draining = false;
 let drainTimer;
 let notifyTimer;
+let observerCleanupAt = 0;
 const id = () => crypto.randomUUID();
 const isX = url => { try { return ["x.com", "twitter.com"].includes(new URL(url).hostname) && new URL(url).protocol === "https:"; } catch { return false; } };
 const postId = url => { try { return new URL(url).pathname.match(/^\/[\w]+\/status\/(\d+)(?:\/|$)/)?.[1] || ""; } catch { return ""; } };
@@ -44,21 +62,23 @@ function notify() {
 }
 async function snapshot(sender, accountValue, view) {
   const manager = sender.url?.startsWith(extensionOrigin);
-  const scoped = manager && ["settings", "observer", "history", "whitelist", "name-rules"].includes(view);
+  const scoped = manager && ["dashboard", "settings", "observer", "history", "whitelist", "name-rules"].includes(view);
   // Project before cloning: settings/observer views do not need thousands of history
   // texts or live session results. Content-script snapshots retain their existing contract.
   const db = await read(d => !scoped ? d : ({
+    legalAcceptance: d.legalAcceptance, onboardingRequired: d.onboardingRequired, filterSubscriptions: d.filterSubscriptions,
     settings: d.settings, whitelist: d.whitelist, debugDryRun: d.debugDryRun,
     history: view === "settings" || view === "whitelist" ? [] : view === "observer"
       ? d.history.filter(h => h.module === "observer" || h.observerOwner) : view === "name-rules" ? d.history.filter(h => h.nameRuleIds?.length) : d.history,
-    jobs: view === "history" || view === "name-rules" ? d.jobs.filter(j => j.status === "pending") : [],
-    sessions: view === "history" || view === "name-rules" ? Object.fromEntries(Object.entries(d.sessions).map(([key, session]) => [key,
-      { id: session.id, tabId: session.tabId, account: session.account, root: session.root, created: session.created, stopped: session.stopped, following: session.following }])) : {},
-    observerFollowing: view === "history" || view === "name-rules" ? d.observerFollowing : {},
-    filterEvents: view === "name-rules" ? d.filterEvents : [], filterErrors: view === "name-rules" ? d.filterErrors : {},
-    queueError: d.queueError, queueNotice: d.queueNotice, modelError: d.modelError
+    jobs: view === "dashboard" || view === "history" || view === "name-rules" ? d.jobs.filter(j => j.status === "pending") : [],
+    sessions: view === "dashboard" || view === "history" || view === "name-rules" ? Object.fromEntries(Object.entries(d.sessions).map(([key, session]) => [key,
+      { id: session.id, tabId: session.tabId, account: session.account, root: session.root, created: session.created, stopped: session.stopped, following: session.following, ...(view === "dashboard" ? { results: session.results } : {}) }])) : {},
+    observerFollowing: view === "dashboard" || view === "history" || view === "name-rules" ? d.observerFollowing : {},
+    filterEvents: view === "dashboard" || view === "name-rules" ? d.filterEvents : [], filterErrors: view === "dashboard" || view === "name-rules" ? d.filterErrors : {},
+    observerSnoozedUntil: d.observerSnoozedUntil, contentExceptions: d.contentExceptions,
+    nextActionAt: d.nextActionAt, queueError: d.queueError, queueNotice: d.queueNotice, modelError: d.modelError
   }));
-  const settings = { ...db.settings, configured: !!(await key()), debugDryRun: !!db.debugDryRun };
+  const settings = { ...db.settings, configured: !!(await key()), debugDryRun: !!db.debugDryRun, legalAcceptance: db.legalAcceptance || null, needsOnboarding: !!db.onboardingRequired };
   // Waiting is a presentation flag, not a terminal job status: undo/cancel and restart
   // recovery must continue to treat legacy jobs without relationship evidence as pending.
   // Build this index once per snapshot instead of scanning all history for each job.
@@ -69,19 +89,98 @@ async function snapshot(sender, accountValue, view) {
     if (job.status === "pending" && waitingFollowingJob(db, job, historyById)) waitingHistory.add(job.historyId);
   }
   const history = db.history.map(h => ({ ...h, waitingFollowing: h.status === "pending" && waitingHistory.has(h.id) }));
-  if (sender.url?.startsWith(extensionOrigin)) return { settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), filterEvents: db.filterEvents || [], filterErrors: db.filterErrors || {}, sessions: Object.values(db.sessions).map(({ following, ...session }) => session), observer: !scoped || view === "observer" ? await observerSnapshot(db) : null, view: scoped ? view : "all", queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
+  if (sender.url?.startsWith(extensionOrigin)) return { filterSubscriptions: (db.filterSubscriptions || []).map(({ id, url, autoUpdate, lastCheck, lastAttempt, error, rules }) => ({ id, url, autoUpdate, lastCheck, lastAttempt, error, count: rules.length, rules: rules.map(({ name, action }) => ({ name, action })) })), dashboard: view === "dashboard" ? dashboardSnapshot(db, await readObserverAll()) : null, settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), nextActionAt: db.nextActionAt || 0, filterEvents: db.filterEvents || [], filterErrors: db.filterErrors || {}, sessions: Object.values(db.sessions).map(({ following, ...session }) => session), observer: !scoped || view === "observer" ? await observerSnapshot(db) : null, view: scoped ? view : "all", queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
   const s = db.sessions[sender.tab.id];
   const account = accountValue ? normalizeHandle(accountValue) : "";
-  const { endpoint, customPrompt, analysisRule, ...pageSettings } = settings;
+  const { endpoint, customPrompt, analysisRule, legalAcceptance, needsOnboarding, ...pageSettings } = settings;
   if (pageSettings.observer) {
-    const { prompt, analysisRule, ...publicObserver } = pageSettings.observer, rule = getObserverRule(pageSettings.observer);
+    const { prompt, analysisRule, reviewRule, ...publicObserver } = pageSettings.observer, rule = getObserverRule(pageSettings.observer);
+    if (publicObserver.mode === "combined") { publicObserver.showMarkers = true; publicObserver.mask = false; }
     pageSettings.observer = { ...publicObserver, revision: db.observerPolicyRevision || 0, customRule: !observerBuiltinCategories(rule), ruleOptions: rule.options.map(({ id, name, block }) => ({ id, name, block })) };
   }
   pageSettings.customRule = customRuleEnabled(settings);
   // The page needs display names and action markers, not the private templates or rubric text.
   pageSettings.ruleOptions = getAnalysisRule(settings).options.map(({ id, name, block }) => ({ id, name, block }));
-  return { settings: pageSettings, account, decisionVersion: DECISION_VERSION, whitelist: db.whitelist.map(w => ({ handle: w.handle, userId: w.userId })), session: s?.account === account ? s : null, queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError,
-    history: history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, trashUnread: !!h.trashUnread, module: h.module, observerOwner: !!h.observerOwner, nameOwner: !!h.nameOwner, nameRuleIds: h.nameRuleIds, nameRootIds: h.nameRootIds, nameRuleWithdrawn: !!h.nameRuleWithdrawn, waitingFollowing: h.waitingFollowing, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
+  return { settings: pageSettings, account, contentExceptions: (db.contentExceptions || []).filter(e => e.account === account && e.expires > Date.now()), quickUndo: quickUndoSnapshot(sender.tab.id, account), decisionVersion: DECISION_VERSION, whitelist: db.whitelist.map(w => ({ handle: w.handle, userId: w.userId })), session: s?.account === account ? s : null, queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError,
+    history: history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, trashUnread: !!h.trashUnread, module: h.module, observerOwner: !!h.observerOwner, nameOwner: !!h.nameOwner, nameRuleIds: h.nameRuleIds, nameRootIds: h.nameRootIds, nameRuleWithdrawn: !!h.nameRuleWithdrawn, waitingFollowing: h.waitingFollowing, undoRequested: !!h.undoRequested, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
+}
+/** Return the newest relationship record, including queues from other tabs/modules. */
+function analysisAlreadyHandled(db, account, target) {
+  const h = db.history.findLast(h => h.account === account && sameTarget(h.target, target));
+  return !!h && ["pending", "running", "submitted", "blocked", "preexisting", "undo_pending", "undo_running", "uncertain"].includes(h.status);
+}
+/** Issue a short-lived, tab/account-bound grant only for new automatic reply jobs. */
+function offerQuickUndo(s, h) {
+  if (!Number.isInteger(s.tabId)) return;
+  const now = Date.now();
+  for (const [tab, batch] of quickUndoBatches) if (batch.expires <= now) quickUndoBatches.delete(tab);
+  let batch = quickUndoBatches.get(s.tabId);
+  if (!batch || batch.account !== s.account || batch.rootId !== s.root.id || batch.items.length >= 20 || now - batch.created > 60000) {
+    batch = { token: id(), account: s.account, actorId: s.actorId, rootId: s.root.id, created: now, items: [] };
+    quickUndoBatches.set(s.tabId, batch);
+  }
+  batch.items.push({ id: h.id, module: h.module, sessionId: h.sessionId });
+  batch.expires = now + 15000;
+  while (quickUndoBatches.size > 100) quickUndoBatches.delete(quickUndoBatches.keys().next().value);
+}
+function quickUndoSnapshot(tabId, account) {
+  const batch = quickUndoBatches.get(tabId);
+  if (!batch || batch.expires <= Date.now()) { quickUndoBatches.delete(tabId); return null; }
+  return batch.account === account ? { token: batch.token, count: batch.items.length, expires: batch.expires } : null;
+}
+/** User correction pauses fresh observation for one day; old evidence is withdrawn separately. */
+function snoozeObserver(db, account, userId) {
+  if (!userId) return;
+  db.observerSnoozedUntil ||= {};
+  const now = Date.now();
+  for (const [key, until] of Object.entries(db.observerSnoozedUntil)) if (until <= now) delete db.observerSnoozedUntil[key];
+  db.observerSnoozedUntil[observerUserKey(account, userId)] = now + 86400000;
+  const entries = Object.entries(db.observerSnoozedUntil);
+  if (entries.length > 5000) for (const [key] of entries.sort((a, b) => a[1] - b[1]).slice(0, entries.length - 5000)) delete db.observerSnoozedUntil[key];
+}
+/** Consume a grant once, cancel unsent jobs and schedule undo only for owned successful POSTs.
+ * Never accepts arbitrary history IDs or revokes another task's subsequently acquired ownership.
+ */
+async function quickUndo(message, sender) {
+  const account = normalizeHandle(message.account), batch = quickUndoBatches.get(sender.tab.id);
+  if (!batch || batch.token !== message.token || batch.account !== account || batch.expires <= Date.now()) throw new Error(t("ui_quick_undo_expired"));
+  if (!Number.isInteger(message.count) || message.count < 1 || message.count > batch.items.length) throw new Error(t("ui_invalid_request_source"));
+  const items = batch.items.slice(0, message.count);
+  const binding = await bindAccount(sender.tab.id, account);
+  if (quickUndoBatches.get(sender.tab.id) !== batch || batch.expires <= Date.now() || batch.actorId && batch.actorId !== binding.actorId) throw new Error(t("ui_quick_undo_expired"));
+  quickUndoBatches.delete(sender.tab.id);
+  const result = await change(d => {
+    if (batch.expires <= Date.now()) throw new Error(t("ui_quick_undo_expired"));
+    const targets = [];
+    for (const item of items) {
+      const h = d.history.find(h => h.id === item.id && h.account === account);
+      if (!h || h.module !== item.module || h.sessionId !== item.sessionId
+        || d.history.findLast(other => other.account === account && sameTarget(other.target, h.target))?.id !== h.id
+        || [h.stanceOwner, h.observerOwner, h.nameOwner].filter(Boolean).length > 1
+        || h.nameRootIds?.some(root => root !== batch.rootId)
+        || !["pending", "running", "submitted", "blocked"].includes(h.status)) continue;
+      const jobs = d.jobs.filter(j => j.historyId === h.id && j.kind === "block");
+      const active = jobs.find(j => ["pending", "running"].includes(j.status));
+      if (!active && !h.owned) continue;
+      h.undoRequested = true; h.taskWithdrawn = true; h.stanceOwner = false; h.observerOwner = false; h.nameOwner = false;
+      h.nameRuleWithdrawn = true;
+      if (h.target.userId) { d.nameRuleExclusions ||= {}; d.nameRuleExclusions[`${account}:${h.target.userId}`] = true; }
+      snoozeObserver(d, account, h.target.userId);
+      for (const session of Object.values(d.sessions)) if (session.account === account && !session.excluded.includes(h.target.handle)) session.excluded.push(h.target.handle);
+      for (const j of jobs) { j.observerAuthorizationRevoked = true; j.nameAuthorizationRevoked = true; }
+      if (active) {
+        if (!active.submitted) { active.status = "cancelled"; h.status = "cancelled"; }
+      } else enqueueUnblock(d, h);
+      h.updated = Date.now(); targets.push(h.target);
+    }
+    return targets;
+  });
+  for (const target of result) {
+    abortFlights(f => f.account === account && (target.userId && f.userId === target.userId || f.handle === target.handle));
+    if (target.userId) await forgetObserverUser(account, target.userId);
+  }
+  notify(); void drain();
+  return { count: result.length, skipped: items.length - result.length };
 }
 /** Record one notification per successful block, not per status refresh or retry.
  * Historical records without these fields stay read when upgrading.
@@ -181,6 +280,7 @@ function enqueueBlock(db, s, target, reply, decision, reason) {
   // Dry-run decisions never become jobs or real block history, even after debugging ends.
   if (db.debugDryRun) return null;
   const manual = reason === "manual";
+  if (!manual && contentExcepted(db, s.account, s.root.id, reply || target)) return null;
   const observer = reason === "observer", nameRule = reason === "name_rule";
   const protectedFollowing = nameRule ? followingStatus(db, s.account, target) !== false : observer ? db.settings.observer?.skipFollowing && followingStatus(db, s.account, target) !== false : skipFollowing(db, s.account, target);
   if ((observer || nameRule) && observerExempt(target) || isWhitelisted(db, target) || target.handle === s.account || (reply && protectedFollowing) || (!manual && s.excluded.includes(target.handle))) return null;
@@ -220,6 +320,7 @@ function enqueueBlock(db, s, target, reply, decision, reason) {
     reply: reply ? { ...reply, text: reply.text.slice(0, 1500) } : null, decision, reason, module: nameRule ? "name" : observer ? "observer" : "stance", nameOwner: nameRule, nameRuleIds: nameRule ? decision.nameRuleIds : [], nameRuleNames: nameRule ? decision.nameRuleNames : {}, nameRootIds: nameRule ? [s.root.id] : [], observerOwner: observer, stanceOwner: !observer && !nameRule, sessionId: s.id, status: "pending", created: Date.now(), updated: Date.now(), error: "", owned: false };
   db.history.push(h);
   db.jobs.push({ id: id(), historyId: h.id, kind: "block", module: h.module, account: s.account, actorId: s.actorId || "", origin: s.origin || "https://x.com", target: h.target, tabId: s.tabId, sessionId: s.id, manual, rootId: s.root.id, status: "pending", created: Date.now(), submitted: false });
+  if (reply && !manual) offerQuickUndo(s, h);
   return h.id;
 }
 function enqueueUnblock(db, h) {
@@ -288,7 +389,7 @@ function invalidateObserverJobs(db) {
   }
 }
 // Appearance/budget changes do not revoke an already-authorized block.
-const observerPolicyKeys = ["enabled", "scope", "threshold", "confidence", "minHits", "minThreads", "hitRate", "retentionDays", "skipFollowing", "prompt", "analysisRule"];
+const observerPolicyKeys = ["enabled", "mode", "reviewMinReplies", "reviewThreshold", "reviewConfidence", "scope", "threshold", "confidence", "minHits", "retentionDays", "skipFollowing", "prompt", "analysisRule", "reviewRule"];
 
 /** Revoke a name rule without changing another module's independent authorization. */
 function finishNameRevocation(job, history) {
@@ -319,12 +420,12 @@ async function applyNameRules(message, sender) {
   reply.name = message.displayName.trim().slice(0, 80);
   const page = tab && isX(tab.url) && !tab.incognito ? new URL(tab.url) : null;
   if (!page || !(/^\/home\/?$/.test(page.pathname) || postId(tab.url) === root.id) || !reply.userId || reply.id === root.id || !reply.parentId || !validateThread(root, reply, parents)) return { action: "skip" };
-  const before = await read(d => ({ settings: d.settings, whitelist: d.whitelist, observerFollowing: d.observerFollowing,
+  const before = await read(d => ({ settings: d.settings, whitelist: d.whitelist, contentExceptions: d.contentExceptions, observerFollowing: d.observerFollowing,
     sessions: Object.fromEntries(Object.entries(d.sessions).map(([key, session]) => [key, { account: session.account, following: session.following }])) }));
-  if (before.settings.paused || observerExempt(reply) || isWhitelisted(before, reply) || reply.handle === account) return { action: "skip" };
+  if (contentExcepted(before, account, root.id, reply) || before.settings.paused || observerExempt(reply) || isWhitelisted(before, reply) || reply.handle === account) return { action: "skip" };
   if (followingStatus(before, account, reply) !== false) return { action: "skip" };
-  const rules = getFilterRules(before.settings).filter(r => r.enabled);
-  const revision = JSON.stringify(getFilterRules(before.settings));
+  const rules = getProcessingFilters(before.settings).filter(r => r.enabled);
+  const revision = JSON.stringify(getProcessingFilters(before.settings));
   const target = { ...reply, name: message.displayName.trim(), hasLink: !!message.hasLink };
   const evaluation = await evaluateFilters(rules, target);
   if (!evaluation.errors.length && !evaluation.results.some(r => r.matched)) return { action: "keep" };
@@ -334,14 +435,20 @@ async function applyNameRules(message, sender) {
   const currentTab = await chrome.tabs.get(sender.tab.id).catch(() => null);
   if (currentTab?.url !== tab.url) return { action: "skip" };
   const result = await change(d => {
-    if (revision !== JSON.stringify(getFilterRules(d.settings)) || d.settings.paused || observerExempt(reply) || isWhitelisted(d, reply)
+    if (contentExcepted(d, account, root.id, reply) || revision !== JSON.stringify(getProcessingFilters(d.settings)) || d.settings.paused || observerExempt(reply) || isWhitelisted(d, reply)
       || followingStatus(d, account, reply) !== false || d.nameRuleExclusions?.[`${account}:${reply.userId}`]
       || d.history.some(h => h.account === account && sameTarget(h.target, reply) && h.nameRuleWithdrawn)) return { action: "skip" };
     if (evaluation.errors.length) {
       d.filterErrors ||= {};
       for (const error of evaluation.errors) {
-        const rule = d.settings.filterRules.find(r => r.id === error.id);
-        if (rule) { rule.enabled = false; d.filterErrors[rule.id] = error.reason; }
+        const rule = [...d.settings.filterRules, ...(d.settings.subscriptionRules || [])].find(r => r.id === error.id);
+        if (rule) {
+          rule.enabled = false; d.filterErrors[rule.id] = error.reason;
+          for (const source of d.filterSubscriptions || []) {
+            const remote = source.rules.find(r => r.id === rule.id);
+            if (remote) { remote.enabled = false; source.error = "update"; }
+          }
+        }
       }
       invalidateNameJobs(d);
       return { action: "skip" };
@@ -373,28 +480,51 @@ async function applyNameRules(message, sender) {
   return result;
 }
 
-const observerConfig = db => normalizeObserverSettings(db.settings.observer || {});
+const observerConfig = db => {
+  const config = normalizeObserverSettings(db.settings.observer || {});
+  return config.mode === "combined" ? { ...config, retentionDays: 30 } : config;
+};
+function clearlyNatural(decision, config) {
+  const rule = getObserverRule(config);
+  return observerBuiltinCategories(rule) && !rule.options.find(o => o.id === "human_like")?.block
+    && decision?.label === "human_like" && decision.score >= config.reviewThreshold && decision.confidence >= config.reviewConfidence;
+}
+function accountSignalsAllowed(db, account, target, signals) {
+  return !signals || Array.isArray(signals.references) && signals.references.every(r => Array.isArray(r.authors)
+    && !contentExcepted(db, account, r.rootId, { ...target, id: r.replyId }) && !r.authors.some(p => isWhitelisted(db, p)));
+}
+function observerSummary(rows, config, fingerprint, db) {
+  const reviewRows = rows.filter(e => !isWhitelisted(db, e) && !contentExcepted(db, e.account, e.rootId, { ...e, id: e.replyId })
+    && (!e.reviewContext || ![e.reviewContext.root, e.reviewContext.reply, ...e.reviewContext.ancestors].some(p => isWhitelisted(db, p))))
+    .map(e => e.accountReview && !accountSignalsAllowed(db, e.account, e, e.accountReview.accountSignals) ? { ...e, accountReview: null } : e);
+  const summary = summarizeObserverEvidence(rows, config, fingerprint), review = eligibleAccountReview(reviewRows, config, fingerprint), latestReview = eligibleAccountReview(reviewRows, config, fingerprint, Date.now(), false);
+  const collected = reviewRows.filter(e => !e.withdrawn && e.reviewContext && e.fingerprint === fingerprint && (!e.simulation || config.includeDryRun) && e.observedAt > Date.now() - config.retentionDays * 86400000);
+  return { ...summary, collected: collected.length, collectedThreads: new Set(collected.map(e => e.rootId)).size,
+    eligible: config.mode === "combined" ? !!review : summary.eligible,
+    accountReview: latestReview ? { label: latestReview.decision.label, probabilities: latestReview.decision.probabilities, winningScore: latestReview.decision.score, score: latestReview.decision.spamScore, confidence: latestReview.decision.confidence, samples: latestReview.replyIds.length,
+      dimensions: latestReview.accountSignals ? { profile: latestReview.accountSignals.profile?.bio !== null, activity: latestReview.accountSignals.activity } : null } : null };
+}
 async function observerFingerprint(db) {
   const config = observerConfig(db);
-  return requestKey({ module: OBSERVER_VERSION, model: db.settings.model, ...observerRuleIdentity(config) }, db.settings.endpoint);
+  return requestKey({ module: OBSERVER_VERSION, mode: config.mode, ...(config.mode === "combined" ? { collection: ACCOUNT_REVIEW_VERSION } : {}), model: db.settings.model, ...observerRuleIdentity(config) }, db.settings.endpoint);
 }
 function observerHistoryIndex(db) {
   const index = new Map();
   for (const h of db.history) if (h.target.userId && (h.module === "observer" || h.observerOwner)) index.set(observerUserKey(h.account, h.target.userId), h);
   return index;
 }
-function observerResult(entry, db, historyIndex = observerHistoryIndex(db)) {
+function observerResult(entry, db, historyIndex = observerHistoryIndex(db), accountReview = null) {
   const config = observerConfig(db), h = historyIndex.get(entry.userKey);
   const protectedUser = observerExempt(entry) || isWhitelisted(db, entry) || config.skipFollowing && followingStatus(db, entry.account, entry) !== false;
   const active = config.enabled && !protectedUser && !entry.withdrawn;
   const status = !active ? "observing" : db.debugDryRun && observerSimulations.has(entry.userKey) ? "simulated" : h?.status || "observing";
-  const suspicious = observerSuspicious(entry, config);
-  return { replyId: entry.replyId, rootId: entry.rootId, userId: entry.userId, handle: entry.handle, label: entry.label, score: entry.score, probabilities: entry.probabilities, spamScore: entry.spamScore, confidence: entry.confidence, suspicious, status,
+  const suspicious = config.mode === "cumulative" && observerSuspicious(entry, config);
+  return { replyId: entry.replyId, rootId: entry.rootId, userId: entry.userId, handle: entry.handle, label: entry.label, score: entry.score, probabilities: entry.probabilities, spamScore: entry.spamScore, confidence: entry.confidence, accountReview: active ? accountReview : null, suspicious, status,
     action: active && ["pending", "running", "submitted", "blocked", "simulated"].includes(status) ? "block" : "keep", historyId: active ? h?.id || null : null, dryRun: status === "simulated", excerpt: entry.excerpt, observedAt: entry.observedAt };
 }
 async function observerSnapshot(db) {
   const config = observerConfig(db), fingerprint = await observerFingerprint(db);
-  const [entries, dailyUsed] = await Promise.all([readObserverAll(), readObserverBudget()]);
+  const [entries, dailyUsed, collections] = await Promise.all([readObserverAll(), readObserverBudget(), readReplyCollections()]);
   const groups = new Map(), history = observerHistoryIndex(db);
   for (const e of entries) if (!e.withdrawn && e.fingerprint === fingerprint && e.observedAt > Date.now() - config.retentionDays * 86400000) {
     if (!groups.has(e.userKey)) groups.set(e.userKey, []); groups.get(e.userKey).push(e);
@@ -402,14 +532,18 @@ async function observerSnapshot(db) {
   const accounts = [];
   for (const rows of groups.values()) {
     rows.sort((a, b) => b.observedAt - a.observedAt);
-    const e = rows[0], summary = summarizeObserverEvidence(rows, { ...config, includeDryRun: !!db.debugDryRun }, fingerprint), h = history.get(e.userKey);
+    const e = rows[0], summary = observerSummary(rows, { ...config, includeDryRun: !!db.debugDryRun }, fingerprint, db), h = history.get(e.userKey);
     if (db.debugDryRun) { if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey); }
-    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, owned: !!h?.owned, error: h?.error || "", ...summary,
-      evidence: rows.filter(e => !e.error).slice(0, 30).map(({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt }) => ({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt })) });
+    const collection = collections.get(e.userKey);
+    accounts.push({ account: e.account, userId: e.userId, handle: e.handle, name: e.name, blueVerified: e.blueVerified, status: h?.status || "observing", historyId: h?.id || null, owned: !!h?.owned, error: h?.error || "", snoozedUntil: db.observerSnoozedUntil?.[e.userKey] || 0, ...summary,
+      collection: config.mode === "combined" && collection ? { status: collection.status === "fetching" && ![...observerFlights.values()].some(f => f.account === e.account && f.userId === e.userId) ? "unavailable" : collection.status, retryAt: collection.retryAt } : null,
+      evidence: rows.filter(e => !e.error).slice(0, 30).map(({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt, replyText, replyTextIncomplete, reviewContext }) => ({ replyId, rootId, url, label, labelName, customRule, score, confidence, excerpt, observedAt,
+        text: replyText ?? reviewContext?.reply?.text ?? excerpt,
+        textIncomplete: replyText != null ? !!replyTextIncomplete : !reviewContext?.reply || !!reviewContext.reply.incomplete })) });
   }
   // Evidence can expire independently of an actual submitted block. Keep its undo entry.
   for (const [userKey, h] of history) if (!groups.has(userKey) && h.observerOwner && !["unblocked", "cancelled"].includes(h.status)) {
-    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, owned: !!h.owned, error: h.error || "", hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
+    accounts.push({ account: h.account, userId: h.target.userId, handle: h.target.handle, name: h.target.name, blueVerified: false, status: h.status, historyId: h.id, owned: !!h.owned, error: h.error || "", snoozedUntil: db.observerSnoozedUntil?.[userKey] || 0, hits: 0, valid: 0, threads: 0, hitRate: 0, eligible: false, evidence: [] });
   }
   return { accounts: accounts.sort((a, b) => (b.evidence[0]?.observedAt || 0) - (a.evidence[0]?.observedAt || 0)), dailyUsed };
 }
@@ -426,10 +560,113 @@ function recordObserverRelations(db, account, posts) {
 }
 function observerAllowed(db, account, root, reply, ancestors) {
   const config = observerConfig(db);
-  return config.enabled && !matchingNameRules(db.settings, reply).length && !observerExempt(reply) && !db.settings.paused && !db.modelError && reply.userId && reply.handle !== account && reply.handle !== root.handle
+  return config.enabled && !contentExcepted(db, account, root.id, reply) && !analysisAlreadyHandled(db, account, reply)
+    && !(db.observerSnoozedUntil?.[observerUserKey(account, reply.userId)] > Date.now()) && !matchingNameRules(db.settings, reply).length && !observerExempt(reply) && !db.settings.paused && !db.modelError && reply.userId && reply.handle !== account && reply.handle !== root.handle
     && !(config.scope === "blue" && reply.blueVerified !== true)
     && ![root, reply, ...ancestors].some(p => isWhitelisted(db, p))
     && !(config.skipFollowing && followingStatus(db, account, reply) !== false);
+}
+/** Combined-mode analysis. Runs outside the finalization lock. On first encounter,
+ * supplement local observations with bounded recent replies, then make one model call.
+ * Every fetched context is subject to the same whitelist and relationship protections.
+ */
+async function reviewObservedAccount({ db, account, root, reply, ancestors, binding, controller, fingerprint, epoch, policyRevision, dryRun, evidenceKey, secret }) {
+  const config = observerConfig(db);
+  if (config.mode !== "combined" || !secret) return;
+  let rows = await readObserverUser(account, reply.userId);
+  if (observerSummary(rows, { ...config, includeDryRun: dryRun }, fingerprint, db).eligible) return;
+  const protectedContext = (d, e) => {
+    const c = e.reviewContext;
+    return !c || contentExcepted(d, account, e.rootId, { ...e, id: e.replyId }) || [c.root, c.reply, ...c.ancestors].some(p => isWhitelisted(d, p));
+  };
+  let samples = selectReviewSamples(rows.filter(e => !protectedContext(db, e)), { ...config, includeDryRun: dryRun }, fingerprint);
+  const storedCollection = await readReplyCollection(observerUserKey(account, reply.userId));
+  let signals = storedCollection?.epoch === epoch && storedCollection.accountSignals?.fingerprint === fingerprint
+    && storedCollection.at > Date.now() - config.retentionDays * 86400000 && accountSignalsAllowed(db, account, reply, storedCollection.accountSignals) ? storedCollection.accountSignals : null;
+  const latest = eligibleAccountReview(rows, { ...config, includeDryRun: dryRun }, fingerprint, Date.now(), false);
+  // Reuse a recent negative result. After an hour, actively look for new material;
+  // the model reservation still requires changed samples before charging again.
+  const permitted = async () => {
+    const current = await read();
+    return !controller.signal.aborted && !!current.debugDryRun === dryRun && (current.observerPolicyRevision || 0) === policyRevision
+      && observerAllowed(current, account, root, reply, ancestors) && await observerFingerprint(current) === fingerprint
+      && await observerEpoch(account, reply.userId) === epoch && !samples.some(e => protectedContext(current, e)) && accountSignalsAllowed(current, account, reply, signals);
+  };
+  if (!await permitted()) return;
+  if (latest && accountSignalsAllowed(db, account, reply, latest.accountSignals)) {
+    if (!dryRun && clearlyNatural(latest.decision, config)) { await saveNormalAccount(account, reply, epoch); return; }
+    if (Date.now() - latest.at < 3600000) return;
+  }
+  if ((!samples.length || !signals || latest) && await reserveReplyCollection(observerUserKey(account, reply.userId), epoch)) {
+    notify();
+    try {
+      let candidates = [], fetchedProfile = null;
+      const accept = async (contexts, profile) => {
+        fetchedProfile = profile;
+        const current = await read();
+        if (!await permitted()) return true;
+        // Check target relationships from the newest response, not a stale DOM flag.
+        await change(d => recordObserverRelations(d, account, contexts.map(c => c.reply)));
+        const fresh = await read();
+        candidates = contexts.filter(c => observerAllowed(fresh, account, c.root, c.reply, c.ancestors));
+        const local = rows.filter(e => e.reviewContext && !e.withdrawn && !e.error && (!e.simulation || dryRun) && e.observedAt > Date.now() - config.retentionDays * 86400000 && !protectedContext(current, e) && e.fingerprint === fingerprint);
+        const ids = new Set([...local.map(e => e.replyId), ...candidates.map(c => c.reply.id)]);
+        return ids.size >= config.reviewMinReplies;
+      };
+      await collectRecentReplies({ binding, userId: reply.userId, account, config, signal: controller.signal, permitted, accept });
+      if (!await permitted()) return;
+      const signalState = await read();
+      candidates = candidates.filter(c => observerAllowed(signalState, account, c.root, c.reply, c.ancestors));
+      signals = { ...summarizeAccountSignals(candidates, reply.userId, fetchedProfile), fingerprint };
+      // Select available replies up to the limit; never require a distinct-root quota.
+      const localContexts = rows.filter(e => !e.withdrawn && !e.error && (!e.simulation || dryRun) && e.observedAt > Date.now() - config.retentionDays * 86400000 && e.fingerprint === fingerprint && e.reviewContext && !protectedContext(db, e)).map(e => e.reviewContext);
+      const uniqueContexts = new Map();
+      for (const c of [...candidates, ...localContexts]) if (!uniqueContexts.has(c.reply.id)) uniqueContexts.set(c.reply.id, c);
+      const selected = [...uniqueContexts.values()].slice(0, config.reviewMinReplies);
+      const now = Date.now();
+      for (const [index, c] of selected.entries()) {
+        if (!await permitted()) return;
+        if (rows.some(e => e.replyId === c.reply.id && e.reviewContext)) continue;
+        const current = await read();
+        if (!observerAllowed(current, account, c.root, c.reply, c.ancestors)) continue;
+        await saveObserverEvidence({ key: observerEvidenceKey(account, c.reply.id, fingerprint), userKey: observerUserKey(account, reply.userId), replyKey: `${account}:${c.reply.id}`,
+          account, userId: reply.userId, handle: c.reply.handle, name: c.reply.name, blueVerified: c.reply.blueVerified === true,
+          replyId: c.reply.id, rootId: c.root.id, url: c.reply.url, excerpt: c.reply.text.slice(0, 160), replyText: c.reply.text, replyTextIncomplete: !!c.reply.incomplete, observedAt: now - index, fingerprint,
+          following: c.reply.following, followingAccount: c.reply.followingAccount, followingAt: c.reply.followingAt,
+          label: "collected", collected: true, simulation: dryRun, reviewContext: reviewContext(c.root, c.reply, c.ancestors) }, epoch, config.retentionDays);
+      }
+      rows = await readObserverUser(account, reply.userId);
+      db = await read();
+      samples = selectReviewSamples(rows.filter(e => !protectedContext(db, e)), { ...config, includeDryRun: dryRun }, fingerprint);
+      await finishReplyCollection(observerUserKey(account, reply.userId), epoch, samples.length ? "ready" : "insufficient", Date.now() + 3600000, signals);
+    } catch (error) {
+      if (!controller.signal.aborted) await finishReplyCollection(observerUserKey(account, reply.userId), epoch,
+        error.status === 429 ? "limited" : "unavailable", Math.max(Date.now() + 3600000, error.retryAt || 0));
+      // A failed read is not AI evidence. Existing usable samples can still be analyzed.
+      if (controller.signal.aborted || error.code === "REPLIES_CANCELLED" || [401, 403].includes(error.status) || !samples.length) return;
+    } finally { notify(); }
+  }
+  if (!samples.length || !await permitted()) return;
+  const flight = observerFlights.get(evidenceKey);
+  if (flight) flight.contextHandles = [...new Set([...flight.contextHandles, ...samples.flatMap(e => [e.reviewContext.root, ...e.reviewContext.ancestors].map(p => p.handle))])];
+  const replyIds = samples.map(e => e.replyId);
+  if (!await reserveAccountReview(observerUserKey(account, reply.userId), epoch, fingerprint, replyIds)) return;
+  try {
+    const request = buildAccountReviewRequest(samples, db.settings.model, config, signals);
+    const payload = await askJevCached(request, secret, controller.signal, p => parseObserverDecision(p, accountReviewConfig(config)), db.settings.cacheLimit, db.settings.endpoint, async () => {
+      if (!await permitted()) throw Object.assign(new Error("Review cancelled"), { code: "OBSERVER_CANCELLED" });
+      await reserveObserverBudget();
+    });
+    if (!await permitted()) return;
+    const decision = parseObserverDecision(payload, accountReviewConfig(config));
+    await saveAccountReview(evidenceKey, epoch, { version: ACCOUNT_REVIEW_VERSION, fingerprint, policyKey: reviewPolicyKey(config), replyIds, at: Date.now(), accountSignals: signals, decision });
+    if (!dryRun && clearlyNatural(decision, config) && await permitted()) await saveNormalAccount(account, reply, epoch);
+  } catch (error) {
+    // A failed request retains collected text; the reservation prevents refresh retries.
+    if (!controller.signal.aborted && !["OBSERVER_BUDGET", "OBSERVER_CANCELLED", "OBSERVER_REVIEW_TOO_LARGE"].includes(error.code)) {
+      await change(d => { if ((d.observerPolicyRevision || 0) === policyRevision && (d.settings.analysisRevision || 0) === (db.settings.analysisRevision || 0)) d.modelError = error.message; }); notify();
+    }
+  }
 }
 /** Passive analysis still binds the acting account; a forged page handle never authorizes jobs. */
 async function observeReply(message, sender) {
@@ -440,11 +677,13 @@ async function observeReply(message, sender) {
   if (!reply.userId || !validateThread(root, reply, ancestors) || !reply.text.trim() || [root, reply, ...ancestors].some(p => p.incomplete || !p.text.trim() && !p.hasMedia)) return { action: "skip", why: "missing-context" };
   let db = await read();
   if (!observerAllowed(db, account, root, reply, ancestors)) return { action: "skip", why: "protected" };
+  if (observerConfig(db).mode === "combined" && await readNormalAccount(account, reply.userId)) return { action: "skip", why: "normal-account" };
   const binding = await bindAccount(sender.tab.id, account);
   await change(d => recordObserverRelations(d, account, [reply, ...ancestors]));
   const fingerprint = await observerFingerprint(db), evidenceKey = observerEvidenceKey(account, reply.id, fingerprint);
   if (observerFlights.has(evidenceKey)) return observerFlights.get(evidenceKey).promise;
   // A bounded flight pool prevents fast scrolling from producing an unbounded model queue.
+  if ([...observerFlights.values(), ...flights.values()].some(f => f.account === account && (reply.userId ? f.userId === reply.userId : f.handle === reply.handle))) return { action: "skip", why: "account-busy" };
   if (observerFlights.size >= 2) return { action: "skip", why: "busy" };
   const controller = new AbortController();
   const run = (async () => {
@@ -454,19 +693,24 @@ async function observeReply(message, sender) {
     if (existing && (existing.error || existing.withdrawn || existing.simulation && !db.debugDryRun)) return { action: "skip", why: existing.error ? "previous-error" : "withdrawn" };
     db = await read();
     if (!observerAllowed(db, account, root, reply, ancestors) || controller.signal.aborted || await observerFingerprint(db) !== fingerprint) return { action: "skip", why: "config-changed" };
+    if (!existing && config.mode === "cumulative") {
+      const recent = await readObserverUser(account, reply.userId);
+      if (recent.some(e => !e.withdrawn && e.fingerprint === fingerprint && e.observedAt > Date.now() - 60000)) return { action: "skip", why: "account-cooldown" };
+    }
     const dryRun = !!db.debugDryRun;
     const policyRevision = db.observerPolicyRevision || 0;
-    const request = buildObserverRequest(root, reply, ancestors, db.settings.model, config), secret = await key();
-    if (!secret) return { action: "skip", why: "missing-key" };
+    const request = config.mode === "cumulative" ? buildObserverRequest(root, reply, ancestors, db.settings.model, config) : null, secret = await key();
+    if (!secret && config.mode === "cumulative") return { action: "skip", why: "missing-key" };
     const entry = { key: evidenceKey, userKey: observerUserKey(account, reply.userId), replyKey: `${account}:${reply.id}`, account, userId: reply.userId, handle: reply.handle, name: reply.name, blueVerified: reply.blueVerified === true, simulation: dryRun,
-      replyId: reply.id, rootId: root.id, url: reply.url, excerpt: reply.text.slice(0, 160), observedAt: Date.now(), fingerprint,
+      replyId: reply.id, rootId: root.id, url: reply.url, excerpt: reply.text.slice(0, 160), replyText: reply.text, replyTextIncomplete: !!reply.incomplete, observedAt: Date.now(), fingerprint,
       following: reply.following, followingAccount: reply.followingAccount, followingAt: reply.followingAt };
-    let decision = existing;
-    if (!existing) try {
+    if (config.mode === "combined") entry.reviewContext = reviewContext(root, reply, ancestors);
+    let decision = existing || (config.mode === "combined" ? { label: "collected", collected: true } : null);
+    if (!existing && config.mode === "cumulative") try {
       const payload = await askJevCached(request, secret, controller.signal, answer => parseObserverDecision(answer, config), db.settings.cacheLimit, db.settings.endpoint, async () => {
         const current = await read();
         if (!observerAllowed(current, account, root, reply, ancestors) || controller.signal.aborted || await observerFingerprint(current) !== fingerprint) throw Object.assign(new Error("Observer observation cancelled"), { code: "OBSERVER_CANCELLED" });
-        if (!await reserveObserverBudget(config.dailyLimit)) throw Object.assign(new Error("Observer daily analysis limit reached"), { code: "OBSERVER_BUDGET" });
+        await reserveObserverBudget();
       });
       decision = parseObserverDecision(payload, config);
     } catch (error) {
@@ -478,12 +722,20 @@ async function observeReply(message, sender) {
       }
       return { action: "skip", why: error.code === "OBSERVER_BUDGET" ? "daily-limit" : "analysis-error" };
     }
+    if (config.mode === "combined") {
+      const current = await read();
+      if (!controller.signal.aborted && (current.observerPolicyRevision || 0) === policyRevision && observerAllowed(current, account, root, reply, ancestors)
+        && !!current.debugDryRun === dryRun && await observerFingerprint(current) === fingerprint) {
+        await saveObserverEvidence({ ...entry, ...decision }, epoch, config.retentionDays);
+        await reviewObservedAccount({ db: current, account, root, reply, ancestors, binding, controller, fingerprint, epoch, policyRevision, dryRun, evidenceKey, secret });
+      }
+    }
     const finalize = observerFinalizing.then(async () => {
       let current = await read();
       if (!observerAllowed(current, account, root, reply, ancestors) || controller.signal.aborted || !!current.debugDryRun !== dryRun || (current.observerPolicyRevision || 0) !== policyRevision || await observerFingerprint(current) !== fingerprint) return { action: "skip", why: "config-changed" };
       const config = observerConfig(current);
       await saveObserverEvidence({ ...entry, ...decision }, epoch, config.retentionDays);
-      const rows = await readObserverUser(account, reply.userId), summary = summarizeObserverEvidence(rows, { ...config, includeDryRun: dryRun }, fingerprint);
+      const rows = await readObserverUser(account, reply.userId), summary = observerSummary(rows, { ...config, includeDryRun: dryRun }, fingerprint, current);
       const saved = rows.find(e => e.key === evidenceKey);
       if (!saved || saved.withdrawn || await observerEpoch(account, reply.userId) !== epoch) return { action: "skip", why: "withdrawn" };
       let simulated = false;
@@ -492,19 +744,21 @@ async function observeReply(message, sender) {
         if (!observerAllowed(d, account, root, reply, ancestors) || controller.signal.aborted || !!d.debugDryRun !== dryRun
           || (d.observerPolicyRevision || 0) !== policyRevision || (d.settings.analysisRevision || 0) !== (db.settings.analysisRevision || 0)) return;
         if (d.debugDryRun) { simulated = true; observerSimulations.add(entry.userKey); return; }
-        enqueueBlock(d, { account, ...binding, tabId: sender.tab.id, id: `observer:${account}:${reply.userId}`, root, excluded: [] }, reply, reply, { ...decision, action: "block", module: "observer", fingerprint }, "observer");
+        enqueueBlock(d, { account, ...binding, tabId: sender.tab.id, id: `observer:${account}:${reply.userId}`, root, excluded: [] }, reply, reply, { ...decision, accountReview: summary.accountReview, action: "block", module: "observer", fingerprint }, "observer");
       });
       current = await read();
       if (controller.signal.aborted || (current.observerPolicyRevision || 0) !== policyRevision) return { action: "skip", why: "config-changed" };
       await markObserverEvaluated(evidenceKey, epoch, policyRevision);
       notify(); void drain();
-      void cleanObserverEvidence(config.retentionDays).catch(() => {});
-      return observerResult({ ...saved, dryRun: simulated }, current);
+      if (Date.now() - observerCleanupAt > 3600000) {
+        observerCleanupAt = Date.now(); void cleanObserverEvidence(config.retentionDays).catch(() => { observerCleanupAt = 0; });
+      }
+      return observerResult({ ...saved, dryRun: simulated }, current, observerHistoryIndex(current), summary.accountReview);
     });
     observerFinalizing = finalize.catch(() => {});
     return finalize;
   })();
-  observerFlights.set(evidenceKey, { promise: run, controller, tabId: sender.tab.id, handle: reply.handle, account, userId: reply.userId, contextHandles: [root.handle, ...ancestors.map(p => p.handle)] });
+  observerFlights.set(evidenceKey, { promise: run, controller, rootId: root.id, tabId: sender.tab.id, handle: reply.handle, account, replyId: reply.id, userId: reply.userId, contextHandles: [root.handle, ...ancestors.map(p => p.handle)] });
   try { return await run; } finally { observerFlights.delete(evidenceKey); }
 }
 
@@ -514,13 +768,16 @@ async function classify(message, sender) {
   const account = normalizeHandle(message.account);
   const flightKey = `${tabId}:${message.sessionId}:${reply.id}`;
   if (flights.has(flightKey)) return flights.get(flightKey).promise;
+  if ([...flights.values(), ...observerFlights.values()].some(f => f.account === account && (reply.userId ? f.userId === reply.userId : f.handle === reply.handle))) return { action: "skip", why: "account-busy" };
   const controller = new AbortController();
   const promise = (async () => {
     let db = await read();
     let s = sessionFor(db, tabId, message.sessionId, account);
+    flights.get(flightKey).rootId = s.root.id;
     if (await currentPostId(sender) !== s.root.id || reply.id === s.root.id || reply.conversationId !== s.root.conversationId) throw new Error(t("ui_reply_does_not_belong_to_the_selected_conversation"));
     if (s.sortRequired && !s.pageReady) return { action: "skip", why: "waiting-first-page" };
-    if (matchingNameRules(db.settings, reply).length || reply.handle === account || reply.handle === s.root.handle || isWhitelisted(db, reply) || skipFollowing(db, account, reply) || s.excluded.includes(reply.handle)) return { action: "skip" };
+    if (analysisAlreadyHandled(db, account, reply) && !s.results[reply.id]) return { action: "skip", why: "already-handled" };
+    if (contentExcepted(db, account, s.root.id, reply) || matchingNameRules(db.settings, reply).length || reply.handle === account || reply.handle === s.root.handle || isWhitelisted(db, reply) || skipFollowing(db, account, reply) || s.excluded.includes(reply.handle)) return { action: "skip" };
     if (db.modelError) throw new Error(db.modelError);
     if (!s.results[reply.id] && Object.keys(s.results).length >= 2000) throw new Error(t("ui_this_task_has_analyzed_2_000_replies_stop_and_start"));
     const ancestry = Array.isArray(message.ancestors) && message.ancestors.length <= 30 ? message.ancestors.map(sanitizePost) : [];
@@ -540,9 +797,9 @@ async function classify(message, sender) {
       // Rechecking policy must neither charge Jev nor bypass current whitelist/undo guards.
       return change(d => {
         const current = sessionFor(d, tabId, message.sessionId, account);
-        if (isWhitelisted(d, current.root) || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
+        if (contentExcepted(d, account, current.root.id, reply) || isWhitelisted(d, current.root) || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
         if ((d.settings.analysisRevision || 0) !== revision) return { action: "skip", why: "config-changed" };
-        const result = { ...decideAction(cached, d.settings, current.root, reply, parent), dryRun: !!d.debugDryRun, simulatedAt: d.debugDryRun ? Date.now() : 0, handle: reply.handle };
+        const result = { ...decideAction(cached, d.settings, current.root, reply, parent), analysisRevision: revision, contextComplete: ![current.root, reply, ...ancestry].some(p => p.incomplete || !p.text?.trim()), dryRun: !!d.debugDryRun, simulatedAt: d.debugDryRun ? Date.now() : 0, handle: reply.handle };
         if (result.action === "block") result.historyId = enqueueBlock(d, current, reply, reply, result, "supporter");
         // Preserve rubric text in durable block history, not in every transient session score.
         const { labelDescription, ...score } = result;
@@ -555,8 +812,9 @@ async function classify(message, sender) {
     const apiKey = await key();
     // Recheck after every await immediately before external transmission.
     db = await read(); s = sessionFor(db, tabId, message.sessionId, account);
-    if (isWhitelisted(db, s.root) || isWhitelisted(db, reply) || skipFollowing(db, account, reply) || ancestry.some(p => isWhitelisted(db, p)) || s.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
+    if (contentExcepted(db, account, s.root.id, reply) || isWhitelisted(db, s.root) || isWhitelisted(db, reply) || skipFollowing(db, account, reply) || ancestry.some(p => isWhitelisted(db, p)) || s.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
     if ((db.settings.analysisRevision || 0) !== revision) return { action: "skip", why: "config-changed" };
+    if (analysisAlreadyHandled(db, account, reply)) return { action: "skip", why: "already-handled" };
     let result;
     let payload;
     try {
@@ -582,10 +840,10 @@ async function classify(message, sender) {
     }
     return await change(d => {
       const current = sessionFor(d, tabId, message.sessionId, account);
-      if (isWhitelisted(d, current.root) || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
+      if (contentExcepted(d, account, current.root.id, reply) || isWhitelisted(d, current.root) || isWhitelisted(d, reply) || skipFollowing(d, account, reply) || ancestry.some(p => isWhitelisted(d, p)) || current.excluded.includes(reply.handle) || controller.signal.aborted) return { action: "skip" };
       // A cached model answer must still pass today's thresholds and account protections.
       if ((d.settings.analysisRevision || 0) !== revision) return { action: "skip", why: "config-changed" };
-      result = { ...parseDecision(payload, d.settings, current.root, reply, parent), dryRun: !!d.debugDryRun, simulatedAt: d.debugDryRun ? Date.now() : 0 };
+      result = { ...parseDecision(payload, d.settings, current.root, reply, parent), analysisRevision: revision, contextComplete: ![current.root, reply, ...ancestry].some(p => p.incomplete || !p.text?.trim()), dryRun: !!d.debugDryRun, simulatedAt: d.debugDryRun ? Date.now() : 0 };
       if (result.action === "block") result.historyId = enqueueBlock(d, current, reply, reply, result, "supporter");
       if (!current.results[reply.id]) current.count++;
       const { labelDescription, ...score } = result;
@@ -593,7 +851,7 @@ async function classify(message, sender) {
       return current.results[reply.id];
     });
   })();
-  flights.set(flightKey, { promise, controller, tabId, sessionId: message.sessionId, handle: reply.handle, parentHandle: message.parent?.handle });
+  flights.set(flightKey, { promise, controller, tabId, account, replyId: reply.id, userId: reply.userId, sessionId: message.sessionId, handle: reply.handle, parentHandle: message.parent?.handle });
   try { const result = await promise; notify(); void drain(); return result; } finally { flights.delete(flightKey); }
 }
 
@@ -752,6 +1010,26 @@ async function handle(message, sender) {
   if (sender.id !== chrome.runtime.id || (!ui && !web)) throw new Error(t("ui_invalid_request_source"));
   const type = message?.type;
   if (type === "SNAPSHOT") return snapshot(sender, message.account, message.view);
+  if (type === "LEGAL_ACCEPT") {
+    if (!ui || message.version !== LEGAL_VERSION || message.accepted !== true) throw new Error(t("ui_invalid_request_source"));
+    const accepted = await change(d => {
+      d.legalAcceptance = { version: LEGAL_VERSION, license: "AGPL-3.0-only", acceptedAt: Date.now() };
+      d.onboardingRequired = false; return d.legalAcceptance;
+    }); notify(); return accepted;
+  }
+  if (["SUBSCRIPTION_PREVIEW", "SUBSCRIPTION_ADD", "SUBSCRIPTION_REFRESH", "SUBSCRIPTION_EDIT", "SUBSCRIPTION_REMOVE"].includes(type)) {
+    if (!ui) throw new Error(t("ui_invalid_request_source"));
+    try {
+      if (type === "SUBSCRIPTION_PREVIEW") return await subscriptions.preview(message.url);
+      if (type === "SUBSCRIPTION_ADD") return await subscriptions.add(message.token, message.autoUpdate);
+      if (type === "SUBSCRIPTION_REFRESH") return await subscriptions.refresh(message.id);
+      return await subscriptions.edit(message.id, message.autoUpdate, type === "SUBSCRIPTION_REMOVE");
+    } catch { throw new Error(t("ui_subscription_failed")); }
+  }
+  if (type === "QUICK_UNDO") {
+    if (!web || sender.frameId !== 0) throw new Error(t("ui_invalid_request_source"));
+    return quickUndo(message, sender);
+  }
   if (type === "READ_TRASH") {
     if (!web || !Array.isArray(message.ids) || message.ids.length > 5000 || message.ids.some(id => typeof id !== "string" || id.length > 80)) throw new Error(t("ui_invalid_request_source"));
     const account = normalizeHandle(message.account);
@@ -779,16 +1057,18 @@ async function handle(message, sender) {
     await bindAccount(sender.tab.id, account);
     const db = await read(), fingerprint = await observerFingerprint(db), config = observerConfig(db);
     const rows = await readObserverReplies(account, message.replyIds.map(numericId).filter(Boolean)), history = observerHistoryIndex(db);
-    if (db.debugDryRun) {
+    const accountReviews = new Map();
+    if (db.debugDryRun || config.mode === "combined") {
       // Recover derived preview state after MV3 suspension; old simulations never authorize
       // real jobs, and withdrawn/normal evidence can remove an earlier simulated result.
       const users = new Map(rows.map(e => [e.userKey, e]));
       await Promise.all([...users.values()].map(async e => {
-        const all = await readObserverUser(account, e.userId), summary = summarizeObserverEvidence(all, { ...config, includeDryRun: true }, fingerprint);
-        if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey);
+        const all = await readObserverUser(account, e.userId), summary = observerSummary(all, { ...config, includeDryRun: true }, fingerprint, db);
+        accountReviews.set(e.userKey, summary.accountReview);
+        if (db.debugDryRun) { if (summary.eligible) observerSimulations.add(e.userKey); else observerSimulations.delete(e.userKey); }
       }));
     }
-    return rows.filter(e => !e.error && !e.withdrawn && (!e.simulation || db.debugDryRun) && (e.policyRevision || 0) === (db.observerPolicyRevision || 0) && e.fingerprint === fingerprint && e.observedAt > Date.now() - config.retentionDays * 86400000 && (!message.rootId || e.rootId === numericId(message.rootId))).map(e => observerResult(e, db, history));
+    return rows.filter(e => !e.error && !e.withdrawn && (!e.simulation || db.debugDryRun) && (e.policyRevision || 0) === (db.observerPolicyRevision || 0) && e.fingerprint === fingerprint && e.observedAt > Date.now() - config.retentionDays * 86400000 && (!message.rootId || e.rootId === numericId(message.rootId))).map(e => observerResult(e, db, history, accountReviews.get(e.userKey)));
   }
   if (type === "OBSERVER_RELATIONSHIPS") {
     if (!web || !Array.isArray(message.posts) || message.posts.length > 40) throw new Error(t("ui_invalid_request_source"));
@@ -798,6 +1078,19 @@ async function handle(message, sender) {
     const db = await read();
     if (observerConfig(db).skipFollowing) abortFlights(f => f.account === account && posts.some(p => p.userId === f.userId && p.following === true));
     notify(); void drain(); return true;
+  }
+  if (type === "OBSERVER_NORMAL_LIST") {
+    if (!ui) throw new Error(t("ui_use_the_management_panel_for_this_action"));
+    return (await listNormalAccounts()).map(({ key, ...row }) => row);
+  }
+  if (type === "OBSERVER_NORMAL_REMOVE") {
+    if (!ui) throw new Error(t("ui_use_the_management_panel_for_this_action"));
+    const account = normalizeHandle(message.account), userId = numericId(message.userId);
+    if (!userId) throw new Error(t("ui_account_verification_failed"));
+    abortFlights(f => f.account === account && f.userId === userId);
+    await removeNormalAccount(account, userId);
+    await change(d => { d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1; });
+    notify(); return true;
   }
   if (type === "OBSERVER_FORGET") {
     if (!ui) throw new Error(t("ui_use_the_management_panel_for_this_action"));
@@ -848,30 +1141,117 @@ async function handle(message, sender) {
     if (session?.id !== s.id || session.account !== account || session.stopped || await currentPostId(sender) !== s.root.id) return [];
     return result.filter(p => p.conversationId === session.root.conversationId && !isWhitelisted(current, p));
   }
+  if (type === "SETTINGS_EFFECT_PREVIEW") {
+    if (!ui || !["observer", "stance"].includes(message.module)) throw new Error(t("ui_invalid_request_source"));
+    const db = await read();
+    if (message.module === "stance") {
+      const allowed = ["preset", "high", "confidence", "skipFollowing", "maskEnabled", "maskThreshold", "autoLoadDefault"];
+      const patch = Object.fromEntries(Object.entries(message.value || {}).filter(([key]) => allowed.includes(key)));
+      const config = updateSettings(db.settings, patch);
+      const sessions = Object.values(db.sessions).map(session => ({ ...session, results: Object.fromEntries(Object.entries(session.results || {}).filter(([replyId, result]) => {
+        const target = { id: replyId, handle: result.handle, userId: session.following?.[`handle:${result.handle}`]?.userId || "" };
+        return !isWhitelisted(db, target) && !contentExcepted(db, session.account, session.root.id, target)
+          && !(config.skipFollowing && followingStatus(db, session.account, target) !== false);
+      })) }));
+      return previewStance(db.settings, config, sessions);
+    }
+    const config = normalizeObserverSettings(message.value, observerConfig(db));
+    // Only threshold/cumulative changes can reuse today's evidence; never relabel with a different rubric.
+    if (JSON.stringify(observerRuleIdentity(config)) !== JSON.stringify(observerRuleIdentity(observerConfig(db)))) return { available: false, reason: "stale-draft" };
+    const fingerprint = await observerFingerprint(db), all = await readObserverAll(), groups = new Map();
+    for (const e of all) if (!e.withdrawn && !e.error && !e.simulation && e.fingerprint === fingerprint
+      && e.observedAt > Date.now() - Math.max(config.retentionDays, observerConfig(db).retentionDays) * 86400000 && !isWhitelisted(db, e)
+      && !contentExcepted(db, e.account, e.rootId, { ...e, id: e.replyId })
+      && !(db.observerSnoozedUntil?.[e.userKey] > Date.now())) {
+      if (!groups.has(e.userKey)) groups.set(e.userKey, []); groups.get(e.userKey).push(e);
+    }
+    let total = 0, matched = 0, blocked = 0, changed = 0;
+    for (const entries of groups.values()) {
+      const eligibleRows = policy => entries.filter(e => !(policy.scope === "blue" && !e.blueVerified)
+        && !(policy.skipFollowing && followingStatus(db, e.account, e) !== false));
+      const before = summarizeObserverEvidence(eligibleRows(observerConfig(db)), observerConfig(db), fingerprint), after = summarizeObserverEvidence(eligibleRows(config), config, fingerprint);
+      total += after.valid; matched += after.hits; blocked += after.eligible; changed += before.eligible !== after.eligible;
+    }
+    return { module: "observer", available: groups.size > 0, total, matched, blocked, masked: config.mask ? matched : 0, changed,
+      ...(groups.size ? {} : { reason: "no-current-results" }) };
+  }
+  if (type === "CLEAR_JEV_CACHE") {
+    if (!ui) throw new Error(t("ui_invalid_request_source"));
+    return { cleared: await clearJevCache() };
+  }
+  if (type === "KEEP_CONTENT" || type === "OPEN_FILTER_FROM_REPLY") {
+    if (!web || sender.frameId !== 0) throw new Error(t("ui_invalid_request_source"));
+    const account = normalizeHandle(message.account), rootId = numericId(message.rootId), reply = sanitizePost(message.reply);
+    if (!rootId || !reply.id || reply.id === rootId || !reply.parentId || await currentPostId(sender) !== rootId) throw new Error(t("ui_thread_changed_try_again"));
+    const root = sanitizePost(message.root), parents = Array.isArray(message.ancestors) && message.ancestors.length <= 30 ? message.ancestors.map(sanitizePost) : [];
+    if (root.id !== rootId || !validateThread(root, reply, parents)) throw new Error(t("ui_thread_changed_try_again"));
+    const visible = await chrome.tabs.sendMessage(sender.tab.id, { type: "GET_VIEWER" });
+    if (visible?.account !== account || await currentPostId(sender) !== rootId) throw new Error(t("ui_account_changed_start_the_task_again"));
+    if (type === "OPEN_FILTER_FROM_REPLY") {
+      const field = message.field === "text" ? "text" : "name";
+      const value = field === "text" ? String(message.value || reply.text).slice(0, 512) : String(reply.name || "").slice(0, 160);
+      if (!value.trim()) throw new Error(t("ui_filter_seed_empty"));
+      const token = id(), now = Date.now();
+      for (const [key, entry] of filterSeeds) if (entry.expires <= now) filterSeeds.delete(key);
+      filterSeeds.set(token, { field, value, expires: now + 300000 });
+      while (filterSeeds.size > 20) filterSeeds.delete(filterSeeds.keys().next().value);
+      await chrome.tabs.create({ url: chrome.runtime.getURL(`src/manager/manager.html?tab=name-rules&seed=${token}`) });
+      return true;
+    }
+    if (!["reply", "thread-user", "clear"].includes(message.scope)) throw new Error(t("ui_invalid_request_source"));
+    const result = await change(d => {
+      if (message.scope === "clear") { d.contentExceptions = (d.contentExceptions || []).filter(e => !(e.account === account && e.rootId === rootId && (e.replyId === reply.id || e.scope === "thread-user" && sameTarget(e, reply)))); return { cancelled: 0 }; }
+      addContentException(d, account, rootId, reply, message.scope);
+      let cancelled = 0;
+      for (const j of d.jobs) {
+        const h = d.history.find(h => h.id === j.historyId);
+        if (j.kind !== "block" || j.manual || j.submitted || !["pending", "running"].includes(j.status) || j.account !== account || j.rootId !== rootId
+          || !h || !contentExcepted(d, account, rootId, h.reply || h.target)
+          || [h.stanceOwner, h.observerOwner, h.nameOwner].filter(Boolean).length > 1 || h.nameRootIds?.some(r => r !== rootId)) continue;
+        j.status = "cancelled"; h.status = "cancelled"; h.updated = Date.now(); cancelled++;
+      }
+      return { cancelled };
+    });
+    if (message.scope !== "clear") abortFlights(f => f.account === account && f.rootId === rootId && (message.scope === "thread-user" ? f.userId === reply.userId || f.handle === reply.handle : f.replyId === reply.id));
+    notify(); return result;
+  }
+  if (type === "FILTER_SEED_GET") {
+    if (!ui || new URL(sender.url).pathname !== "/src/manager/manager.html") throw new Error(t("ui_invalid_request_source"));
+    const seed = filterSeeds.get(message.token); filterSeeds.delete(message.token);
+    if (!seed || seed.expires <= Date.now()) return null;
+    return { field: seed.field, value: seed.value };
+  }
   if (type === "OPEN_MANAGER") { await chrome.tabs.create({ url: chrome.runtime.getURL("src/manager/manager.html") }); return true; }
   if (["RULE_CONFIG", "SAVE_RULE_CONFIG", "OPEN_RULE_EDITOR", "SAVE_SETTINGS", "SAVE_MODEL_CONFIG", "SAVE_KEY", "REMOVE_KEY", "UNDO", "TASK_UNDO_PREVIEW", "UNDO_TASK", "RETRY_JOB", "RECONCILE", "CLEAR_FINISHED", "EXPORT"].includes(type) && !ui) throw new Error(t("ui_use_the_management_panel_for_this_action"));
-  if (type === "OPEN_RULE_EDITOR") { await chrome.tabs.create({ url: chrome.runtime.getURL(message.module === "observer" ? "src/manager/observer-rules.html" : "src/manager/rules.html") }); return true; }
+  if (type === "OPEN_RULE_EDITOR") {
+    const path = message.module === "observer" ? "src/manager/observer-rules.html" : "src/manager/rules.html";
+    await chrome.tabs.create({ url: chrome.runtime.getURL(path) + (message.module === "observer" ? `?mode=${message.mode === "combined" ? "combined" : "cumulative"}` : "") }); return true;
+  }
   if (type === "RULE_CONFIG") {
     const db = await read(), { settings } = db;
     if (message.module === "observer") {
       const config = observerConfig(db);
-      return { rule: getObserverRule(config), revision: db.observerPolicyRevision || 0, model: settings.model, language: settings.language || "auto" };
+      return { rule: message.mode === "combined" ? getReviewRule(config) : getObserverRule({ ...config, mode: "cumulative" }), revision: db.observerEditorRevision ?? db.observerPolicyRevision ?? 0, model: settings.model, language: settings.language || "auto" };
     }
     return { rule: getAnalysisRule(settings), revision: settings.analysisRevision || 0, model: settings.model, language: settings.language || "auto" };
   }
   if (type === "SAVE_RULE_CONFIG") {
     if (message.module === "observer") {
       // Only the rule changes here. Thresholds and cumulative policy belong to settings.
-      const rule = normalizeObserverRule(message.rule);
+      const combined = message.mode === "combined";
+      const rule = combined ? normalizeReviewRule(message.rule) : normalizeObserverRule(message.rule);
+      let activeChanged = false;
       const revision = await change(d => {
-        if (!Number.isInteger(message.revision) || message.revision !== (d.observerPolicyRevision || 0)) throw new Error(t("ui_settings_changed_in_another_window_copy_your_draft_then_load"));
+        if (!Number.isInteger(message.revision) || message.revision !== (d.observerEditorRevision ?? d.observerPolicyRevision ?? 0)) throw new Error(t("ui_settings_changed_in_another_window_copy_your_draft_then_load"));
         const current = observerConfig(d);
-        if (JSON.stringify(getObserverRule(current)) === JSON.stringify(rule)) return d.observerPolicyRevision || 0;
-        d.settings.observer = normalizeObserverSettings({ analysisRule: rule, prompt: "" }, current);
-        invalidateObserverJobs(d);
-        return d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
+        if (JSON.stringify(combined ? getReviewRule(current) : getObserverRule({ ...current, mode: "cumulative" })) === JSON.stringify(rule)) return d.observerEditorRevision ?? d.observerPolicyRevision ?? 0;
+        d.settings.observer = normalizeObserverSettings(combined ? { reviewRule: rule } : { analysisRule: rule, prompt: "" }, current);
+        const nextRevision = (d.observerEditorRevision ?? d.observerPolicyRevision ?? 0) + 1;
+        activeChanged = current.mode === (combined ? "combined" : "cumulative");
+        if (activeChanged) { invalidateObserverJobs(d); d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1; }
+        return d.observerEditorRevision = nextRevision;
       });
-      if (revision !== message.revision) {
+      if (activeChanged) {
         for (const flight of observerFlights.values()) flight.controller.abort();
         observerSimulations.clear();
       }
@@ -958,15 +1338,19 @@ async function handle(message, sender) {
       if (["high", "confidence", "skipFollowing"].some(key => next[key] !== d.settings[key])) {
         for (const s of Object.values(d.sessions)) { s.results = {}; s.count = 0; }
       }
-      if (JSON.stringify(next.observer) !== JSON.stringify(d.settings.observer)) d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
+      if (JSON.stringify(next.observer) !== JSON.stringify(d.settings.observer)) {
+        d.observerEditorRevision = (d.observerEditorRevision ?? d.observerPolicyRevision ?? 0) + 1;
+        d.observerPolicyRevision = (d.observerPolicyRevision || 0) + 1;
+      }
       if (observerPolicyKeys.some(k => JSON.stringify(next.observer?.[k]) !== JSON.stringify(d.settings.observer?.[k]))) invalidateObserverJobs(d);
       d.settings = next;
       if (message.value?.filterRules !== undefined) d.filterErrors = {};
       invalidateNameJobs(d);
       cancelFollowingJobs(d);
     });
-    if (message.value?.filterRules !== undefined || message.value?.nameBlockAI !== undefined || message.value?.nameBlockBNB !== undefined) abortFlights(() => true);
+    if (message.value?.filterRules !== undefined || message.value?.nameBlockAI !== undefined || message.value?.nameBlockBNB !== undefined || message.value?.blockHiddenText !== undefined) abortFlights(() => true);
     if (message.value?.observer) for (const flight of observerFlights.values()) flight.controller.abort();
+    if (message.value?.observer?.mode === "cumulative" || message.value?.observer?.enabled === false) await clearAccountReviewData();
     await globalThis.BlockSBI18n.setLanguage?.((await read()).settings.language || "auto");
     void cleanJevCache((await read()).settings.cacheLimit).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
     if (message.value?.paused) abortFlights(() => true);
@@ -1090,13 +1474,14 @@ async function handle(message, sender) {
     }
     await change(d => {
       const h = d.history.find(h => h.id === message.id);
+      if (h && message.module !== "name") snoozeObserver(d, h.account, h.target.userId);
       if (h && message.module === "name") {
         if (message.ruleId) {
           if (!h.nameRuleIds?.includes(message.ruleId)) return;
           d.filterRuleExclusions ||= {};
           const key = `${h.account}:${h.target.userId}`;
           d.filterRuleExclusions[key] = [...new Set([...(d.filterRuleExclusions[key] || []), message.ruleId])];
-          h.target.filterGrants ||= Object.fromEntries(matchingNameRules(d.settings, h.target).map(id => [id, filterStamp(getFilterRules(d.settings).find(r => r.id === id))]));
+          h.target.filterGrants ||= Object.fromEntries(matchingNameRules(d.settings, h.target).map(id => [id, filterStamp(getProcessingFilters(d.settings).find(r => r.id === id))]));
           delete h.target.filterGrants[message.ruleId];
           for (const job of d.jobs) if (job.historyId === h.id && job.kind === "block") job.target.filterGrants = h.target.filterGrants;
           if (matchingNameRules(d.settings, h.target).length) return;
@@ -1142,17 +1527,21 @@ async function handle(message, sender) {
   if (type === "CANCEL_JOB") {
     if (!ui) throw new Error(t("ui_use_the_history_panel"));
     const before = await read(), original = before.history.find(h => h.id === message.id);
-    if (original?.module === "observer" && before.jobs.some(j => j.historyId === original.id && j.status === "pending")) {
+    if (original?.module === "observer" && before.jobs.some(j => j.historyId === original.id && ["pending", "running"].includes(j.status))) {
       abortFlights(f => f.account === original.account && f.userId === original.target.userId);
       await forgetObserverUser(original.account, original.target.userId);
       observerSimulations.delete(observerUserKey(original.account, original.target.userId));
     }
     await change(d => {
-      const j = d.jobs.find(j => j.historyId === message.id && j.status === "pending"); if (!j) throw new Error(t("ui_action_already_started_submitted_requests_cannot_be_canceled"));
+      const j = d.jobs.find(j => j.historyId === message.id && (j.status === "pending" || j.kind === "block" && j.status === "running")); if (!j) throw new Error(t("ui_action_already_started_submitted_requests_cannot_be_canceled"));
       const h = d.history.find(h => h.id === message.id);
       if (j.kind === "block" && (h.observerOwner || h.nameOwner) && h.module === "stance") { h.stanceOwner = false; h.module = h.observerOwner ? "observer" : "name"; j.module = h.module; j.manual = false; return; }
-      j.status = "cancelled"; h.status = j.kind === "unblock" ? h.verification === "http-only" ? "submitted" : "blocked" : "cancelled"; h.updated = Date.now();
-      if (j.kind === "block") h.observerOwner = false;
+      // A sent request cannot be recalled: queue an unblock after confirmed success.
+      // Before submission, cancelling the job also invalidates the worker's final send guard.
+      if (j.kind === "block" && j.submitted) h.undoRequested = true;
+      else { j.status = "cancelled"; h.status = j.kind === "unblock" ? h.verification === "http-only" ? "submitted" : "blocked" : "cancelled"; }
+      h.updated = Date.now();
+      if (j.kind === "block") { h.observerOwner = false; h.stanceOwner = false; }
       for (const s of Object.values(d.sessions)) if (s.account === h.account && !s.excluded.includes(h.target.handle)) s.excluded.push(h.target.handle);
     }); notify(); return true;
   }
@@ -1202,6 +1591,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   return true;
 });
 chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === "blocksb-subscriptions") void subscriptions.due().catch(() => {});
   if (alarm.name === "blocksb-queue") void drain();
   if (alarm.name === "blocksb-cache-cleanup") void (async () => {
     // A failed IndexedDB cleanup must not prevent session-result expiry in local storage.
@@ -1216,7 +1606,7 @@ chrome.alarms.onAlarm.addListener(alarm => {
     notify();
   })().catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
 });
-chrome.tabs.onRemoved.addListener(tabId => { abortFlights(f => f.tabId === tabId); void change(d => { delete d.sessions[tabId]; }); });
+chrome.tabs.onRemoved.addListener(tabId => { quickUndoBatches.delete(tabId); abortFlights(f => f.tabId === tabId); void change(d => { delete d.sessions[tabId]; }); });
 // A login/account change can release waiting jobs without requiring the original post or any X tab.
 chrome.cookies.onChanged.addListener(({ cookie }) => {
   if (["ct0", "twid"].includes(cookie.name) && /(^|\.)(x\.com|twitter\.com)$/.test(cookie.domain)) {
@@ -1238,6 +1628,8 @@ void ready.then(async () => {
     await chrome.alarms.create("blocksb-cache-cleanup", { periodInMinutes: 60 });
     void read(d => d.settings.cacheLimit).then(cleanJevCache).catch(() => console.warn(t("ui_block_s_b_cache_cleanup_failed")));
   }
+  if (!await chrome.alarms.get("blocksb-subscriptions")) await chrome.alarms.create("blocksb-subscriptions", { periodInMinutes: 60 });
+  void subscriptions.due().catch(() => {});
   await drain();
 }).catch(error => {
   console.error("block s.b. startup:", error.message);

@@ -144,7 +144,7 @@
     "message": "許可リスト内のため Jev に送信しません"
   },
   "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
-    "message": "許可リストのユーザーは分析・自動ブロックされません。既存のブロックは手動で解除してください。"
+    "message": "許可リストのアカウントは対象外です。既存のブロックは別途解除してください。"
   },
   "ui_already_blocked": {
     "message": "以前からブロック済み"
@@ -2111,7 +2111,7 @@
     "message": "複数選択可。累積条件を満たすとブロックします。"
   },
   "ui_observer_beta_notice": {
-    "message": "誤判定や見逃しが発生する場合があります。"
+    "message": "ベータ版：誤検出や見逃しが発生する場合があります。"
   },
   "ui_observer_beta_contribute": {
     "message": "PR でプロンプトを改善"
@@ -2290,5 +2290,832 @@
   },
   "ui_filter_preview_error": {
     "message": "式が無効か、実行がタイムアウトしました。"
+  },
+  "ui_quick_undo": {
+    "message": "元に戻す"
+  },
+  "ui_quick_undo_count": {
+    "message": "$v0$ 件のアカウントをキューに追加しました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_done": {
+    "message": "$v0$ 件のアカウントへの操作を取り消しました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_partial": {
+    "message": "$v0$ 件の操作を取り消しました。残りは履歴をご確認ください",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_expired": {
+    "message": "取り消し期限が切れました。ブロック履歴から操作してください。"
+  },
+  "ui_quick_undo_dismiss": {
+    "message": "取り消し通知を閉じる"
+  },
+  "ui_quick_undo_preview_count": {
+    "message": "$v0$ 件の返信の削除をプレビューしました",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_draft_retained": {
+    "message": "未保存の下書き"
+  },
+  "ui_discard_draft": {
+    "message": "下書きを破棄"
+  },
+  "ui_model_memory_draft": {
+    "message": "未保存"
+  },
+  "ui_check_connection": {
+    "message": "モデル接続を確認"
+  },
+  "ui_preview_animation": {
+    "message": "アニメーションをプレビュー"
+  },
+  "ui_replay_guide": {
+    "message": "設定ガイド"
+  },
+  "ui_percent_input": {
+    "message": "割合（1～100）：Enterで確定、Escでキャンセル"
+  },
+  "ui_percent_edit": {
+    "message": "クリックして割合を入力"
+  },
+  "ui_see_effect": {
+    "message": "効果を試算"
+  },
+  "ui_effect_hint": {
+    "message": "現在のモデルとプロンプトによる有効な端末内の結果だけで推計します。モデルへのリクエストやブロックは実行しません。"
+  },
+  "ui_effect_loading": {
+    "message": "端末内の結果から計算中…"
+  },
+  "ui_effect_invalid": {
+    "message": "先に設定の無効な値を修正してください。"
+  },
+  "ui_effect_unavailable": {
+    "message": "利用可能な結果がありません"
+  },
+  "ui_effect_stale": {
+    "message": "ルールが変更されています。古い下書きを破棄してから再度調整してください。"
+  },
+  "ui_effect_counts": {
+    "message": "返信$1件：一致$2件、ブロック条件を満たす返信$3件、マスク条件を満たす返信$4件。$5件の処理結果が変わります。"
+  },
+  "ui_effect_observer_counts": {
+    "message": "返信$1件：疑わしい返信$2件、累積ブロック条件を満たすアカウント$3件、マスク条件を満たす返信$4件。$5アカウントの処理結果が変わります。"
+  },
+  "ui_observer_progress": {
+    "message": "一致 $1/$2 · 元の投稿 $3/$4 · 一致率 $5%（必要な割合 $6%）"
+  },
+  "ui_pause_scope": {
+    "message": "一時停止すると、新たな分析とブロック送信が止まります。取り消しは引き続き利用でき、送信済みのリクエストは完了する場合があります。"
+  },
+  "ui_observer_cooldown": {
+    "message": "次回送信可能：$1"
+  },
+  "ui_observer_snoozed": {
+    "message": "$1まで分析を保留"
+  },
+  "ui_debug_protection_help": {
+    "message": "バックグラウンドの「ブロック禁止」保護が有効です。XページのblockSBDebugデバッグパネルで確認してください。モデルの分析には引き続き料金が発生する場合があります。"
+  },
+  "guide_skip": {
+    "message": "スキップ"
+  },
+  "guide_previous": {
+    "message": "戻る"
+  },
+  "guide_next": {
+    "message": "次へ"
+  },
+  "guide_replay": {
+    "message": "このステップを再生"
+  },
+  "ui_reply_actions": {
+    "message": "その他の操作"
+  },
+  "ui_reply_keep_one": {
+    "message": "この返信を残す"
+  },
+  "ui_reply_keep_user": {
+    "message": "この返信欄ではこのユーザーを処理しない"
+  },
+  "ui_reply_resume": {
+    "message": "自動処理を再開"
+  },
+  "ui_reply_retained": {
+    "message": "この返信欄で残すように設定しました"
+  },
+  "ui_reply_resumed": {
+    "message": "この返信欄での自動処理を再開しました"
+  },
+  "ui_filter_from_name": {
+    "message": "この表示名からルールを作成"
+  },
+  "ui_filter_from_text": {
+    "message": "この返信からルールを作成"
+  },
+  "ui_filter_from_selection": {
+    "message": "選択したテキストからルールを作成"
+  },
+  "ui_filter_seed_empty": {
+    "message": "ルールの作成に使えるテキストがありません。"
+  },
+  "ui_filter_draft_conflict": {
+    "message": "下書きを復元しましたが、別の画面でルールが変更されています。下書きを破棄してから再度編集してください。"
+  },
+  "setup_connect": {
+    "message": "モデルに接続"
+  },
+  "setup_features": {
+    "message": "機能を選択"
+  },
+  "setup_confirm": {
+    "message": "設定を確認"
+  },
+  "setup_finish": {
+    "message": "保存して使い始める"
+  },
+  "setup_connect_next": {
+    "message": "接続して次へ"
+  },
+  "setup_endpoint_model": {
+    "message": "API エンドポイントとモデル"
+  },
+  "setup_auto_observe": {
+    "message": "AI アカウントを自動検出"
+  },
+  "setup_manual_stance": {
+    "message": "元のポストの右上にある「···」から、投稿者と支持者をブロックする項目を選びます。そのポストへの返信を分析し、選んだ方針で処理します。"
+  },
+  "setup_on": {
+    "message": "オン"
+  },
+  "setup_off": {
+    "message": "オフ"
+  },
+  "setup_start": {
+    "message": "かんたん設定"
+  },
+  "setup_demo": {
+    "message": "デモ"
+  },
+  "setup_sample_reply": {
+    "message": "返信"
+  },
+  "setup_model_analysis": {
+    "message": "分析中"
+  },
+  "setup_result": {
+    "message": "分類結果"
+  },
+  "setup_sample_text": {
+    "message": "公園の散歩は単なる運動ではなく、脳を休ませる時間です。ルート、所要時間、天候の3つの観点で計画しましょう。リラックスと運動のどちらが目的ですか？"
+  },
+  "setup_demo_probability": {
+    "message": "確率 96%"
+  },
+  "setup_demo_distribution": {
+    "message": "選択肢 A 96%\n選択肢 B 3%\n不明 1%"
+  },
+  "setup_demo_undo": {
+    "message": "元に戻す"
+  },
+  "setup_demo_removed": {
+    "message": "デモの返信を削除しました"
+  },
+  "setup_demo_reveal": {
+    "message": "非表示の返信を見る"
+  },
+  "setup_demo_evidence": {
+    "message": "疑わしい記録 $1/3 · デモ"
+  },
+  "setup_demo_start": {
+    "message": "投稿者と支持者をブロック"
+  },
+  "setup_demo_menu": {
+    "message": "···"
+  },
+  "setup_demo_remove": {
+    "message": "削除アニメーションを試す"
+  },
+  "setup_auto_hint": {
+    "message": "閲覧中の返信を自動で判定します。累積モードは返信ごとに分析し、疑わしい返信を数えます。総合モードは初めて見かけたアカウントの最近の返信をバックグラウンドで取得し、まとめて判定します。"
+  },
+  "setup_connect_description": {
+    "message": "返信の判定に使うモデルに接続します。API キーを入力して接続してください。接続済みならそのまま次へ進めます。"
+  },
+  "setup_display_description": {
+    "message": "返信にマウスを重ねると確率と操作が表示され、確率に重ねると内訳を確認できます。非表示の内容は開いて読めます。処理後は元に戻すか、右下のごみ箱から履歴を確認できます。"
+  },
+  "setup_finish_description": {
+    "message": "設定を確認して保存してください。自動検出はスイッチに従い、集団ブロックはポストのメニューから開始します。"
+  },
+  "setup_x_post": {
+    "message": "ポスト"
+  },
+  "setup_original_text": {
+    "message": "週末は公園を散歩する予定です。皆さんの予定は？"
+  },
+  "setup_other_reply": {
+    "message": "私も散歩に出かける予定です。"
+  },
+  "setup_native_block": {
+    "message": "@example をブロック"
+  },
+  "setup_threshold_note": {
+    "message": "縦線：ブロックのしきい値 92%"
+  },
+  "setup_stance_original": {
+    "message": "フォローされたら必ずフォローバックすべき。返さないのは失礼です。"
+  },
+  "setup_stance_support": {
+    "message": "その通り。相互フォローは最低限の礼儀です。返してくれない人はフォローを外します。"
+  },
+  "setup_stance_oppose": {
+    "message": "私は反対です。フォローは投稿を読みたいからするもので、お返しを義務にすべきではありません。"
+  },
+  "ui_observer_account_review": {
+    "message": "同じアカウントの返信をまとめて再判定"
+  },
+  "ui_observer_account_review_hint": {
+    "message": "任意機能です。追加のモデル呼び出しで最大5件の返信をまとめて再判定します。返信数と異なるポスト数の条件を満たし、判定に該当すればアカウントをブロックできます。1日の上限に含まれ、オフにすると再判定用の本文を削除します。"
+  },
+  "ui_observer_review_result": {
+    "message": "$1件の総合判定 · 確率 $2% · 信頼度 $3%"
+  },
+  "ui_setting_help": {
+    "message": "設定の説明"
+  },
+  "ui_clear_cache": {
+    "message": "キャッシュを削除"
+  },
+  "ui_cache_cleared": {
+    "message": "$1件のキャッシュを削除しました"
+  },
+  "help_scope": {
+    "message": "**自動観察の対象を選びます。**\n\n青い認証バッジ限定では未確認のアカウントを除外します。\n\nバッジはAI判定の根拠にはなりません。\n\n自動観察が必要です。"
+  },
+  "help_policy": {
+    "message": "**確率と信頼度をまとめて調整します。** スライダーを動かすとカスタムに切り替わります。累積件数は変わりません。"
+  },
+  "help_suspect": {
+    "message": "**疑わしい返信と数えるための確率です。** 信頼度も条件を満たす必要があり、指定件数に達するとブロックします。"
+  },
+  "help_confidence": {
+    "message": "**個別分類の確信度で、分類確率とは別です。**\n\n両方を満たす必要があり、累積モードでは件数条件も必要です。\n\n総合は独立した信頼度を使います。"
+  },
+  "help_hits": {
+    "message": "**同じアカウントの疑わしい返信が指定件数に達したらブロックします。** 各返信が確率と信頼度の両方の条件を満たす必要があります。\n\n1件、2件、または1〜100件を指定できます。直近30日間の異なる返信を数え、同じ返信は重複計上しません。同一スレッド内でも数えます。"
+  },
+  "help_threads": {
+    "message": "**該当返信が何件の異なる元ポストに必要かを指定します。**\n\n同じスレッドは1件です。\n\n他の累計条件も必要で、高いほど厳しくなります。\n\n返信数を超える設定はできません。"
+  },
+  "help_rate": {
+    "message": "**累積専用で直近最大5件の有効判定に占める該当率です。**\n\n低信頼度と対象外の不明分類は除外し、返信数・ポスト数も必要です。"
+  },
+  "help_retention": {
+    "message": "**観察記録の保存期間です。**\n\n期限切れの記録は集計や再判定に使いませんが、ブロックは解除しません。\n\nリクエストキャッシュの30日間とは別です。"
+  },
+  "help_daily": {
+    "message": "**AI検出の実リクエスト日次上限です。**\n\n累積は個別送信ごと、総合は収集時0回・バッチ分析1回と数えます。\n\nキャッシュは除外、失敗した送信は含みます。\n\nUTC午前0時にリセットし、集団ブロックは対象外です。"
+  },
+  "help_following": {
+    "message": "**フォロー中のアカウントを除外し、状態不明の場合も保留します。**\n\nモジュールごとに設定します。\n\n許可リストは常に優先されます。"
+  },
+  "help_markers": {
+    "message": "**累積モードでは返信ごとの確率表示を切り替えられます。ホバーで各項目の確率を確認できます。**\n\n総合モードでは判定後にユーザー名の横へアカウントのAI確率が自動表示されます。このスイッチには連動しません。"
+  },
+  "help_observer_mask": {
+    "message": "**累積専用です。**\n\n個別しきい値を満たした返信を等高マスクで隠します。\n\n個別判定のない総合では無効ですが、総合でブロック条件を満たせば削除アニメーションは動作します。"
+  },
+  "help_review": {
+    "message": "**自動観察と追加のモデル呼び出しが必要です。**\n\n最大5件、最低3件・2ポストをまとめ、高い累計設定も尊重します。\n\n件数設定が5を超えると実行しません。\n\n確率・信頼度・該当率を共用し、最低1時間と新規2件を空けます。\n\n日次上限に含み、オフで本文を削除します。"
+  },
+  "help_support": {
+    "message": "**手動開始した集団ブロックで、支持または選択した分類に必要な確率です。**\n\n信頼度も必要です。\n\nカスタム出力で対象が変わり、高いほど厳しくなります。"
+  },
+  "help_mask": {
+    "message": "**開始済みの集団ブロックでのみ有効です。**\n\n下限から自動ブロックしきい値未満をマスクし、上限はそのしきい値と連動します。\n\n高さを維持して開けます。\n\nブロックとは別です。"
+  },
+  "help_auto_load": {
+    "message": "**集団ブロックを手動開始した後、自動で返信を追加読み込みします。**\n\n自動でタスクを開始はしません。\n\n利用量が増える場合があり、タスクバーでオフにできます。"
+  },
+  "help_cache": {
+    "message": "**両モジュール共通のリクエストキャッシュです。**\n\n同じモデル・ルール・文脈を再利用し、30日で期限切れになります。\n\n上限超過時は古い使用順に削除します。\n\n削除しても観察記録・履歴・許可リストは残り、再リクエストには料金が発生する場合があります。"
+  },
+  "help_endpoint": {
+    "message": "**共通のJev互換APIエンドポイントです。**\n\nドメイン変更には対応キーとアクセス許可が必要で、選択モデルに対応している必要があります。\n\n保存時に検証リクエストを送ります。"
+  },
+  "help_model": {
+    "message": "**両モジュール共通のモデル名で、エンドポイントとの互換性が必要です。**\n\n変更時はキャッシュと観察記録を区別し、古いモデルの結果を新しい累計判定に混ぜません。"
+  },
+  "ui_observer_mode": {
+    "message": "判定モード"
+  },
+  "ui_mode_cumulative": {
+    "message": "累積判定"
+  },
+  "ui_mode_combined": {
+    "message": "総合判定"
+  },
+  "ui_combined_conditions": {
+    "message": "収集と判定の条件"
+  },
+  "ui_collect_replies": {
+    "message": "分析する返信数の上限"
+  },
+  "ui_combined_probability": {
+    "message": "総合判定の疑い確率"
+  },
+  "ui_combined_ratio": {
+    "message": "必要な該当サンプル率"
+  },
+  "ui_collected_unanalysed": {
+    "message": "総合判定用"
+  },
+  "ui_collection_progress": {
+    "message": "収集済み $1 件 · 1回の分析は最大 $2 件 · 元の投稿 $3 件"
+  },
+  "help_observer_mode": {
+    "message": "**累積：個別に分析し、疑わしい返信を数えます。**\n\n**総合：初めて見かけたら、最近の返信をバックグラウンドで取得してまとめて分析します。** プロフィールへの移動はありません。設定は別々に保存されます。"
+  },
+  "help_collect_replies": {
+    "message": "最近の返信を最大1〜10件使用します。文脈が欠けた返信は飛ばして探し続けます。取得できた分だけ分析し、上限までそろうのを待ちません。"
+  },
+  "help_collect_threads": {
+    "message": "**必要な元ポストの数（2〜5件）。** 分析する返信数以下にしてください。\n\n同じ会話は1件として数えます。取得は最大2ページで、不足時は後から補います。"
+  },
+  "help_combined_probability": {
+    "message": "取得できた資料全体をモデルが分類します。選ばれたブロック対象カテゴリの確率と確信度が両方条件を満たすと、処理待ちに追加します。"
+  },
+  "help_combined_confidence": {
+    "message": "**総合分類への確信度です。**\n\n総合確率と同時に満たした場合にブロックします。\n\n累積モードの信頼度とは別に保存します。"
+  },
+  "help_combined_ratio": {
+    "message": "**モデルに求める該当パターンのサンプル割合です。**\n\n3件で75%なら3件すべてが必要です。\n\n総合判定の基準であり、個別確率の平均や累積の直近該当率ではありません。"
+  },
+  "modes_title": {
+    "message": "2つの判定モードの違い"
+  },
+  "modes_intro": {
+    "message": "累積は1件ずつ観察します。総合は最初に見かけた時点で最近の返信を取得し、何度も遭遇するのを待ちません。"
+  },
+  "modes_default": {
+    "message": "標準のモード"
+  },
+  "modes_together": {
+    "message": "初回にまとめて取得"
+  },
+  "modes_cumulative": {
+    "message": "**閲覧した返信を1件ずつ判定します。**\n\n確率と信頼度が条件を満たした返信を数えます。1件、2件、または指定件数に達するとブロック待ちになります。"
+  },
+  "modes_combined": {
+    "message": "**初めて見かけた時点で、アカウントを総合分析します。**\n\n最近の返信を取得し、表示名・自己紹介・話題をまたぐ文章構成・投稿ペースを組み合わせて判断します。不足する情報は不明として扱い、プロフィールへ移動しません。"
+  },
+  "modes_c1": {
+    "message": "返信を見かける → 個別に分析"
+  },
+  "modes_c2": {
+    "message": "疑わしい返信を1件加算"
+  },
+  "modes_c3": {
+    "message": "指定件数に到達 → ブロック待ち"
+  },
+  "modes_b1": {
+    "message": "初めて見かける → 端末の材料を確認"
+  },
+  "modes_b2": {
+    "message": "文脈不足を除外 → 取得できた返信を分析"
+  },
+  "modes_b3": {
+    "message": "全体の確率・確信度が条件を満たす → ブロック待ちに追加"
+  },
+  "modes_try": {
+    "message": "動きを試してみる"
+  },
+  "modes_demo_intro": {
+    "message": "同じ人が A・B・C に返信している例です。1回クリックすると、累積は見かけた1件を分析し、総合は残り2件を取得して一緒に分析する流れを示します。"
+  },
+  "modes_scenario": {
+    "message": "例を選ぶ"
+  },
+  "modes_suspicious": {
+    "message": "3件とも疑わしい"
+  },
+  "modes_mixed": {
+    "message": "1件は普通のやり取り"
+  },
+  "modes_next": {
+    "message": "次の返信を見かける"
+  },
+  "modes_reset": {
+    "message": "最初から"
+  },
+  "modes_demo_note": {
+    "message": "この例では累積モードは疑わしい返信3件、総合モードは最大3件を分析します。確率のしきい値は90%、信頼度は80%です。スコアは例示用で、設定やアカウントは変更しません。"
+  },
+  "modes_requests": {
+    "message": "回の分析リクエスト"
+  },
+  "modes_read_settings": {
+    "message": "設定の数字の意味"
+  },
+  "modes_counts_title": {
+    "message": "返信件数の意味はどう違う？"
+  },
+  "modes_counts": {
+    "message": "**累積：件数はブロックの条件です。** 2件を選ぶと、同じアカウントの異なる返信2件が条件を満たせばブロックします。同一スレッドでも構いません。\n\n**総合：件数は分析の上限です。** 上限7件でも5件しか取得できなければ5件を分析します。文脈が欠けた返信は除外し、0件なら分析しません。"
+  },
+  "modes_scores_title": {
+    "message": "確率と信頼度"
+  },
+  "modes_scores": {
+    "message": "**確率：ブロック対象のカテゴリにどれほど当てはまるか。**\n\n**信頼度：モデルが分類にどれほど確信しているか。** 両方が条件を満たした返信だけを累積します。"
+  },
+  "modes_marks_title": {
+    "message": "総合モードで個別の確率が出ない理由"
+  },
+  "modes_marks": {
+    "message": "**総合モードは返信単独ではなくアカウント全体の確率を表示します。** 判定後、ユーザー名横の表示にホバーすると各項目の確率、信頼度、分析件数を確認できます。\n\n事前マスクは利用できません。ブロック条件を満たすと削除アニメーションが再生されます。"
+  },
+  "modes_cost_title": {
+    "message": "リクエストが少ないのは？"
+  },
+  "modes_cost": {
+    "message": "**累積：個別分析して判定を積み重ねます。**\n\n**総合：読み取り範囲内で使える返信を上限まで集め、まとめて1回分析します。** 件数待ちや返信ごとの多数決は行いません。\n\n同じ結果は再利用し、自然な交流と明確に判定したアカウントは端末に保存して以降省略します。"
+  },
+  "modes_shared": {
+    "message": "**自動観察をオンにしてください。** 許可リストと有効なフォロー保護が適用され、公式 @grok は対象外です。期限切れの返信は集計されず、モード変更前の判定は混ぜません。\n\n確率はモデルの判断であり、投稿者の正体を証明するものではありません。"
+  },
+  "modes_reply": {
+    "message": "返信 $1 · 元ポスト $2"
+  },
+  "modes_reply_score": {
+    "message": "累積モードの例：確率 $1%、確信度90%"
+  },
+  "modes_unseen": {
+    "message": "まだ見かけていません"
+  },
+  "modes_hit_progress": {
+    "message": "疑わしい返信 $1/3 件"
+  },
+  "modes_collect_progress": {
+    "message": "使用可能 $1件 · 元ポスト $2件"
+  },
+  "modes_queued": {
+    "message": "条件達成 → ブロック待ちに追加"
+  },
+  "modes_wait_hits": {
+    "message": "観察を継続：疑わしい返信が不足"
+  },
+  "modes_batch_no": {
+    "message": "全体の確率42%・確信度90% → ブロックしない"
+  },
+  "modes_batch_yes": {
+    "message": "全体の確率96%・確信度90% → ブロック待ちに追加"
+  },
+  "modes_wait_collect": {
+    "message": "初めて見かけたら取得を開始"
+  },
+  "modes_fetched_reply": {
+    "message": "総合は取得済み・累積ではまだ未遭遇"
+  },
+  "ui_collection_fetching": {
+    "message": "最近の返信をバックグラウンドで取得中"
+  },
+  "ui_collection_insufficient": {
+    "message": "使用可能な返信がありません"
+  },
+  "ui_collection_limited": {
+    "message": "X の読み取り制限中。後で再開します"
+  },
+  "ui_collection_unavailable": {
+    "message": "最近の返信を取得できません。後で再試行します"
+  },
+  "ui_block_hidden_text": {
+    "message": "不可視文字を乱用する返信をブロック"
+  },
+  "help_block_hidden_text": {
+    "message": "返信に不可視文字を大量に挿入するアカウントを自動でブロックします。"
+  },
+  "ui_account_material": {
+    "message": "今回の分析資料"
+  },
+  "ui_account_profile_available": {
+    "message": "表示名・自己紹介を参照"
+  },
+  "ui_account_profile_unknown": {
+    "message": "表示名・自己紹介に不足あり"
+  },
+  "ui_account_observed": {
+    "message": "投稿間隔の対象：返信$1件・元ポスト$2件"
+  },
+  "ui_account_rhythm": {
+    "message": "観測間隔の中央値 $1秒 · 最も密な5分間：$2件／元ポスト$3件"
+  },
+  "ui_account_rhythm_unknown": {
+    "message": "投稿間隔のサンプル不足"
+  },
+  "modes_account_dimensions": {
+    "message": "**プロフィール：** 表示名・自己紹介と返信内容の関係や、自動返信の明示を確認します。\n\n**過去の返信：** 話題が違っても同じ構成、経験談の導入、定型的な質問が繰り返されるかを比較します。\n\n**投稿のペース：** 間隔・密度・文章量・元ポスト数を組み合わせ、相互フォローの短文と複数話題へのまとまった論評を区別します。\n\n資料不足は不明として扱います。名前にAIがあること、高頻度、人間との自称だけでは判定しません。"
+  },
+  "ui_normal_accounts": {
+    "message": "自然な交流と判定したアカウント"
+  },
+  "ui_normal_remove": {
+    "message": "リストから削除"
+  },
+  "ui_normal_empty": {
+    "message": "記録はありません"
+  },
+  "ui_normal_help": {
+    "message": "自然な交流と明確に判定したアカウントを端末に保存し、以降の総合分析を省略します。リストから削除すると再判定できます。"
+  },
+  "ui_more_judgment_options": {
+    "message": "判定の詳細設定"
+  },
+  "ui_reply_preview_incomplete": {
+    "message": "この記録には返信の一部のみ保存されています。右の矢印から元の返信を確認できます。"
+  },
+  "observer_combined_marker": {
+    "message": "アカウントのAI確率 $1%"
+  },
+  "observer_combined_marker_note": {
+    "message": "アカウント総合判定 · 返信 $1 件を分析"
+  },
+  "ui_normal_search": {
+    "message": "名前または @ユーザー名を検索"
+  },
+  "ui_normal_count": {
+    "message": "$1 アカウント"
+  },
+  "ui_hits_one": {
+    "message": "1件でブロック"
+  },
+  "ui_hits_two": {
+    "message": "疑わしい返信2件"
+  },
+  "ui_hits_progress": {
+    "message": "疑わしい返信：$1 / $2 件"
+  },
+  "dash_title": {
+    "message": "ダッシュボード"
+  },
+  "dash_overview": {
+    "message": "今日の概要"
+  },
+  "dash_analyzed": {
+    "message": "分析済み"
+  },
+  "dash_recent": {
+    "message": "最近の処理"
+  },
+  "dash_search": {
+    "message": "アカウント・一致ルールを検索"
+  },
+  "dash_combined_score": {
+    "message": "総合判定 $1%"
+  },
+  "dash_ai_score": {
+    "message": "AI確率 $1%"
+  },
+  "dash_support_score": {
+    "message": "元の投稿に賛同 $1%"
+  },
+  "dash_observation": {
+    "message": "観察記録"
+  },
+  "dash_skipped": {
+    "message": "スキップ済み"
+  },
+  "dash_masked": {
+    "message": "マスク済み"
+  },
+  "dash_withdraw": {
+    "message": "取り消す"
+  },
+  "dash_undo": {
+    "message": "元に戻す"
+  },
+  "dash_empty": {
+    "message": "処理記録はありません"
+  },
+  "dash_count_note": {
+    "message": "本日保持されている判定数です。キャッシュ再利用を含み、APIリクエスト数ではありません。"
+  },
+  "dash_tasks": {
+    "message": "実行中 $1 件"
+  },
+  "dash_no_tasks": {
+    "message": "実行中のタスクなし"
+  },
+  "dash_combined_watching": {
+    "message": "総合判定 · 観察中"
+  },
+  "dash_cumulative_watching": {
+    "message": "累積判定 · 観察中"
+  },
+  "dash_view_tasks": {
+    "message": "タスクを見る"
+  },
+  "dash_manage": {
+    "message": "管理"
+  },
+  "dash_running": {
+    "message": "実行中"
+  },
+  "dash_task_records": {
+    "message": "タスク履歴"
+  },
+  "dash_detection_settings": {
+    "message": "判定設定"
+  },
+  "dash_my_rules": {
+    "message": "マイルール"
+  },
+  "dash_edit_rule": {
+    "message": "ルールを編集"
+  },
+  "ui_custom_filters_enabled": {
+    "message": "カスタムフィルターを有効にする"
+  },
+  "ui_custom_filters_off": {
+    "message": "カスタムフィルターはオフ"
+  },
+  "ui_custom_filters_toggle_help": {
+    "message": "オフにするとルールの照合を停止し、未送信のブロックを取り消します。個別ルールの設定は保持され、送信済みのブロックは解除されません。一般設定の不可視文字フィルターは独立して動作します。"
+  },
+  "ui_rule_conditions": {
+    "message": "一致条件"
+  },
+  "ui_rule_condition_number": {
+    "message": "条件 $1"
+  },
+  "ui_rules_import": {
+    "message": "JSON を読み込む"
+  },
+  "ui_rules_export": {
+    "message": "JSON を書き出す"
+  },
+  "ui_rules_export_one": {
+    "message": "このルールを書き出す"
+  },
+  "ui_rules_select_all": {
+    "message": "すべて選択"
+  },
+  "ui_rules_import_note": {
+    "message": "読み込んだルールは既存の一覧に追加され、保存後に有効になります。"
+  },
+  "ui_rules_import_count": {
+    "message": "$1 件を読み込む"
+  },
+  "ui_rules_export_count": {
+    "message": "$1 件を書き出す"
+  },
+  "ui_rules_import_ready": {
+    "message": "$1 件を読み込みました。設定を保存してください。"
+  },
+  "ui_rules_file_invalid": {
+    "message": "ファイルまたはルールが無効です。JSON、条件、正規表現を確認してください。一度に50件まで読み込めます。"
+  },
+  "ui_rules_file_large": {
+    "message": "ファイルの合計サイズは1 MBまで、選択できるファイルは50個までです。"
+  },
+  "ui_rules_export_empty": {
+    "message": "書き出せるルールがありません。"
+  },
+  "ui_subscription_add": {
+    "message": "URL 購読"
+  },
+  "ui_subscription_title": {
+    "message": "ルールの購読"
+  },
+  "ui_subscription_daily": {
+    "message": "毎日自動更新"
+  },
+  "ui_subscription_apply": {
+    "message": "購読を追加"
+  },
+  "ui_subscription_load": {
+    "message": "ルールを取得"
+  },
+  "ui_subscription_count": {
+    "message": "$1 件のルール"
+  },
+  "ui_subscription_notice": {
+    "message": "購読ルールはすぐに有効になります。自動更新を有効にすると、配信元の追加・変更・削除を自動で反映します。ローカルのルールは保持されます。"
+  },
+  "ui_subscription_url_invalid": {
+    "message": "認証情報や # フラグメントを含まない HTTPS の JSON URL を入力してください。"
+  },
+  "ui_subscription_permission": {
+    "message": "このサイトへのアクセスが許可されていません。"
+  },
+  "ui_subscription_checked": {
+    "message": "確認日時：$1"
+  },
+  "ui_subscription_update_failed": {
+    "message": "更新できませんでした。前回の有効なルールを保持しています。"
+  },
+  "ui_subscription_refresh": {
+    "message": "今すぐ更新"
+  },
+  "ui_subscription_remove": {
+    "message": "購読とルールを削除"
+  },
+  "ui_subscription_failed": {
+    "message": "購読を取得または反映できません。URL、権限、JSON 形式、ルール数を確認してください。同じ URL は重複登録できず、全ルールの上限は50件です。"
+  },
+  "legal_title": {
+    "message": "利用上の注意とライセンス"
+  },
+  "legal_continue": {
+    "message": "同意して続ける"
+  },
+  "legal_full_license": {
+    "message": "AGPL-3.0 の全文を読む"
+  },
+  "legal_load_failed": {
+    "message": "ライセンスを読み込めませんでした。開き直してください。"
+  },
+  "legal_acknowledge": {
+    "message": "利用上の注意を読み、AGPL-3.0 ライセンスについて理解しました。"
+  },
+  "legal_risk_title": {
+    "message": "判定には誤りがあり得ます"
+  },
+  "legal_risk": {
+    "message": "AI の確率はアカウントの正体を証明しません。誤判定や見逃しがあり得るため、ご自身の判断で設定し、処理履歴をご確認ください。"
+  },
+  "legal_actions_title": {
+    "message": "ブロックはアカウントに反映されます"
+  },
+  "legal_actions": {
+    "message": "自動処理を有効にすると、ログイン中の X アカウントでブロックを送信することがあります。送信済みの操作は取り消せない場合があります。履歴からブロック解除を試せます。"
+  },
+  "legal_data_title": {
+    "message": "データとキー"
+  },
+  "legal_data": {
+    "message": "分析に必要な投稿、返信、アカウント情報は、設定したモデル API に送信されます。API キー、ルール、処理履歴はローカルブラウザーに保存されます。X の認証情報は X への通信にのみ使用し、モデルには送信しません。"
+  },
+  "legal_cost_title": {
+    "message": "外部サービスの料金と可用性"
+  },
+  "legal_cost": {
+    "message": "モデルの呼び出しには提供元の料金が発生する場合があります。X やモデル API の変更、レート制限、通信障害により利用できなくなることがあります。"
+  },
+  "legal_sources_title": {
+    "message": "購読と確認記録"
+  },
+  "legal_sources": {
+    "message": "信頼できる配信元のみ購読してください。自動更新は処理ルールを変更する場合があります。この確認では文書のバージョンと日時だけを端末内に保存します。氏名の収集や署名情報の送信は行いません。"
+  },
+  "legal_license_title": {
+    "message": "オープンソースライセンスと保証"
+  },
+  "legal_license": {
+    "message": "本プロジェクトは AGPL-3.0-only の下で現状のまま提供され、判定精度や継続的な利用を保証しません。実行自体に AGPL の受諾は不要ですが、複製・改変・配布等にはその条件が適用されます。この確認は追加のライセンス制限を設けません。"
+  },
+  "legal_step": {
+    "message": "利用上の注意"
+  },
+  "variable_review_account": {
+    "message": "プロフィールと投稿傾向"
+  },
+  "variable_review_profile": {
+    "message": "表示名と自己紹介"
+  },
+  "variable_review_activity": {
+    "message": "返信時刻の統計"
+  },
+  "variable_review_samples": {
+    "message": "最近の返信と文脈"
+  },
+  "variable_review_count": {
+    "message": "サンプル数"
+  },
+  "ui_review_prompt_editor": {
+    "message": "総合判定 · カスタムプロンプト"
+  },
+  "ui_cumulative_prompt_editor": {
+    "message": "累積判定 · カスタムプロンプト"
   }
 }
