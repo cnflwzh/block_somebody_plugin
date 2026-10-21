@@ -592,9 +592,13 @@
   /** Read the card's own permalink, excluding quotes; merge DOM/network context by ID and author. */
   function readPost(article) {
     if (scanPosts?.has(article)) return scanPosts.get(article);
-    const time = article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time");
-    const href = time?.closest("a")?.getAttribute("href") || "";
-    const match = href.match(/^\/(\w{1,15})\/status\/(\d+)/);
+    if (!article) return null;
+    const permalink = time => time?.closest("a")?.getAttribute("href")?.match(/^\/(\w{1,15})\/status\/(\d+)(?:[/?#]|$)/);
+    // Timeline/reply timestamps live in the author header. The expanded post's
+    // timestamp comes after its quoted content; quote timestamps may have no link.
+    // Prefer the header, then read linked timestamps from the footer backwards.
+    const match = permalink(article.querySelector('[data-testid="User-Name"] time'))
+      || [...article.querySelectorAll("time")].reverse().map(permalink).find(Boolean);
     if (!match) return null;
     const handle = match[1].toLowerCase(), id = match[2];
     const meta = metadata.get(id);
