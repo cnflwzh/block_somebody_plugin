@@ -62,36 +62,65 @@ function notify() {
 }
 async function snapshot(sender, accountValue, view) {
   const manager = sender.url?.startsWith(extensionOrigin);
+  const account = !manager && accountValue ? normalizeHandle(accountValue) : "";
   const scoped = manager && ["dashboard", "settings", "observer", "history", "whitelist", "name-rules"].includes(view);
-  // Project before cloning: settings/observer views do not need thousands of history
-  // texts or live session results. Content-script snapshots retain their existing contract.
-  const db = await read(d => !scoped ? d : ({
-    legalAcceptance: d.legalAcceptance, onboardingRequired: d.onboardingRequired, filterSubscriptions: d.filterSubscriptions,
-    settings: d.settings, whitelist: d.whitelist, debugDryRun: d.debugDryRun,
-    history: view === "settings" || view === "whitelist" ? [] : view === "observer"
-      ? d.history.filter(h => h.module === "observer" || h.observerOwner) : view === "name-rules" ? d.history.filter(h => h.nameRuleIds?.length) : d.history,
-    jobs: view === "dashboard" || view === "history" || view === "name-rules" ? d.jobs.filter(j => j.status === "pending") : [],
-    sessions: view === "dashboard" || view === "history" || view === "name-rules" ? Object.fromEntries(Object.entries(d.sessions).map(([key, session]) => [key,
-      { id: session.id, tabId: session.tabId, account: session.account, root: session.root, created: session.created, stopped: session.stopped, following: session.following, ...(view === "dashboard" ? { results: session.results } : {}) }])) : {},
-    observerFollowing: view === "dashboard" || view === "history" || view === "name-rules" ? d.observerFollowing : {},
-    filterEvents: view === "dashboard" || view === "name-rules" ? d.filterEvents : [], filterErrors: view === "dashboard" || view === "name-rules" ? d.filterErrors : {},
-    observerSnoozedUntil: d.observerSnoozedUntil, contentExceptions: d.contentExceptions,
-    nextActionAt: d.nextActionAt, queueError: d.queueError, queueNotice: d.queueNotice, modelError: d.modelError
-  }));
+  // Project before cloning. Content scripts only need the current account's public
+  // status/index fields; copying every historical post body on each refresh is costly.
+  const db = await read(d => {
+    if (scoped) return ({
+      legalAcceptance: d.legalAcceptance, onboardingRequired: d.onboardingRequired, filterSubscriptions: d.filterSubscriptions,
+      settings: d.settings, whitelist: d.whitelist, debugDryRun: d.debugDryRun,
+      history: view === "settings" || view === "whitelist" ? [] : view === "observer"
+        ? d.history.filter(h => h.module === "observer" || h.observerOwner) : view === "name-rules" ? d.history.filter(h => h.nameRuleIds?.length) : d.history,
+      jobs: view === "dashboard" || view === "history" || view === "name-rules" ? d.jobs.filter(j => j.status === "pending") : [],
+      sessions: view === "dashboard" || view === "history" || view === "name-rules" ? Object.fromEntries(Object.entries(d.sessions).map(([key, session]) => [key,
+        { id: session.id, tabId: session.tabId, account: session.account, root: session.root, created: session.created, stopped: session.stopped, following: session.following, ...(view === "dashboard" ? { results: session.results } : {}) }])) : {},
+      observerFollowing: view === "dashboard" || view === "history" || view === "name-rules" ? d.observerFollowing : {},
+      filterEvents: view === "dashboard" || view === "name-rules" ? d.filterEvents : [], filterErrors: view === "dashboard" || view === "name-rules" ? d.filterErrors : {},
+      observerSnoozedUntil: d.observerSnoozedUntil, contentExceptions: d.contentExceptions,
+      nextActionAt: d.nextActionAt, queueError: d.queueError, queueNotice: d.queueNotice, modelError: d.modelError
+    });
+    if (manager) return d;
+    const accountHistory = d.history.filter(h => h.account === account);
+    const historyById = new Map(accountHistory.map(h => [h.id, h]));
+    const waitingHistory = new Set();
+    for (const job of d.jobs) if (job.status === "pending" && historyById.has(job.historyId) && waitingFollowingJob(d, job, historyById)) waitingHistory.add(job.historyId);
+    const history = accountHistory.map(h => ({
+      id: h.id, target: { handle: h.target.handle, userId: h.target.userId, name: h.target.name }, status: h.status,
+      trashUnread: !!h.trashUnread, module: h.module, observerOwner: !!h.observerOwner, nameOwner: !!h.nameOwner,
+      nameRuleIds: h.nameRuleIds, nameRootIds: h.nameRootIds, nameRuleWithdrawn: !!h.nameRuleWithdrawn,
+      waitingFollowing: h.status === "pending" && waitingHistory.has(h.id), undoRequested: !!h.undoRequested,
+      sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated
+    }));
+    const session = d.sessions[sender.tab.id];
+    const publicSettings = { ...d.settings };
+    // Keep rule shape for client-side option labels, but do not copy prompt text.
+    if (publicSettings.analysisRule) publicSettings.analysisRule = { ...publicSettings.analysisRule, prompt: "" };
+    if (publicSettings.observer) publicSettings.observer = {
+      ...publicSettings.observer,
+      prompt: "",
+      analysisRule: publicSettings.observer.analysisRule ? { ...publicSettings.observer.analysisRule, prompt: "" } : null,
+      reviewRule: publicSettings.observer.reviewRule ? { ...publicSettings.observer.reviewRule, prompt: "" } : null
+    };
+    return {
+      settings: publicSettings, whitelist: d.whitelist.map(w => ({ handle: w.handle, userId: w.userId })), debugDryRun: d.debugDryRun,
+      observerPolicyRevision: d.observerPolicyRevision || 0, contentExceptions: (d.contentExceptions || []).filter(e => e.account === account && e.expires > Date.now()),
+      session: session?.account === account ? session : null, history,
+      observerFollowing: Object.fromEntries(Object.entries(d.observerFollowing || {}).filter(([key]) => key.startsWith(`${account}:`))),
+      nextActionAt: d.nextActionAt, queueError: d.queueError, queueNotice: d.queueNotice, modelError: d.modelError
+    };
+  });
   const settings = { ...db.settings, configured: !!(await key()), debugDryRun: !!db.debugDryRun, legalAcceptance: db.legalAcceptance || null, needsOnboarding: !!db.onboardingRequired };
-  // Waiting is a presentation flag, not a terminal job status: undo/cancel and restart
-  // recovery must continue to treat legacy jobs without relationship evidence as pending.
-  // Build this index once per snapshot instead of scanning all history for each job.
-  // Keep it local to this immutable read; queue mutations must use their current records.
-  const historyById = new Map(db.history.map(h => [h.id, h]));
-  const waitingHistory = new Set();
-  for (const job of db.jobs) {
-    if (job.status === "pending" && waitingFollowingJob(db, job, historyById)) waitingHistory.add(job.historyId);
+  if (manager) {
+    // Waiting is a presentation flag, not a terminal job status. Build this index
+    // only for manager snapshots, after the content path has already projected data.
+    const historyById = new Map(db.history.map(h => [h.id, h]));
+    const waitingHistory = new Set();
+    for (const job of db.jobs) if (job.status === "pending" && waitingFollowingJob(db, job, historyById)) waitingHistory.add(job.historyId);
+    const history = db.history.map(h => ({ ...h, waitingFollowing: h.status === "pending" && waitingHistory.has(h.id) }));
+    return { filterSubscriptions: (db.filterSubscriptions || []).map(({ id, url, autoUpdate, lastCheck, lastAttempt, error, rules }) => ({ id, url, autoUpdate, lastCheck, lastAttempt, error, count: rules.length, rules: rules.map(({ name, action }) => ({ name, action })) })), dashboard: view === "dashboard" ? dashboardSnapshot(db, await readObserverAll()) : null, settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), nextActionAt: db.nextActionAt || 0, filterEvents: db.filterEvents || [], filterErrors: db.filterErrors || {}, sessions: Object.values(db.sessions).map(({ following, ...session }) => session), observer: !scoped || view === "observer" ? await observerSnapshot(db) : null, view: scoped ? view : "all", queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
   }
-  const history = db.history.map(h => ({ ...h, waitingFollowing: h.status === "pending" && waitingHistory.has(h.id) }));
-  if (sender.url?.startsWith(extensionOrigin)) return { filterSubscriptions: (db.filterSubscriptions || []).map(({ id, url, autoUpdate, lastCheck, lastAttempt, error, rules }) => ({ id, url, autoUpdate, lastCheck, lastAttempt, error, count: rules.length, rules: rules.map(({ name, action }) => ({ name, action })) })), dashboard: view === "dashboard" ? dashboardSnapshot(db, await readObserverAll()) : null, settings, presets: PRESETS, whitelist: db.whitelist, history: history.slice().reverse(), nextActionAt: db.nextActionAt || 0, filterEvents: db.filterEvents || [], filterErrors: db.filterErrors || {}, sessions: Object.values(db.sessions).map(({ following, ...session }) => session), observer: !scoped || view === "observer" ? await observerSnapshot(db) : null, view: scoped ? view : "all", queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError };
-  const s = db.sessions[sender.tab.id];
-  const account = accountValue ? normalizeHandle(accountValue) : "";
+  const s = db.session;
   const { endpoint, customPrompt, analysisRule, legalAcceptance, needsOnboarding, ...pageSettings } = settings;
   if (pageSettings.observer) {
     const { prompt, analysisRule, reviewRule, ...publicObserver } = pageSettings.observer, rule = getObserverRule(pageSettings.observer);
@@ -101,8 +130,7 @@ async function snapshot(sender, accountValue, view) {
   pageSettings.customRule = customRuleEnabled(settings);
   // The page needs display names and action markers, not the private templates or rubric text.
   pageSettings.ruleOptions = getAnalysisRule(settings).options.map(({ id, name, block }) => ({ id, name, block }));
-  return { settings: pageSettings, account, contentExceptions: (db.contentExceptions || []).filter(e => e.account === account && e.expires > Date.now()), quickUndo: quickUndoSnapshot(sender.tab.id, account), decisionVersion: DECISION_VERSION, whitelist: db.whitelist.map(w => ({ handle: w.handle, userId: w.userId })), session: s?.account === account ? s : null, queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError,
-    history: history.filter(h => h.account === account).map(h => ({ id: h.id, target: h.target, status: h.status, trashUnread: !!h.trashUnread, module: h.module, observerOwner: !!h.observerOwner, nameOwner: !!h.nameOwner, nameRuleIds: h.nameRuleIds, nameRootIds: h.nameRootIds, nameRuleWithdrawn: !!h.nameRuleWithdrawn, waitingFollowing: h.waitingFollowing, undoRequested: !!h.undoRequested, sessionId: h.sessionId, rootId: h.root?.id, replyId: h.reply?.id, updated: h.updated })) };
+  return { settings: pageSettings, account, contentExceptions: db.contentExceptions || [], quickUndo: quickUndoSnapshot(sender.tab.id, account), decisionVersion: DECISION_VERSION, whitelist: db.whitelist, session: s, queueError: db.queueError, queueNotice: db.queueNotice || "", modelError: db.modelError, history: db.history };
 }
 /** Return the newest relationship record, including queues from other tabs/modules. */
 function analysisAlreadyHandled(db, account, target) {
