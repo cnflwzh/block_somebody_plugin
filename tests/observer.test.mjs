@@ -8,15 +8,18 @@ const config = { ...OBSERVER_DEFAULTS };
 const now = Date.now();
 const evidence = (replyId, rootId, extra = {}) => ({ replyId, rootId, observedAt: now, fingerprint: "rule-a", label: "ai_generated", score: .96, confidence: .97, ...extra });
 
-test("observer requires independent comments, multiple threads and recent normal evidence", () => {
+test("observer counts distinct replies without thread or recent-ratio gates", () => {
   const first = evidence("100001", "100000");
   assert.equal(summarizeObserverEvidence([first, first, first], config, "rule-a", now).eligible, false);
-  const rows = [first, evidence("100002", "100000"), evidence("200001", "200000")];
+  assert.equal(config.minThreads, undefined);
+  assert.equal(summarizeObserverEvidence([first], { ...config, minHits: 1 }, "rule-a", now).eligible, true);
+  assert.equal(summarizeObserverEvidence([first, evidence("100002", "100000")], { ...config, minHits: 2 }, "rule-a", now).eligible, true);
+  const rows = [first, evidence("100002", "300000"), evidence("200001", "200000")];
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).eligible, true);
   rows.push(evidence("300001", "300000", { label: "human_like", observedAt: now + 1 }));
   assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).hitRate, .75);
   rows.push(evidence("300002", "300000", { label: "human_like", observedAt: now + 2 }));
-  assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).eligible, false);
+  assert.equal(summarizeObserverEvidence(rows, config, "rule-a", now).eligible, true);
 });
 
 test("observer isolates rule versions, expired evidence, withdrawals and simulations", () => {
@@ -40,7 +43,10 @@ test("observer validates choices and does not label normal winner probability as
 
 test("observer policy rejects unknown keys and invalid cumulative thresholds", () => {
   assert.equal(normalizeObserverSettings({ enabled: true }).enabled, true);
-  for (const input of [{ scope: "verified" }, { enabled: 1 }, { threshold: NaN }, { minHits: 1 }, { minThreads: 4, minHits: 3 }, { typo: true }]) assert.throws(() => normalizeObserverSettings(input));
+  const migrated = normalizeObserverSettings({ minHits: 1, minThreads: 4, hitRate: 1, dailyLimit: 1, retentionDays: 7 });
+  assert.equal(migrated.minHits, 1); assert.equal(migrated.retentionDays, 30);
+  for (const retired of ["minThreads", "hitRate", "dailyLimit"]) assert.equal(retired in migrated, false);
+  for (const input of [{ scope: "verified" }, { enabled: 1 }, { threshold: NaN }, { minHits: 0 }, { minHits: 101 }, { typo: true }]) assert.throws(() => normalizeObserverSettings(input));
 });
 
 test("observer store deduplicates concurrent replies and rejects evidence arriving after undo", async () => {

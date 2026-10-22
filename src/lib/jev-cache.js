@@ -6,6 +6,7 @@ import { JEV_CACHE_TTL, DEFAULT_ENDPOINT, normalizeEndpoint } from "./core.js";
 export const CACHE_TTL = JEV_CACHE_TTL;
 const flights = new Map();
 let database;
+let cacheGeneration = 0;
 
 // Keep up to 10000 compact answers outside chrome.storage's shared state/quota.
 // Neither tweet text nor credentials are persisted here: the key is a request digest.
@@ -68,6 +69,14 @@ function prune(store, limit, now) {
 export async function cleanJevCache(limit = 10000) {
   return transaction(store => prune(store, limit, Date.now()));
 }
+/** Clear reusable model answers only. In-flight consumers may finish, but their old
+ * responses cannot repopulate the cache after this user-requested clear.
+ * Returns the number of persisted answers removed; observation evidence is untouched.
+ */
+export async function clearJevCache() {
+  cacheGeneration++;
+  return transaction((store, done) => { const count = store.count(); count.onsuccess = () => done(count.result); store.clear(); });
+}
 
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
@@ -110,7 +119,7 @@ export async function askJevCached(request, apiKey, signal, validate, limit = 10
   if (signal?.aborted) throw cancelled();
   let flight = flights.get(key);
   if (!flight) {
-    flight = { controller: new AbortController(), users: 0, settled: false };
+    flight = { controller: new AbortController(), users: 0, settled: false, generation: cacheGeneration };
     const current = flight;
     current.promise = Promise.resolve().then(async () => {
       let cached;
@@ -138,6 +147,7 @@ export async function askJevCached(request, apiKey, signal, validate, limit = 10
       } }, cacheCreatedAt: now };
       try {
         await transaction(store => {
+          if (current.generation !== cacheGeneration) return;
           store.put({ key, payload, createdAt: now, expiresAt: now + CACHE_TTL, usedAt: now });
           prune(store, limit, now);
         });

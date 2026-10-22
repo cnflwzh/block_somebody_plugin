@@ -1,29 +1,111 @@
 import "../lib/i18n.js";
+import { mountSubscriptions } from "./subscriptions.js";
+import { LEGAL_VERSION } from "../lib/legal.js";
 const { t, localizeDocument } = globalThis.BlockSBI18n;
 await globalThis.BlockSBI18n.ready;
 import { OBSERVER_PRESETS, normalizeObserverSettings } from "../lib/observer-core.js";
 import { DEFAULT_ENDPOINT, normalizeEndpoint, endpointPermission, matchingNameRules, updateSettings, getAnalysisRule, customRuleEnabled } from "../lib/core.js";
 import { mountFilterEditor } from "./filter-editor.js";
+import { createSettingsDrafts } from "./drafts.js";
+import { mountDashboard } from "./dashboard.js";
+import { mountGuide } from "./guide.js";
+import { renderHelpText } from "./help-text.js";
 localizeDocument(document);
+
+/** One viewport-bound help panel for all settings. Wrapping the translated label keeps
+ * localization refreshes from removing its help control; help clicks never toggle fields.
+ */
+function mountSettingsHelp() {
+  const panel = document.createElement("div"); panel.id = "settings-help-panel"; panel.className = "settings-help-panel"; panel.role = "tooltip"; panel.hidden = true; document.body.append(panel);
+  let active, hideTimer;
+  const hide = () => { clearTimeout(hideTimer); active?.removeAttribute("aria-describedby"); active = null; panel.hidden = true; };
+  const deferHide = () => { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 180); };
+  const show = control => {
+    clearTimeout(hideTimer); active?.removeAttribute("aria-describedby"); active = control;
+    renderHelpText(panel, t(control.dataset.help)); panel.hidden = false; control.setAttribute("aria-describedby", panel.id);
+    const r = control.getBoundingClientRect(); panel.style.left = `${Math.max(8, Math.min(r.left, innerWidth - panel.offsetWidth - 8))}px`;
+    panel.style.top = `${Math.max(8, r.bottom + panel.offsetHeight + 8 < innerHeight ? r.bottom + 7 : r.top - panel.offsetHeight - 7)}px`;
+  };
+  for (const label of document.querySelectorAll("[data-setting-help]")) {
+    const wrapper = document.createElement("span"); wrapper.className = "settings-help-label";
+    if (label.classList.contains("threshold-label")) wrapper.classList.add("threshold-label");
+    label.before(wrapper); wrapper.append(label);
+    const control = document.createElement("span"); control.className = "settings-help-button"; control.textContent = "?"; control.tabIndex = 0; control.role = "button"; control.dataset.help = label.dataset.settingHelp;
+    control.dataset.i18nAriaLabel = "ui_setting_help"; control.setAttribute("aria-label", t("ui_setting_help")); wrapper.append(control);
+    control.addEventListener("mouseenter", () => show(control)); control.addEventListener("mouseleave", deferHide);
+    control.addEventListener("focus", () => show(control)); control.addEventListener("blur", deferHide);
+    control.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); show(control); });
+    control.addEventListener("keydown", e => { if (["Enter", " ", "Escape"].includes(e.key)) { e.preventDefault(); e.stopPropagation(); e.key === "Escape" ? hide() : show(control); } });
+  }
+  panel.addEventListener("mouseenter", () => clearTimeout(hideTimer)); panel.addEventListener("mouseleave", deferHide);
+  document.addEventListener("scroll", e => { if (e.target !== panel) hide(); }, true);
+  document.addEventListener("pointerdown", e => { if (!panel.contains(e.target) && !e.target.closest(".settings-help-button")) hide(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && active) { hide(); e.stopPropagation(); } });
+  window.addEventListener("resize", hide); window.addEventListener("pagehide", hide);
+}
+mountSettingsHelp();
+
+/** Shared full-reply preview. Appended to body so cards cannot clip it; text is never HTML. */
+function mountReplyPreview() {
+  const panel = document.createElement("div");
+  panel.id = "reply-preview"; panel.className = "settings-help-panel reply-preview";
+  panel.role = "tooltip"; panel.hidden = true; document.body.append(panel);
+  const content = new WeakMap();
+  let active, timer;
+  const hide = () => { clearTimeout(timer); active?.removeAttribute("aria-describedby"); active = null; panel.hidden = true; };
+  const deferHide = () => { clearTimeout(timer); timer = setTimeout(hide, 180); };
+  const show = target => {
+    const value = content.get(target); if (!value) return;
+    clearTimeout(timer); active?.removeAttribute("aria-describedby"); active = target;
+    panel.textContent = value.text;
+    if (value.incomplete) { const note = document.createElement("p"); note.className = "hint"; note.textContent = t("ui_reply_preview_incomplete"); panel.append(note); }
+    panel.hidden = false; panel.scrollTop = 0; target.setAttribute("aria-describedby", panel.id);
+    const r = target.getBoundingClientRect();
+    panel.style.left = `${Math.max(8, Math.min(r.left, innerWidth - panel.offsetWidth - 8))}px`;
+    panel.style.top = `${Math.max(8, Math.min(r.bottom + 7, innerHeight - panel.offsetHeight - 8))}px`;
+  };
+  // Delegation avoids retaining removed evidence rows across snapshot refreshes.
+  document.addEventListener("mouseover", e => { const target = e.target.closest?.(".evidence-excerpt"); if (target && target !== active) show(target); });
+  document.addEventListener("mouseout", e => { if (e.target === active && !active.contains(e.relatedTarget)) deferHide(); });
+  document.addEventListener("focusin", e => { if (content.has(e.target)) show(e.target); });
+  document.addEventListener("focusout", e => { if (e.target === active) deferHide(); });
+  panel.addEventListener("mouseenter", () => clearTimeout(timer)); panel.addEventListener("mouseleave", deferHide);
+  document.addEventListener("scroll", e => { if (e.target !== panel) hide(); }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  document.addEventListener("pointerdown", e => { if (!panel.contains(e.target) && e.target !== active) hide(); });
+  window.addEventListener("resize", hide); window.addEventListener("pagehide", hide);
+  return { hide, bind: (node, text, incomplete) => { content.set(node, { text, incomplete }); node.tabIndex = 0; } };
+}
+const replyPreview = mountReplyPreview();
 
 /* Extension-owned manager: never expose the key in snapshots, exports, or page messages. */
 (() => {
   const $ = id => document.getElementById(id);
-  $("extension-version").textContent = `v${chrome.runtime.getManifest().version}`;
+  const setNodeText = (node, value) => { const text = String(value); if (node.textContent !== text) node.textContent = text; };
+  const setLabel = (id, value) => setNodeText($(id), value);
+  setLabel("extension-version", `v${chrome.runtime.getManifest().version}`);
   const params = new URLSearchParams(location.search);
   if (params.has("embedded")) document.body.classList.add("embedded");
   // Reuse the manager in Chrome's toolbar popup without changing the in-page drawer or options page.
   if (params.has("popup")) { document.documentElement.classList.add("popup"); document.body.classList.add("popup"); }
-  let state, currentTab = ["observer", "history", "whitelist", "name-rules", "settings"].includes(params.get("tab")) ? params.get("tab") : "observer";
+  let state, currentTab = ["dashboard", "observer", "history", "whitelist", "name-rules", "normal-accounts", "model", "settings"].includes(params.get("tab")) ? params.get("tab") : "dashboard";
   const expandedTasks = new Set(), taskLimits = new Map(), expandedObservers = new Set();
   let observerListSignature = "", nameLimit = 20, nameListSignature = "";
   let settingTab = "general", observerFilter = "all", observerLimit = 30, observerDirty = false, generalDirty = false;
   let filter = "all", limit = 20, settingsDirty = false, settingsLoaded = false, modelDirty = false, modelLoaded = false, loading = false, reloadAgain = false, toastTimer, refreshTimer;
   let account = params.get("account") || "";
+  const drafts = createSettingsDrafts();
+  let draftsRestored = false, seedLoaded = false, onboardingOpened = false;
+  const preferenceKey = "blocksb.manager-view.v1";
+  let remembered = {};
+  try { remembered = JSON.parse(localStorage.getItem(preferenceKey) || "{}"); } catch { /* Preferences are optional. */ }
+  if (!params.has("tab") && ["dashboard", "observer", "history", "whitelist", "name-rules", "normal-accounts", "model", "settings"].includes(remembered?.tab)) currentTab = remembered.tab === "model" ? "settings" : remembered.tab;
+  if (params.has("seed")) currentTab = "name-rules";
+  const rememberView = () => { try { localStorage.setItem(preferenceKey, JSON.stringify({ tab: currentTab, section: settingTab })); } catch { /* Navigation still works without storage. */ } };
   let loadedView = "", localizedLocale = "", historySignature = "", whitelistSignature = "", whiteLimit = 50;
   const statusLabels = () => ({ pending: t("ui_pending"), running: t("ui_submitting"), submitted: t("ui_submitted"), blocked: t("ui_blocked"), preexisting: t("ui_already_blocked"), failed: t("ui_submission_failed"), uncertain: t("ui_needs_verification"), undo_pending: t("ui_unblock_pending"), undo_running: t("ui_unblocking"), undo_failed: t("ui_unblock_failed"), unblocked: t("ui_unblocked"), cancelled: t("ui_task_canceled") });
   const stanceHistory = h => !["observer", "name"].includes(h.module) || h.stanceOwner === true;
-  const observerCategory = entry => !entry?.customRule && ["ai_generated", "human_like", "spam", "template", "empty", "repetitive", "useful", "normal", "uncertain"].includes(entry?.label)
+  const observerCategory = entry => entry?.label === "collected" ? t("ui_collected_unanalysed") : !entry?.customRule && ["ai_generated", "human_like", "spam", "template", "empty", "repetitive", "useful", "normal", "uncertain"].includes(entry?.label)
     ? t(`observer_category_${entry.label}`) : entry?.labelName || entry?.label || t("observer_category_uncertain");
   const pending = h => ["pending", "running", "undo_pending", "undo_running"].includes(h.status);
   const failed = h => ["failed", "undo_failed", "uncertain"].includes(h.status);
@@ -35,27 +117,79 @@ localizeDocument(document);
     return dateFormatter.format(Number(value) || 0);
   };
   async function send(type, payload = {}) { const r = await chrome.runtime.sendMessage({ type, ...payload }); if (!r?.ok) throw new Error(r?.error || t("ui_cannot_connect_to_the_extension")); return r.data; }
-  function toast(text) { $("toast").textContent = String(text); $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 5500); }
-  async function run(button, fn) { button.disabled = true; try { await fn(); } catch (e) { toast(e.message); } finally { button.disabled = false; } }
+  function toast(text) { setLabel("toast", String(text)); $("toast").hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 5500); }
+  async function run(button, fn) { button.disabled = true; button.setAttribute("aria-busy", "true"); try { await fn(); } catch (e) { toast(e.message); } finally { button.disabled = false; button.removeAttribute("aria-busy"); } }
+  // Animate only user navigation, never background refreshes or list updates.
+  function enterPanel(panel) {
+    if (!state || !panel || (state.settings.reducedMotion && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    for (const animation of panel.getAnimations()) animation.cancel();
+    panel.animate([{ opacity: .55, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], { duration: 140, easing: "ease-out" });
+  }
   function tab(value) {
+    const changedView = currentTab !== value;
+    replyPreview.hide();
     currentTab = value;
+    if (value !== "name-rules") document.body.classList.remove("filter-editing");
+    else document.body.classList.toggle("filter-editing", !!document.querySelector("details.filter-rule[open]"));
+    if (value === "normal-accounts") void loadNormalAccounts();
+    rememberView();
+    if (params.has("embedded")) parent.postMessage({ type: "blocksb:view", tab: value }, "*");
     if (state && loadedView !== value) void refresh();
-    for (const name of ["history", "observer", "whitelist", "name-rules", "settings"]) $("view-" + name).hidden = name !== value;
-    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === (["whitelist", "name-rules"].includes(value) ? "settings" : value))));
-    if (state) $("onboarding").hidden = state.settings.configured || ["settings", "name-rules"].includes(value);
+    for (const name of ["dashboard", "history", "observer", "whitelist", "name-rules", "normal-accounts", "model", "settings"]) $("view-" + name).hidden = name !== value;
+    document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === (["whitelist", "normal-accounts", "model"].includes(value) ? "settings" : value))));
+    if (changedView) enterPanel($("view-" + value));
+    if (state) $("onboarding").hidden = state.settings.configured || ["settings", "name-rules", "normal-accounts", "model"].includes(value);
   }
   document.querySelectorAll("[data-tab]").forEach(b => { b.onclick = () => tab(b.dataset.tab); });
   function settingsTab(value) {
+    const changedSection = settingTab !== value;
     settingTab = value;
+    rememberView();
     for (const [name, id] of [["general", "settings-general"], ["observer", "observer-form"], ["support", "settings-form"]]) $(id).hidden = name !== value;
     document.querySelectorAll("[data-setting-tab]").forEach(button => button.setAttribute("aria-selected", String(button.dataset.settingTab === value)));
+    if (changedSection) enterPanel($(value === "general" ? "settings-general" : value === "observer" ? "observer-form" : "settings-form"));
     $("settings-about").hidden = value === "observer";
+    if (value === "observer" && !normalLoaded && !normalFlight) void loadNormalAccounts();
   }
   document.querySelectorAll("[data-setting-tab]").forEach(button => { button.onclick = () => settingsTab(button.dataset.settingTab); });
   $("connect-now").onclick = () => { tab("settings"); settingsTab("general"); };
+  const guide = mountGuide({ t, getSettings: () => state?.settings,
+    onAccept: async () => {
+      const receipt = await send("LEGAL_ACCEPT", { version: LEGAL_VERSION, accepted: true });
+      state.settings.legalAcceptance = receipt; state.settings.needsOnboarding = false;
+    },
+    onConnect: async ({ key: secret, endpoint, model }) => {
+      const next = updateSettings(state.settings, { endpoint, model });
+      const permission = chrome.permissions.request({ origins: [endpointPermission(next.endpoint)] });
+      if (!await permission) throw new Error(t("ui_access_to_this_api_endpoint_was_not_granted_settings_were"));
+      await send("SAVE_MODEL_CONFIG", { value: secret, config: { endpoint: next.endpoint, model: next.model } });
+      modelLoaded = false; await refresh();
+    },
+    onSave: async value => {
+      const high = state.presets[value.preset]?.high ?? state.settings.high;
+      const maskThreshold = Math.min(state.settings.maskThreshold, Math.max(0, high - 0.01));
+      await send("SAVE_SETTINGS", { value: { preset: value.preset, maskThreshold, animationEffect: value.animationEffect,
+        observer: { enabled: value.enabled, mode: value.mode, scope: value.scope, minHits: value.minHits, skipFollowing: value.skipFollowing, ...(value.mode === "cumulative" ? { preset: value.observerPreset } : {}) } } });
+      // Preserve unrelated general drafts while keeping the wizard's saved effect consistent.
+      for (const radio of document.querySelectorAll('[name="animation-effect"]')) radio.checked = radio.value === value.animationEffect;
+      if (generalDirty) drafts.capture("general", $("general-form"));
+      for (const group of ["support", "observer"]) { drafts.clear(group); $("discard-" + group).hidden = true; }
+      settingsDirty = false; observerDirty = false; settingsLoaded = false;
+      await refresh(); toast(t("ui_saved"));
+    }
+  });
+  $("replay-guide").onclick = () => guide.open();
+  $("service-settings").onclick = () => { tab("settings"); settingsTab("general"); toggleModel(true); };
+  $("custom-filters-enabled").onchange = () => run($("custom-filters-enabled"), async () => {
+    try { await send("SAVE_SETTINGS", { value: { customFiltersEnabled: $("custom-filters-enabled").checked } }); await refresh(); }
+    catch (error) { $("custom-filters-enabled").checked = state.settings.customFiltersEnabled !== false; throw error; }
+  });
+  $("history-settings-link").onclick = () => { tab("settings"); settingsTab("support"); };
+  $("observer-settings-top").onclick = () => { tab("settings"); settingsTab("observer"); };
   $("manage-name-rules").onclick = () => tab("name-rules");
   $("name-back").onclick = () => { tab("settings"); settingsTab("general"); };
   const updateFilterEditor = mountFilterEditor(send, toast, refresh);
+  const updateSubscriptions = mountSubscriptions({ send, refresh, toast });
   let selectedFilter = "";
   $("filter-history-select").onchange = () => { selectedFilter = $("filter-history-select").value; nameListSignature = ""; renderNameRules(); };
   $("filter-undo-all").onclick = () => run($("filter-undo-all"), async () => {
@@ -121,15 +255,20 @@ localizeDocument(document);
   }; });
   $("observer-quick-enable").onchange = () => run($("observer-quick-enable"), async () => {
     try { await send("SAVE_SETTINGS", { value: { observer: { enabled: $("observer-quick-enable").checked } } }); }
-    finally { await refresh(); $("observer-enabled").checked = !!state.settings.observer.enabled; }
+    finally { await refresh(); if (!observerDirty) $("observer-enabled").checked = !!state.settings.observer.enabled; }
   });
-  function toggleModel(open = $("key-form").hidden) {
-    $("key-form").hidden = !open; $("model-details").setAttribute("aria-expanded", String(open));
-    if (open) $("api-key").focus();
+  function toggleModel(open = currentTab !== "model") {
+    if (open) { tab("model"); window.scrollTo(0, 0); $("api-key").focus(); }
+    else { tab("settings"); settingsTab("general"); }
   }
+  $("model-back").onclick = $("model-cancel").onclick = () => toggleModel(false);
   $("edit-key").onclick = () => toggleModel(true); $("model-details").onclick = () => toggleModel();
   $("cache-limit").oninvalid = () => { $("cache-details").hidden = false; $("cache-toggle").setAttribute("aria-expanded", "true"); };
   $("cache-toggle").onclick = () => { $("cache-details").hidden = !$("cache-details").hidden; $("cache-toggle").setAttribute("aria-expanded", String(!$("cache-details").hidden)); };
+  $("clear-cache").onclick = () => run($("clear-cache"), async () => {
+    setLabel("cache-feedback", "");
+    const result = await send("CLEAR_JEV_CACHE"); setLabel("cache-feedback", t("ui_cache_cleared", result.cleared));
+  });
   // Only extension-owned manager documents use this preference; it survives popup/drawer closure.
   const noticeKey = "blocksb.whitelist-notice-dismissed";
   const betaNoticeKey = "blocksb.observer-beta-notice-dismissed";
@@ -215,9 +354,9 @@ localizeDocument(document);
     if (!state || currentTab !== "history" || loadedView !== "history") return;
     const rows = state.history.filter(h => stanceHistory(h) && (!account || h.account === account)), groups = historyTasks();
 
-    $("stat-blocked").textContent = String(rows.filter(h => ["blocked", "submitted"].includes(h.status)).length);
-    $("stat-pending").textContent = String(rows.filter(pending).length);
-    $("stat-review").textContent = String(rows.filter(failed).length);
+    setLabel("stat-blocked", String(rows.filter(h => ["blocked", "submitted"].includes(h.status)).length));
+    setLabel("stat-pending", String(rows.filter(pending).length));
+    setLabel("stat-review", String(rows.filter(failed).length));
     const query = $("history-search").value.trim().toLowerCase();
     const selected = groups.map(group => {
       const rootMatch = [group.root.text, group.root.handle, group.root.name, group.account].join(" ").toLowerCase().includes(query);
@@ -273,18 +412,32 @@ localizeDocument(document);
     const queued = row => ["pending", "running", "undo_pending", "undo_running"].includes(row.status);
     $("observer-quick-enable").checked = !!config.enabled;
     const dailyUsed = typeof state.observer?.dailyUsed === "number" ? state.observer.dailyUsed : 0;
-    const status = !config.enabled ? "off" : state.settings.paused ? "paused" : !state.settings.configured ? "unconfigured" : state.modelError || state.queueError || state.queueNotice ? "error" : dailyUsed >= config.dailyLimit ? "limited" : state.settings.debugDryRun ? "debug" : "active";
-    $("observer-state").textContent = t(`ui_observer_state_${status}`);
+    const status = !config.enabled ? "off" : state.settings.paused ? "paused" : !state.settings.configured ? "unconfigured" : state.modelError || state.queueError || state.queueNotice ? "error" : state.settings.debugDryRun ? "debug" : "active";
+    setLabel("observer-state", t(`ui_observer_state_${status}`));
+    const statusAction = $("observer-status-action"); statusAction.replaceChildren();
+    statusAction.hidden = !["off", "paused", "unconfigured", "error", "limited", "debug"].includes(status);
+    if (!statusAction.hidden) {
+      const connection = status === "unconfigured" || status === "error" && !!state.modelError;
+      statusAction.append(actionButton(t(connection ? "ui_check_connection" : status === "paused" ? "resume" : ["error", "debug"].includes(status) ? "ui_needs_attention" : "ui_observer_settings"), async () => {
+        if (status === "paused") { await send("TOGGLE_PAUSE"); await refresh(); }
+        else if (status === "debug") modal(t("ui_observer_state_debug"), t("ui_debug_protection_help"));
+        else if (status === "error" && !connection) modal(t("ui_needs_attention"), [state.queueError, state.queueNotice].filter(Boolean).join(" "));
+        else { tab("settings"); settingsTab(connection || status === "debug" ? "general" : "observer"); if (connection) toggleModel(true); }
+      }, "text-button"));
+      if (status === "paused") statusAction.append(el("span", "", t("ui_pause_scope")));
+    }
+    if (Number(state.nextActionAt) > Date.now()) { statusAction.hidden = false; statusAction.append(el("span", "", t("ui_observer_cooldown", date(state.nextActionAt)))); }
     $("observer-dot").className = "state-dot " + status;
-    $("observer-watching-count").textContent = rows.filter(row => !done(row) && !queued(row)).length;
-    $("observer-queued-count").textContent = rows.filter(queued).length;
-    $("observer-blocked-count").textContent = rows.filter(done).length;
+    setLabel("observer-watching-count", rows.filter(row => !done(row) && !queued(row)).length);
+    setLabel("observer-queued-count", rows.filter(queued).length);
+    setLabel("observer-blocked-count", rows.filter(done).length);
     const query = $("observer-search").value.trim().toLowerCase();
     const matching = rows.filter(row => (!query || [row.name, row.handle, row.userId].join(" ").toLowerCase().includes(query)) && (observerFilter === "all" || observerFilter === "blocked" && done(row) || observerFilter === "watching" && !done(row) && !queued(row)));
-    const visible = matching.slice(0, observerLimit), signature = JSON.stringify([globalThis.BlockSBI18n.locale, observerFilter, query, [...expandedObservers], visible]);
+    const visible = matching.slice(0, observerLimit), signature = JSON.stringify([globalThis.BlockSBI18n.locale, observerFilter, query, [...expandedObservers], config.mode, config.reviewMinReplies, config.minHits, visible]);
     $("observer-more").hidden = matching.length <= observerLimit;
     if (signature === observerListSignature) return;
     observerListSignature = signature;
+    replyPreview.hide();
     list.replaceChildren();
     for (const row of visible) {
       const key = `${row.account}:${row.userId}`, open = expandedObservers.has(key), card = el("article", "observer-card");
@@ -294,17 +447,37 @@ localizeDocument(document);
       name.append(el("strong", "", row.name || row.handle));
       if (row.blueVerified) { const badge = el("span", "verified-badge", "✓"); badge.title = t("ui_observer_blue_verified"); badge.setAttribute("aria-label", badge.title); name.append(badge); }
       name.append(el("span", "muted", `@${row.handle}`));
-      identity.append(name, el("p", "observer-summary", t("ui_observer_evidence_summary", row.hits, row.valid, row.threads)));
+      identity.append(name, el("p", "observer-summary", config.mode === "combined" ? t("ui_collection_progress", row.collected || 0, config.reviewMinReplies, row.collectedThreads || 0) : t("ui_observer_evidence_summary", row.hits, row.valid, row.threads)));
+      if (config.mode !== "combined") identity.append(el("p", "observer-progress", t("ui_hits_progress", row.hits, config.minHits)));
+      if (row.accountReview) identity.append(el("p", "observer-progress", t("ui_observer_review_result", row.accountReview.samples, Math.round(row.accountReview.score * 100), Math.round(row.accountReview.confidence * 100))));
+      if (config.mode === "combined" && row.collection && !row.accountReview && ["fetching", "insufficient", "limited", "unavailable"].includes(row.collection.status)) {
+        identity.append(el("p", "observer-progress", t(`ui_collection_${row.collection.status}`)));
+      }
+      if (Number(row.snoozedUntil) > Date.now()) identity.append(el("p", "observer-progress", t("ui_observer_snoozed", date(row.snoozedUntil))));
       const label = row.status === "observing" || !row.status || row.status === "cancelled" ? t("ui_observer_watching") : row.status === "simulated" ? t("ui_observer_simulated") : statusLabels()[row.status] || t("ui_observer_watching");
       heading.append(el("span", "avatar", (row.name || row.handle || "?").slice(0, 1).toUpperCase()), identity, el("span", `status ${done(row) ? "observer-blocked" : queued(row) ? "pending" : row.status === "failed" ? "failed" : "observing"}`, label), el("span", "observer-chevron", open ? "⌄" : "›"));
       card.append(heading);
       if (open) {
         const evidence = el("div", "observer-evidence");
+        const dimensions = row.accountReview?.dimensions;
+        if (dimensions) {
+          const facts = el("div", "observer-account-facts");
+          facts.append(el("strong", "", t("ui_account_material")), el("p", "hint", t(dimensions.profile ? "ui_account_profile_available" : "ui_account_profile_unknown")));
+          const activity = dimensions.activity;
+          if (activity) {
+            facts.append(el("p", "hint", t("ui_account_observed", activity.count, activity.distinctOriginals)));
+            facts.append(el("p", "hint", Number.isFinite(activity.medianGapSeconds) && activity.densest5Minutes
+              ? t("ui_account_rhythm", activity.medianGapSeconds, activity.densest5Minutes.count, activity.densest5Minutes.distinctOriginals)
+              : t("ui_account_rhythm_unknown")));
+          }
+          evidence.append(facts);
+        }
         for (const item of row.evidence || []) {
           const line = el("div", "evidence-row"), icon = el("span", "evidence-icon", "▢"); icon.setAttribute("aria-hidden", "true");
           const category = observerCategory(item);
-          const label = el("span", "evidence-label", category); label.title = `${Math.round((item.score || 0) * 100)}%`;
-          const excerpt = el("span", "evidence-excerpt", item.excerpt || "—"); excerpt.title = item.excerpt || "";
+          const label = el("span", "evidence-label", category); if (Number.isFinite(item.score)) label.title = `${Math.round(item.score * 100)}%`;
+          const excerpt = el("span", "evidence-excerpt", item.excerpt || "—");
+          if (item.text || item.excerpt) replyPreview.bind(excerpt, item.text || item.excerpt, item.textIncomplete ?? !item.text);
           const time = el("time", "evidence-time", date(item.observedAt));
           line.append(icon, label, excerpt, time);
           // Build links from validated numeric IDs; snapshots never supply executable URLs to the UI.
@@ -340,7 +513,7 @@ localizeDocument(document);
   }
   function renderWhitelist() {
     if (!state || currentTab !== "whitelist" || loadedView !== "whitelist") return;
-    $("white-count").textContent = String(state.whitelist.length);
+    setLabel("white-count", String(state.whitelist.length));
     const list = $("whitelist-list"); const query = $("white-search").value.toLowerCase().trim();
     const records = state.whitelist.filter(w => [w.handle, w.name, w.note].join(" ").toLowerCase().includes(query));
     $("whitelist-more").hidden = records.length <= whiteLimit;
@@ -358,19 +531,19 @@ localizeDocument(document);
     if (!records.length) empty(list, query ? t("ui_no_matching_users") : t("ui_allowlist_is_empty"));
   }
   function modal(title, copy, confirm, confirmLabel = t("ui_confirm")) {
-    $("modal-title").textContent = title; $("modal-body").replaceChildren(); $("modal-actions").replaceChildren();
+    setLabel("modal-title", title); $("modal-body").replaceChildren(); $("modal-actions").replaceChildren();
     if (typeof copy === "string") $("modal-body").append(el("p", "modal-copy", copy)); else if (copy) $("modal-body").append(copy);
     $("modal-actions").append(actionButton(t("ui_back"), () => $("modal").close(), "subtle"));
     if (confirm) $("modal-actions").append(actionButton(confirmLabel, async () => { await confirm(); $("modal").close(); }, "primary"));
     if (!$("modal").open) $("modal").showModal();
   }
   $("modal-close").onclick = () => $("modal").close();
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("modal").open && params.has("embedded")) parent.postMessage({ type: "blocksb:close" }, "*"); });
-  function undo(h) {
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !e.defaultPrevented && !document.querySelector("dialog[open]") && params.has("embedded")) parent.postMessage({ type: "blocksb:close" }, "*"); });
+  function undo(h, module) {
     const body = el("div"); body.append(el("p", "modal-copy", t("ui_use_s_x_session_to_unblock_keep_an_x_page", h.account, h.target.handle)));
     if (h.verification === "http-only") body.append(el("p", "hint", t("ui_only_http_success_was_recorded_the_prior_block_status_was")));
     const label = el("label", "modal-check"), input = el("input"); input.type = "checkbox"; label.append(input, document.createTextNode(t("ui_also_allowlist_this_user_to_skip_future_analysis"))); body.append(label);
-    modal(t("ui_unblock"), body, async () => { await send("UNDO", { id: h.id, whitelist: input.checked }); await refresh(); toast(t("ui_unblock_request_queued")); }, t("ui_unblock"));
+    modal(t("ui_unblock"), body, async () => { await send("UNDO", { id: h.id, module, whitelist: input.checked }); await refresh(); toast(t("ui_unblock_request_queued")); }, t("ui_unblock"));
   }
   function detail(h) {
     const body = el("div"); body.append(profileHead(h.target, h.waitingFollowing ? "waiting_following" : h.status));
@@ -403,7 +576,12 @@ localizeDocument(document);
     $("api-key").required = !state?.settings.configured || changedOrigin;
     $("api-key").placeholder = changedOrigin ? t("ui_enter_this_service_s_api_key") : state?.settings.configured ? t("ui_leave_blank_to_keep_the_saved_key") : t("ui_enter_api_key");
   }
-  $("key-form").oninput = () => { modelDirty = true; $("model-feedback").textContent = t("ui_unsaved_changes"); updateKeyRequirement(); };
+  $("key-form").oninput = () => { modelDirty = true; $("discard-model").hidden = false; setLabel("model-feedback", t("ui_model_memory_draft")); updateKeyRequirement(); };
+  $("discard-model").onclick = () => {
+    $("api-key").value = ""; $("api-key").type = "password";
+    modelDirty = false; modelLoaded = false; $("discard-model").hidden = true;
+    setLabel("model-feedback", ""); void refresh();
+  };
   $("edit-rules").onclick = () => run($("edit-rules"), () => send("OPEN_RULE_EDITOR"));
   $("key-form").onsubmit = e => { e.preventDefault(); run($("save-key"), async () => {
     const next = updateSettings(state.settings, { endpoint: $("api-endpoint").value, model: $("model").value });
@@ -411,53 +589,79 @@ localizeDocument(document);
     const secret = $("api-key").value;
     // Request only the chosen host, directly within this user gesture (before any await).
     const permission = chrome.permissions.request({ origins: [endpointPermission(config.endpoint)] });
-    $("save-key").textContent = t("ui_connecting");
+    setLabel("save-key", t("ui_connecting"));
     const fields = [...$("key-form").querySelectorAll("input, textarea, button")].filter(n => n.id !== "save-key");
     fields.forEach(n => { n.disabled = true; });
     try {
       if (!await permission) throw new Error(t("ui_access_to_this_api_endpoint_was_not_granted_settings_were"));
       await send("SAVE_MODEL_CONFIG", { value: secret, config });
-      $("api-key").value = ""; $("api-key").type = "password"; $("reveal-key").textContent = t("ui_show");
-      modelDirty = false; modelLoaded = false; toggleModel(false); await refresh(); $("model-feedback").textContent = t("ui_saved_and_connected");
-    } finally { fields.forEach(n => { n.disabled = false; }); $("save-key").textContent = t("ui_save_and_connect"); }
+      $("api-key").value = ""; $("api-key").type = "password"; setLabel("reveal-key", t("ui_show"));
+      modelDirty = false; modelLoaded = false; toggleModel(false); await refresh(); setLabel("model-feedback", t("ui_saved_and_connected"));
+      $("discard-model").hidden = true;
+    } finally { fields.forEach(n => { n.disabled = false; }); setLabel("save-key", t("ui_save_and_connect")); }
   }); };
-  $("reveal-key").onclick = () => { const reveal = $("api-key").type === "password"; $("api-key").type = reveal ? "text" : "password"; $("reveal-key").textContent = reveal ? t("ui_hide") : t("ui_show"); };
+  $("reveal-key").onclick = () => { const reveal = $("api-key").type === "password"; $("api-key").type = reveal ? "text" : "password"; setLabel("reveal-key", reveal ? t("ui_hide") : t("ui_show")); };
   $("remove-key").onclick = () => modal(t("ui_remove_jev_api_key"), t("ui_new_analysis_will_stop_block_history_and_the_allowlist_will"), async () => { await send("REMOVE_KEY"); await refresh(); }, t("ui_remove_key"));
-  $("settings-form").oninput = () => { settingsDirty = true; $("settings-feedback").textContent = t("ui_unsaved_changes"); };
-  $("general-form").oninput = () => { generalDirty = true; $("general-feedback").textContent = t("ui_unsaved_changes"); };
-  $("observer-form").oninput = () => { $("observer-minThreads").setCustomValidity(Number($("observer-minThreads").value) > Number($("observer-minHits").value) ? t("observer_error_threads") : ""); observerDirty = true; $("observer-feedback").textContent = t("ui_unsaved_changes"); };
+  const draftGroups = { general: ["general-form", "general-feedback"], support: ["settings-form", "settings-feedback"], observer: ["observer-form", "observer-feedback"] };
+  function markDraft(group) {
+    if (group === "general") generalDirty = true;
+    if (group === "support") settingsDirty = true;
+    if (group === "observer") {
+      observerDirty = true;
+    }
+    const [formId, feedbackId] = draftGroups[group];
+    setLabel(feedbackId, t(drafts.capture(group, $(formId)) ? "ui_draft_retained" : "ui_unsaved_changes"));
+    $("discard-" + group).hidden = false;
+    if (group === "observer") updateObserverMode();
+    schedulePreview(group);
+  }
+  for (const [group, [formId, feedbackId]] of Object.entries(draftGroups)) {
+    $(formId).addEventListener("input", event => { if (!event.target.classList.contains("percent-input")) markDraft(group); });
+    // Radio onchange applies its preset after input bubbles. Capture the resulting values too.
+    $(formId).addEventListener("change", event => { if (!event.target.classList.contains("percent-input")) markDraft(group); });
+    $("discard-" + group).onclick = () => {
+      drafts.clear(group);
+      if (group === "general") generalDirty = false;
+      if (group === "support") settingsDirty = false;
+      if (group === "observer") observerDirty = false;
+      $("discard-" + group).hidden = true; setLabel(feedbackId, "");
+      void refresh().then(() => schedulePreview(group));
+    };
+  }
   function updateMaskRange() {
     const high = Number($("high").value);
     $("maskThreshold").max = 100;
     $("maskThreshold").value = Math.min(Number($("maskThreshold").value), high - 1);
     $("maskUpper").min = 0;
     $("maskUpper").value = high;
-    $("maskThreshold-out").textContent = `${$("maskThreshold").value}%`;
+    setLabel("maskThreshold-out", `${$("maskThreshold").value}%`);
     $("maskThreshold").disabled = $("maskUpper").disabled = !$("mask-enabled").checked;
-    $("mask-range").textContent = `${$("maskThreshold").value}%–${high}%`;
+    setLabel("mask-range", `${$("maskThreshold").value}%–${high}%`);
     for (const key of ["high", "confidence"]) $(key).style.setProperty("--range-value", `${($(key).value - $(key).min) / ($(key).max - $(key).min) * 100}%`);
     const track = $("maskThreshold").parentElement; track.style.setProperty("--lower", `${$("maskThreshold").value}%`); track.style.setProperty("--upper", `${high}%`);
   }
   $("mask-enabled").onchange = updateMaskRange;
   $("maskUpper").oninput = () => {
-    $("high").value = Math.max(50, Number($("maskThreshold").value) + 1, Number($("maskUpper").value)); $("high-out").textContent = `${$("high").value}%`;
+    $("high").value = Math.max(1, Number($("maskThreshold").value) + 1, Number($("maskUpper").value)); setLabel("high-out", `${$("high").value}%`);
     document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange();
   };
   for (const key of ["high", "confidence", "maskThreshold"]) $(key).oninput = () => { $(key + "-out").textContent = `${$(key).value}%`; if (key !== "maskThreshold") document.querySelector('[name="preset"][value="custom"]').checked = true; updateMaskRange(); };
   document.querySelectorAll('[name="preset"]').forEach(input => { input.onchange = () => { const p = state.presets[input.value]; if (p) for (const key of ["high", "confidence"]) { $(key).value = Math.round(p[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; } updateMaskRange(); }; });
   $("settings-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
-    await send("SAVE_SETTINGS", { value: { preset: document.querySelector('[name="preset"]:checked').value, high: Number($("high").value) / 100, confidence: Number($("confidence").value) / 100, skipFollowing: $("skip-following").checked, maskEnabled: $("mask-enabled").checked, maskThreshold: Number($("maskThreshold").value) / 100, autoLoadDefault: $("auto-load-default").checked } });
-    settingsDirty = false; settingsLoaded = false; await refresh(); $("settings-feedback").textContent = t("ui_saved");
+    await send("SAVE_SETTINGS", { value: collectStance() });
+    drafts.clear("support"); $("discard-support").hidden = true;
+    settingsDirty = false; settingsLoaded = false; await refresh(); setLabel("settings-feedback", t("ui_saved"));
   }); };
   $("general-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
-    await send("SAVE_SETTINGS", { value: { language: $("language").value, cacheLimit: Number($("cache-limit").value), animation: true, animationEffect: document.querySelector('[name="animation-effect"]:checked').value, reducedMotion: $("reduced-motion").checked } });
-    generalDirty = false; await refresh(); $("general-feedback").textContent = t("ui_saved");
+    await send("SAVE_SETTINGS", { value: { language: $("language").value, blockHiddenText: $("block-hidden-text").checked, cacheLimit: Number($("cache-limit").value), animation: true, animationEffect: document.querySelector('[name="animation-effect"]:checked').value, reducedMotion: $("reduced-motion").checked } });
+    drafts.clear("general"); $("discard-general").hidden = true;
+    generalDirty = false; await refresh(); setLabel("general-feedback", t("ui_saved"));
   }); };
   /** Match the group-blocking sliders' percentage labels and track fill. */
   function updateObserverRanges() {
-    for (const key of ["threshold", "confidence"]) {
+    for (const key of ["threshold", "confidence", "reviewThreshold", "reviewConfidence"]) {
       const input = $("observer-" + key);
-      $("observer-" + key + "-out").textContent = `${input.value}%`;
+      setLabel("observer-" + key + "-out", `${input.value}%`);
       input.style.setProperty("--range-value", `${(input.value - input.min) / (input.max - input.min) * 100}%`);
     }
   }
@@ -471,22 +675,138 @@ localizeDocument(document);
     updateObserverRanges();
   }; });
   /** Save this settings form's policy fields without overwriting the independent rule editor. */
+  function updateObserverMode() {
+    const combined = document.querySelector('[name="observer-mode"]:checked').value === "combined";
+    for (const section of document.querySelectorAll(".observer-cumulative,.observer-combined")) {
+      section.hidden = section.classList.contains("observer-combined") !== combined;
+      for (const control of section.querySelectorAll("input,select")) control.disabled = section.hidden;
+    }
+    // These controls affect individual replies only; retain their values when switching modes.
+    const customHits = !combined && document.querySelector('[name="observer-hit-policy"]:checked').value === "custom";
+    $("observer-custom-hits").hidden = !customHits;
+    $("observer-minHits").disabled = !customHits;
+    for (const key of ["showMarkers", "mask"]) {
+      const control = $("observer-" + key);
+      control.disabled = combined;
+      control.closest("label").hidden = combined;
+    }
+  }
+  document.querySelectorAll('[name="observer-mode"]').forEach(input => input.addEventListener("change", updateObserverMode));
+  document.querySelectorAll('[name="observer-hit-policy"]').forEach(input => input.addEventListener("change", updateObserverMode));
+  for (const key of ["reviewThreshold", "reviewConfidence"]) $("observer-" + key).oninput = updateObserverRanges;
   function collectObserver() {
-    const value = { enabled: $("observer-enabled").checked, scope: document.querySelector('[name="observer-scope"]:checked').value };
-    value.preset = document.querySelector('[name="observer-preset"]:checked').value;
-    for (const key of ["threshold", "confidence"]) value[key] = Number($("observer-" + key).value) / 100;
-    for (const key of ["minHits", "minThreads", "retentionDays", "dailyLimit"]) value[key] = Number($("observer-" + key).value);
-    value.hitRate = Number($("observer-hitRate").value) / 100;
+    const value = { enabled: $("observer-enabled").checked, mode: document.querySelector('[name="observer-mode"]:checked').value, scope: document.querySelector('[name="observer-scope"]:checked').value };
+    if (value.mode === "cumulative") {
+      value.preset = document.querySelector('[name="observer-preset"]:checked').value;
+      for (const key of ["threshold", "confidence"]) value[key] = Number($("observer-" + key).value) / 100;
+      const hits = document.querySelector('[name="observer-hit-policy"]:checked').value;
+      value.minHits = Number(hits === "custom" ? $("observer-minHits").value : hits);
+    } else {
+      for (const key of ["reviewThreshold", "reviewConfidence"]) value[key] = Number($("observer-" + key).value) / 100;
+      for (const key of ["reviewMinReplies"]) value[key] = Number($("observer-" + key).value);
+    }
     for (const key of ["skipFollowing", "showMarkers", "mask"]) value[key] = $("observer-" + key).checked;
-    normalizeObserverSettings(value, state.settings.observer);
-    // The independent rule editor owns input, prompt and output options, never these thresholds.
-    return value;
+    normalizeObserverSettings(value, state.settings.observer); return value;
   }
   $("observer-form").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => {
     await send("SAVE_SETTINGS", { value: { observer: collectObserver() } });
-    observerDirty = false; await refresh(); $("observer-feedback").textContent = t("ui_saved");
+    drafts.clear("observer"); $("discard-observer").hidden = true;
+    observerDirty = false; await refresh(); setLabel("observer-feedback", t("ui_saved"));
   }); };
-  $("observer-advanced").onclick = () => run($("observer-advanced"), () => send("OPEN_RULE_EDITOR", { module: "observer" }));
+  /** Collect only stance policy fields; previews cannot save configuration or start analysis. */
+  function collectStance() {
+    return { preset: document.querySelector('[name="preset"]:checked').value, high: Number($("high").value) / 100, confidence: Number($("confidence").value) / 100, skipFollowing: $("skip-following").checked, maskEnabled: $("mask-enabled").checked, maskThreshold: Number($("maskThreshold").value) / 100, autoLoadDefault: $("auto-load-default").checked };
+  }
+  const previewTimers = {}, previewVersions = {};
+  function schedulePreview(group) {
+    if (group !== "support") return;
+    clearTimeout(previewTimers[group]);
+    const version = previewVersions[group] = (previewVersions[group] || 0) + 1;
+    if (!$(group + "-effect").open) return;
+    setLabel(group + "-effect-result", t("ui_effect_loading"));
+    previewTimers[group] = setTimeout(async () => {
+      try {
+        const form = $(draftGroups[group][0]);
+        if (!form.checkValidity()) { setLabel(group + "-effect-result", t("ui_effect_invalid")); return; }
+        const result = await send("SETTINGS_EFFECT_PREVIEW", { module: group === "support" ? "stance" : "observer", value: group === "support" ? collectStance() : collectObserver() });
+        if (previewVersions[group] !== version) return;
+        setLabel(group + "-effect-result", result.available
+          ? t(group === "observer" ? "ui_effect_observer_counts" : "ui_effect_counts", result.total, result.matched, result.blocked, result.masked, result.changed)
+          : t(result.reason === "stale-draft" ? "ui_effect_stale" : "ui_effect_unavailable"));
+      } catch (error) { if (previewVersions[group] === version) setLabel(group + "-effect-result", error.message); }
+    }, 250);
+  }
+  for (const group of ["support"]) $(group + "-effect").ontoggle = () => schedulePreview(group);
+  // Percentage entry is staged separately: Enter commits, Escape restores, blur cancels.
+  for (const id of ["high", "confidence", "observer-threshold", "observer-confidence", "observer-reviewThreshold", "observer-reviewConfidence"]) {
+    const output = $(id + "-out"), input = document.createElement("input");
+    input.type = "number"; input.min = "1"; input.max = "100"; input.step = "1"; input.className = "percent-input"; input.hidden = true;
+    input.setAttribute("aria-label", t("ui_percent_input")); output.after(input);
+    output.tabIndex = 0; output.setAttribute("role", "button"); output.title = t("ui_percent_edit");
+    const close = () => { input.value = $(id).value; input.hidden = true; output.hidden = false; };
+    const open = () => { input.value = $(id).value; input.setCustomValidity(""); output.hidden = true; input.hidden = false; input.focus(); input.select(); };
+    output.onclick = open;
+    output.onkeydown = event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); open(); } };
+    input.onkeydown = event => {
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); output.focus(); }
+      if (event.key === "Enter") {
+        event.preventDefault(); event.stopPropagation();
+        if (!input.value || !input.checkValidity()) { input.reportValidity(); return; }
+        $(id).value = input.value; close(); $(id).dispatchEvent(new Event("input", { bubbles: true })); output.focus();
+      }
+    };
+    input.onblur = close;
+  }
+  $("observer-advanced").onclick = () => run($("observer-advanced"), () => send("OPEN_RULE_EDITOR", { module: "observer", mode: document.querySelector('[name="observer-mode"]:checked').value }));
+  let normalAccounts = [], normalLimit = 50, normalLoaded = false, normalFlight = null, normalReturnScroll = 0;
+  function renderNormalAccounts() {
+    const query = $("normal-search").value.trim().replace(/^@/, "").toLowerCase();
+    const rows = normalAccounts.filter(r => `${r.handle} ${r.name}`.toLowerCase().includes(query));
+    $("normal-count").hidden = !normalLoaded;
+    setLabel("normal-count", t("ui_normal_count", normalAccounts.length));
+    setLabel("normal-status", t("ui_normal_count", normalAccounts.length));
+    $("normal-list").replaceChildren();
+    for (const row of rows.slice(0, normalLimit)) {
+      const line = el("div", "compact-row"), identity = el("div");
+      identity.append(el("strong", "", row.name || `@${row.handle}`), el("p", "muted", `@${row.handle}`), el("p", "hint", t("ui_observer_actor", row.account)));
+      line.classList.add("normal-account-row");
+      line.append(el("span", "avatar", (row.name || row.handle || "?").slice(0, 1)), identity, actionButton(t("ui_normal_remove"), async () => {
+        await send("OBSERVER_NORMAL_REMOVE", { account: row.account, userId: row.userId });
+        normalAccounts = normalAccounts.filter(r => r.account !== row.account || r.userId !== row.userId); renderNormalAccounts();
+      }));
+      $("normal-list").append(line);
+    }
+    if (!rows.length) $("normal-list").append(el("p", "hint", t(query && normalAccounts.length ? "ui_observer_no_matches" : "ui_normal_empty")));
+    $("normal-more").hidden = rows.length <= normalLimit;
+  }
+  /** Lazy, shared load: entering the secondary view never starts analysis or saves drafts. */
+  function loadNormalAccounts() {
+    if (normalFlight) return normalFlight;
+    $("normal-list").setAttribute("aria-busy", "true");
+    $("normal-search").disabled = true; $("normal-more").hidden = true;
+    $("normal-retry").hidden = true; $("normal-list").replaceChildren();
+    setLabel("normal-status", t("ui_loading"));
+    normalFlight = send("OBSERVER_NORMAL_LIST").then(rows => {
+      normalAccounts = rows; normalLoaded = true; normalLimit = 50; renderNormalAccounts();
+    }).catch(error => {
+      setLabel("normal-status", error.message); $("normal-retry").hidden = false;
+    }).finally(() => {
+      normalFlight = null; $("normal-search").disabled = false;
+      $("normal-list").setAttribute("aria-busy", "false");
+    });
+    return normalFlight;
+  }
+  $("normal-accounts").onclick = () => {
+    normalReturnScroll = window.scrollY;
+    tab("normal-accounts"); window.scrollTo(0, 0); $("normal-title").focus({ preventScroll: true });
+  };
+  $("normal-back").onclick = () => {
+    tab("settings"); settingsTab("observer");
+    requestAnimationFrame(() => { window.scrollTo(0, normalReturnScroll); $("normal-accounts").focus({ preventScroll: true }); });
+  };
+  $("normal-retry").onclick = () => { void loadNormalAccounts(); };
+  $("normal-search").addEventListener("input", e => { e.stopPropagation(); normalLimit = 50; renderNormalAccounts(); });
+  $("normal-more").onclick = () => { normalLimit += 50; renderNormalAccounts(); };
   $("export").onclick = () => run($("export"), async () => { const data = await send("EXPORT"); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const link = el("a"); link.href = url; link.download = `block-sb-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 2000); });
   $("clear-finished").onclick = () => modal(t("ui_clear_canceled_records"), t("ui_only_unblocked_or_canceled_local_records_will_be_deleted_active"), async () => { await send("CLEAR_FINISHED"); await refresh(); }, t("ui_clear_records"));
 
@@ -499,37 +819,45 @@ localizeDocument(document);
       const boot = globalThis.blockSBInitialSnapshot;
       delete globalThis.blockSBInitialSnapshot;
       const initial = boot ? await boot : null;
-      state = initial?.ok ? initial.data : await send("SNAPSHOT", { view: requestedView });
+      state = initial?.ok ? initial.data : await send("SNAPSHOT", { view: ["normal-accounts", "model"].includes(requestedView) ? "settings" : requestedView });
       loadedView = initial?.ok ? "settings" : requestedView;
       if (loadedView !== currentTab) reloadAgain = true;
       await globalThis.BlockSBI18n.setLanguage(state.settings.language || "auto");
+      $("observer-modes-help").href = `modes.html?language=${encodeURIComponent(state.settings.language || "auto")}`;
       if (localizedLocale !== globalThis.BlockSBI18n.locale) {
         localizeDocument(document); localizedLocale = globalThis.BlockSBI18n.locale;
+        if (normalLoaded && !normalFlight) renderNormalAccounts();
       }
-      $("white-count").textContent = String(state.whitelist.length);
-      $("name-rules-summary").textContent = t("ui_name_rules_count", (state.settings.filterRules || []).filter(r => r.enabled).length);
+      document.body.dataset.reduceMotion = String(state.settings.reducedMotion !== false);
+      $("custom-filters-enabled").checked = state.settings.customFiltersEnabled !== false;
+      $("custom-filters-enabled").title = t("ui_custom_filters_toggle_help");
+      if (currentTab === "name-rules") updateSubscriptions(state.filterSubscriptions || []);
+      setLabel("white-count", String(state.whitelist.length));
+      setLabel("name-rules-summary", t("ui_name_rules_count", (state.settings.filterRules || []).filter(r => r.enabled).length));
       // Draft values survive locale changes; their status text should follow the new locale.
       for (const [id, dirty] of [["settings-feedback", settingsDirty], ["general-feedback", generalDirty], ["observer-feedback", observerDirty], ["model-feedback", modelDirty]]) {
-        if (dirty) $(id).textContent = t("ui_unsaved_changes");
+        if (dirty) $(id).textContent = t(id === "model-feedback" ? "ui_model_memory_draft" : "ui_draft_retained");
       }
-      $("reveal-key").textContent = $("api-key").type === "password" ? t("ui_show") : t("ui_hide");
+      setLabel("reveal-key", $("api-key").type === "password" ? t("ui_show") : t("ui_hide"));
       if (previousRevision !== state.settings.analysisRevision) modelLoaded = false;
-      $("global-pause").textContent = state.settings.paused ? t("resume") : t("pause");
-      $("onboarding").hidden = state.settings.configured || ["settings", "name-rules"].includes(currentTab);
+      setLabel("global-pause", state.settings.paused ? t("resume") : t("pause"));
+      $("global-pause").title = t("ui_pause_scope");
+      $("service-settings").hidden = !state.modelError;
+      $("onboarding").hidden = state.settings.configured || ["settings", "name-rules", "normal-accounts", "model"].includes(currentTab);
       $("service-error").hidden = !(state.queueError || state.queueNotice || state.modelError);
-      $("service-error-text").textContent = [state.modelError, state.queueError, state.queueNotice].filter(Boolean).map(value => String(value)).join(" ");
-      $("key-status").textContent = state.settings.configured ? t("ui_observer_connected") : t("ui_not_connected");
+      setLabel("service-error-text", [state.modelError, state.queueError, state.queueNotice].filter(Boolean).map(value => String(value)).join(" "));
+      setLabel("key-status", state.settings.configured ? t("ui_observer_connected") : t("ui_not_connected"));
       $("key-status").className = `status ${state.settings.configured ? "connected" : ""}`;
       $("remove-key").hidden = !state.settings.configured;
-      $("key-mask").textContent = state.settings.configured ? "••••••••••••••••" : "—";
+      setLabel("key-mask", state.settings.configured ? "••••••••••••••••" : "—");
       if (!modelLoaded && !modelDirty) {
         $("api-endpoint").value = state.settings.endpoint || DEFAULT_ENDPOINT;
         $("model").value = state.settings.model;
         modelLoaded = true;
       }
       const rule = getAnalysisRule(state.settings), probabilityLabel = customRuleEnabled(state.settings) ? t("match_probability") : t("support_probability");
-      $("rule-summary").textContent = t("ui_options_blocking_options", rule.options.length, rule.options.filter(o => o.block).length);
-      document.querySelectorAll(".probability-label").forEach(n => { n.textContent = probabilityLabel; });
+      setLabel("rule-summary", t("ui_options_blocking_options", rule.options.length, rule.options.filter(o => o.block).length));
+      document.querySelectorAll(".probability-label").forEach(n => setNodeText(n, probabilityLabel));
       updateMaskRange();
       updateKeyRequirement();
       if (currentTab === "history") {
@@ -538,32 +866,59 @@ localizeDocument(document);
       }
       if (!settingsDirty) {
         $("maskThreshold").max = 100;
-        for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); $(key + "-out").textContent = `${$(key).value}%`; }
+        for (const key of ["high", "confidence", "maskThreshold"]) { $(key).value = Math.round(state.settings[key] * 100); setLabel(key + "-out", `${$(key).value}%`); }
         $("skip-following").checked = state.settings.skipFollowing; $("mask-enabled").checked = state.settings.maskEnabled; $("auto-load-default").checked = !!state.settings.autoLoadDefault; updateMaskRange();
         document.querySelector(`[name="preset"][value="${state.settings.preset}"]`).checked = true;
         settingsLoaded = true;
       }
       if (!generalDirty) {
         $("language").value = state.settings.language || "auto"; $("cache-limit").value = state.settings.cacheLimit; $("reduced-motion").checked = state.settings.reducedMotion;
+        $("block-hidden-text").checked = !!state.settings.blockHiddenText;
         document.querySelector(`[name="animation-effect"][value="${state.settings.animationEffect === "particles" ? "particles" : "fly"}"]`).checked = true;
       }
-      $("observer-minThreads").setCustomValidity(Number($("observer-minThreads").value) > Number($("observer-minHits").value) ? t("observer_error_threads") : "");
-      $("cache-summary").textContent = t("ui_cache_summary", state.settings.cacheLimit, 30);
+      setLabel("cache-summary", t("ui_cache_summary", state.settings.cacheLimit, 30));
       if (!observerDirty) {
         const config = state.settings.observer;
+        document.querySelector(`[name="observer-mode"][value="${config.mode === "combined" ? "combined" : "cumulative"}"]`).checked = true;
+        for (const key of ["reviewMinReplies"]) $("observer-" + key).value = config[key] ?? 3;
+        for (const key of ["reviewThreshold", "reviewConfidence"]) $("observer-" + key).value = Math.round((config[key] ?? ({reviewThreshold:.9,reviewConfidence:.8}[key])) * 100);
         document.querySelector(`[name="observer-preset"][value="${config.preset}"]`).checked = true;
         for (const key of ["threshold", "confidence"]) $("observer-" + key).value = Math.round(config[key] * 100);
         updateObserverRanges();
         $("observer-enabled").checked = !!config.enabled;
         document.querySelector(`[name="observer-scope"][value="${config.scope === "all" ? "all" : "blue"}"]`).checked = true;
-        for (const key of ["minHits", "minThreads", "retentionDays", "dailyLimit"]) $("observer-" + key).value = config[key];
-        $("observer-hitRate").value = Math.round(config.hitRate * 100);
+        $("observer-minHits").value = config.minHits;
+        document.querySelector(`[name="observer-hit-policy"][value="${[1, 2].includes(config.minHits) ? config.minHits : "custom"}"]`).checked = true;
         for (const key of ["skipFollowing", "showMarkers", "mask"]) $("observer-" + key).checked = !!config[key];
       }
+      if (!draftsRestored) {
+        draftsRestored = true;
+        for (const [group, [formId]] of Object.entries(draftGroups)) if (drafts.restore(group, $(formId))) markDraft(group);
+        updateMaskRange(); updateObserverRanges();
+        for (const id of ["high", "confidence"]) setLabel(id + "-out", `${$(id).value}%`);
+      }
+      updateObserverMode();
       renderHistory(); renderWhitelist(); renderObservers(); renderNameRules();
+      if (currentTab === "dashboard") renderDashboard(state);
+      if (state.settings.needsOnboarding && !onboardingOpened) { onboardingOpened = true; guide.open(); }
+      setLabel("global-state-label", t(state.settings.paused ? "ui_paused" : state.modelError || state.queueError ? "ui_needs_attention" : "dash_running"));
+      $("global-state").dataset.paused = String(state.settings.paused);
+      setLabel("observer-mode-label", t(state.settings.observer.mode === "combined" ? "ui_mode_combined" : "ui_mode_cumulative"));
+      if (!seedLoaded && params.has("seed") && loadedView === "name-rules") {
+        seedLoaded = true;
+        const seed = await send("FILTER_SEED_GET", { token: params.get("seed") });
+        await updateFilterEditor.seed(seed);
+        params.delete("seed");
+        const cleanUrl = new URL(location.href); cleanUrl.searchParams.delete("seed"); history.replaceState(null, "", cleanUrl);
+      }
+      for (const group of ["support"]) if ($(group + "-effect").open) schedulePreview(group);
     } catch (e) { toast(e.message); }
     finally { loading = false; if (reloadAgain) { reloadAgain = false; clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 0); } }
   }
   chrome.runtime.onMessage.addListener(m => { if (m?.type === "STATE_CHANGED") { clearTimeout(refreshTimer); refreshTimer = setTimeout(refresh, 150); } });
-  tab(currentTab); settingsTab(["general", "observer", "support"].includes(params.get("section")) ? params.get("section") : "general"); void refresh();
+  const renderDashboard = mountDashboard({ send, refresh, navigate: tab, showRecord: detail, toast, undoRecord: async (h, module) => {
+    if (["pending", "running"].includes(h.status)) { await send(module === "stance" ? "CANCEL_JOB" : "UNDO", { id: h.id, module }); await refresh(); }
+    else undo(h, module);
+  } });
+  tab(currentTab); settingsTab(["general", "observer", "support"].includes(params.get("section")) ? params.get("section") : ["general", "observer", "support"].includes(remembered?.section) ? remembered.section : "general"); void refresh();
 })();

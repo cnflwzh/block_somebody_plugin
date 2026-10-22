@@ -3,13 +3,17 @@ const { t, localizeDocument } = globalThis.BlockSBI18n;
 await globalThis.BlockSBI18n.ready;
 import { RULE_VARIABLES, getAnalysisRule, normalizeRule, buildRequest } from "../lib/core.js";
 import { OBSERVER_VARIABLES, getObserverRule, normalizeObserverRule, buildObserverRequest } from "../lib/observer-core.js";
+import { getReviewRule, normalizeReviewRule, REVIEW_VARIABLES } from "../lib/observer-review-rule.js";
+import { buildAccountReviewRequest, reviewContext } from "../lib/observer-review.js";
 localizeDocument(document);
 
 // Both modules use one editor so visual/Raw behavior and draft protection cannot drift.
 const observer = document.body.dataset.ruleModule === "observer";
-const variables = observer ? OBSERVER_VARIABLES : RULE_VARIABLES;
-const normalize = observer ? normalizeObserverRule : normalizeRule;
-const defaultRule = observer ? getObserverRule : getAnalysisRule;
+const combined = observer && new URLSearchParams(location.search).get("mode") === "combined";
+const variables = combined ? REVIEW_VARIABLES : observer ? OBSERVER_VARIABLES : RULE_VARIABLES;
+const normalize = combined ? normalizeReviewRule : observer ? normalizeObserverRule : normalizeRule;
+const defaultRule = combined ? getReviewRule : observer ? getObserverRule : getAnalysisRule;
+if (observer) { const heading = document.querySelector("h1"); heading.dataset.i18n = combined ? "ui_review_prompt_editor" : "ui_cumulative_prompt_editor"; heading.textContent = t(heading.dataset.i18n); document.title = heading.textContent; }
 
 // This extension-owned editor saves a typed rule, never executable code or login credentials.
 const $ = id => document.getElementById(id);
@@ -22,7 +26,7 @@ const element = (tag, className, text) => {
   if (text !== undefined) node.textContent = text; return node;
 };
 async function send(type, payload = {}) {
-  const result = await chrome.runtime.sendMessage({ type, ...(observer ? { module: "observer" } : {}), ...payload });
+  const result = await chrome.runtime.sendMessage({ type, ...(observer ? { module: "observer", mode: combined ? "combined" : "cumulative" } : {}), ...payload });
   if (!result?.ok) throw new Error(result?.error || t("ui_cannot_connect_to_the_extension_reload_the_extension_and_this"));
   return result.data;
 }
@@ -59,7 +63,7 @@ function renderOptions() {
     name.oninput = () => { option.name = name.value; markDirty(); };
     const check = element("label", "check"), enabled = element("input"); enabled.type = "checkbox"; enabled.checked = option.block;
     enabled.onchange = () => { option.block = enabled.checked; markDirty(); };
-    check.append(enabled, document.createTextNode(t(observer ? "ui_observer_count_evidence" : "ui_block_on_match"))); heading.append(name, check);
+    check.append(enabled, document.createTextNode(t(observer && !combined ? "ui_observer_count_evidence" : "ui_block_on_match"))); heading.append(name, check);
     const description = element("textarea", "option-description"); description.value = option.description; description.rows = 2; description.maxLength = 4000;
     description.placeholder = t("ui_criteria_which_replies_belong_in_this_category"); description.setAttribute("aria-label", t("ui_option_criteria", index + 1));
     description.oninput = () => { option.description = description.value; markDirty(); };
@@ -122,7 +126,7 @@ function renderPreview() {
   const parentText = $("sample-parent").value;
   const parent = parentText.trim() ? { id: "100002", text: parentText, parentId: root.id } : null;
   const reply = { id: "100001", text: $("sample-reply").value, parentId: parent?.id || root.id };
-  const request = observer ? buildObserverRequest(root, reply, parent ? [parent] : [], model, { analysisRule: previewRule }) : buildRequest(root, reply, parent, model, "", previewRule);
+  const request = combined ? buildAccountReviewRequest([{rootId:root.id,reviewContext:reviewContext(root,reply,parent?[parent]:[])}], model, {reviewRule:previewRule}) : observer ? buildObserverRequest(root, reply, parent ? [parent] : [], model, { analysisRule: previewRule }) : buildRequest(root, reply, parent, model, "", previewRule);
   $("request-output").textContent = JSON.stringify(request, null, 2);
 }
 $("preview-request").onclick = () => {
@@ -155,7 +159,7 @@ async function load() {
     const previousLocale = globalThis.BlockSBI18n.locale;
     await globalThis.BlockSBI18n.setLanguage(latest.language || "auto");
     localizeDocument(document);
-    if (observer) document.title = `block s.b. · ${t("ui_observer_settings")}`;
+    if (observer) document.title = `block s.b. · ${t(combined ? "ui_review_prompt_editor" : "ui_cumulative_prompt_editor")}`;
     document.querySelectorAll("[data-variable-name]").forEach(button => { button.title = t("ui_insert", button.dataset.variableName); button.setAttribute("aria-label", button.title); });
     if (previousLocale !== globalThis.BlockSBI18n.locale && draft) {
       // Rebuild labels without resetting the current input or Raw draft.

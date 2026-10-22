@@ -144,7 +144,7 @@
     "message": "Allowlisted; not sent to Jev"
   },
   "ui_allowlisted_users_are_not_analyzed_or_auto_blocked_existing_blocks": {
-    "message": "Allowlisted users are not analyzed or auto-blocked. Existing blocks must be undone manually."
+    "message": "Allowlisted accounts are skipped. Undo existing blocks separately."
   },
   "ui_already_blocked": {
     "message": "Already blocked"
@@ -370,8 +370,8 @@
       }
     }
   },
-  "ui_block_threshold_cannot_be_below_0_5": {
-    "message": "Block threshold cannot be below 0.5."
+  "ui_probability_threshold_range": {
+    "message": "Probability and model confidence thresholds must be between 1% and 100%."
   },
   "ui_block_threshold_confidence_must_be": {
     "message": "Block threshold $v0$ · Confidence must be ≥ $v1$",
@@ -2111,7 +2111,7 @@
     "message": "Select one or more. Blocking requires cumulative evidence."
   },
   "ui_observer_beta_notice": {
-    "message": "False positives and missed detections are still possible."
+    "message": "Beta: false positives and missed detections are possible."
   },
   "ui_observer_beta_contribute": {
     "message": "Improve prompts via PR"
@@ -2290,5 +2290,832 @@
   },
   "ui_filter_preview_error": {
     "message": "Expression invalid or timed out."
+  },
+  "ui_quick_undo": {
+    "message": "Undo"
+  },
+  "ui_quick_undo_count": {
+    "message": "$v0$ accounts queued",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_done": {
+    "message": "Actions withdrawn for $v0$ accounts",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_partial": {
+    "message": "Actions withdrawn for $v0$ accounts; check history for the rest",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_quick_undo_expired": {
+    "message": "Quick undo expired. Open block history to undo."
+  },
+  "ui_quick_undo_dismiss": {
+    "message": "Dismiss undo notice"
+  },
+  "ui_quick_undo_preview_count": {
+    "message": "Previewed $v0$ replies",
+    "placeholders": {
+      "v0": {
+        "content": "$1"
+      }
+    }
+  },
+  "ui_draft_retained": {
+    "message": "Unsaved draft"
+  },
+  "ui_discard_draft": {
+    "message": "Discard draft"
+  },
+  "ui_model_memory_draft": {
+    "message": "Unsaved"
+  },
+  "ui_check_connection": {
+    "message": "Check model connection"
+  },
+  "ui_preview_animation": {
+    "message": "Preview animation"
+  },
+  "ui_replay_guide": {
+    "message": "Setup wizard"
+  },
+  "ui_percent_input": {
+    "message": "Percentage (1–100): Enter to confirm, Esc to cancel"
+  },
+  "ui_percent_edit": {
+    "message": "Click to enter a percentage"
+  },
+  "ui_see_effect": {
+    "message": "Estimate impact"
+  },
+  "ui_effect_hint": {
+    "message": "Estimates use only valid local results for the current model and prompt. No model requests or blocks are performed."
+  },
+  "ui_effect_loading": {
+    "message": "Calculating from local results…"
+  },
+  "ui_effect_invalid": {
+    "message": "Correct the invalid values in settings first."
+  },
+  "ui_effect_unavailable": {
+    "message": "No usable results yet"
+  },
+  "ui_effect_stale": {
+    "message": "Rules have changed. Discard the old draft before editing again."
+  },
+  "ui_effect_counts": {
+    "message": "$1 replies: $2 matches, $3 meet block conditions, $4 meet mask conditions; $5 would be handled differently."
+  },
+  "ui_effect_observer_counts": {
+    "message": "$1 replies: $2 suspicious, $3 accounts meet cumulative block conditions, $4 replies meet mask conditions; $5 accounts would be handled differently."
+  },
+  "ui_observer_progress": {
+    "message": "Matches $1/$2 · Original posts $3/$4 · Match rate $5% (required $6%)"
+  },
+  "ui_pause_scope": {
+    "message": "Pausing stops new analyses and block submissions. Undo remains available, and requests already sent may still complete."
+  },
+  "ui_observer_cooldown": {
+    "message": "Next submission available: $1"
+  },
+  "ui_observer_snoozed": {
+    "message": "Analysis deferred until $1"
+  },
+  "ui_debug_protection_help": {
+    "message": "The background “Prevent blocking” safeguard is on. Check blockSBDebug on the X page; model analysis may still incur charges."
+  },
+  "guide_skip": {
+    "message": "Skip"
+  },
+  "guide_previous": {
+    "message": "Back"
+  },
+  "guide_next": {
+    "message": "Next"
+  },
+  "guide_replay": {
+    "message": "Replay this step"
+  },
+  "ui_reply_actions": {
+    "message": "More actions"
+  },
+  "ui_reply_keep_one": {
+    "message": "Keep this reply"
+  },
+  "ui_reply_keep_user": {
+    "message": "Stop handling this user in this reply section"
+  },
+  "ui_reply_resume": {
+    "message": "Resume automatic handling"
+  },
+  "ui_reply_retained": {
+    "message": "Kept in this reply section"
+  },
+  "ui_reply_resumed": {
+    "message": "Automatic handling resumed in this reply section"
+  },
+  "ui_filter_from_name": {
+    "message": "Create a rule from this display name"
+  },
+  "ui_filter_from_text": {
+    "message": "Create a rule from this reply"
+  },
+  "ui_filter_from_selection": {
+    "message": "Create a rule from selected text"
+  },
+  "ui_filter_seed_empty": {
+    "message": "No text is available to create a rule."
+  },
+  "ui_filter_draft_conflict": {
+    "message": "Draft restored, but rules have changed on another page. Discard the draft before editing again."
+  },
+  "setup_connect": {
+    "message": "Connect model"
+  },
+  "setup_features": {
+    "message": "Choose features"
+  },
+  "setup_confirm": {
+    "message": "Confirm settings"
+  },
+  "setup_finish": {
+    "message": "Save and start"
+  },
+  "setup_connect_next": {
+    "message": "Connect and continue"
+  },
+  "setup_endpoint_model": {
+    "message": "Endpoint and model"
+  },
+  "setup_auto_observe": {
+    "message": "Detect AI accounts automatically"
+  },
+  "setup_manual_stance": {
+    "message": "Open the original post’s ··· menu and choose the option to block its author and supporters. Replies under that post are analyzed using your selected policy."
+  },
+  "setup_on": {
+    "message": "On"
+  },
+  "setup_off": {
+    "message": "Off"
+  },
+  "setup_start": {
+    "message": "Quick setup"
+  },
+  "setup_demo": {
+    "message": "Demo"
+  },
+  "setup_sample_reply": {
+    "message": "Reply"
+  },
+  "setup_model_analysis": {
+    "message": "Analyzing"
+  },
+  "setup_result": {
+    "message": "Classification"
+  },
+  "setup_sample_text": {
+    "message": "A park walk is not just exercise; it gives your mind breathing room. Consider three dimensions: route, duration, and weather. Are you aiming for relaxation or fitness?"
+  },
+  "setup_demo_probability": {
+    "message": "Probability 96%"
+  },
+  "setup_demo_distribution": {
+    "message": "Option A 96%\nOption B 3%\nUncertain 1%"
+  },
+  "setup_demo_undo": {
+    "message": "Undo"
+  },
+  "setup_demo_removed": {
+    "message": "Demo reply removed"
+  },
+  "setup_demo_reveal": {
+    "message": "Reveal hidden reply"
+  },
+  "setup_demo_evidence": {
+    "message": "Suspicious records $1/3 · demo"
+  },
+  "setup_demo_start": {
+    "message": "Block author and supporters"
+  },
+  "setup_demo_menu": {
+    "message": "···"
+  },
+  "setup_demo_remove": {
+    "message": "Try removal animation"
+  },
+  "setup_auto_hint": {
+    "message": "Replies are checked as you browse. Cumulative mode analyzes each reply and counts suspicious ones. Combined mode fetches recent replies in the background when you first encounter an account, then assesses them together."
+  },
+  "setup_connect_description": {
+    "message": "Connect the model that analyzes replies. Enter your API key and select Connect and continue, or continue with your saved connection."
+  },
+  "setup_display_description": {
+    "message": "Hover over a reply to reveal its probability and actions, then hover over the probability for details. Reveal masked replies, undo a removal, or open the bottom-right trash to view records."
+  },
+  "setup_finish_description": {
+    "message": "Save these settings to finish. Automatic detection follows your switch; group blocking starts when you choose it from a post’s menu."
+  },
+  "setup_x_post": {
+    "message": "Post"
+  },
+  "setup_original_text": {
+    "message": "Planning a walk in the park this weekend. What are your plans?"
+  },
+  "setup_other_reply": {
+    "message": "I am heading out for a walk too."
+  },
+  "setup_native_block": {
+    "message": "Block @example"
+  },
+  "setup_threshold_note": {
+    "message": "Line: blocking threshold 92%"
+  },
+  "setup_stance_original": {
+    "message": "If someone follows you, you must follow them back. Not doing so is rude."
+  },
+  "setup_stance_support": {
+    "message": "Exactly. Following back is basic courtesy. I unfollow anyone who does not return the follow."
+  },
+  "setup_stance_oppose": {
+    "message": "I disagree. Following someone should mean you enjoy their posts, not that they owe you a follow."
+  },
+  "ui_observer_account_review": {
+    "message": "Review recent replies together"
+  },
+  "ui_observer_account_review_hint": {
+    "message": "Optional; uses additional model requests. Reviews up to 5 recent replies after your reply and thread counts are met, and may block the account. Counts toward the daily limit. Turning it off deletes retained review text."
+  },
+  "ui_observer_review_result": {
+    "message": "Combined result: $1 replies · $2% probability · $3% confidence"
+  },
+  "ui_setting_help": {
+    "message": "Setting help"
+  },
+  "ui_clear_cache": {
+    "message": "Clear cache"
+  },
+  "ui_cache_cleared": {
+    "message": "Cleared $1 cached results"
+  },
+  "help_scope": {
+    "message": "**Choose which accounts to observe.**\n\nBlue-only skips accounts without confirmed blue verification; verification is not AI evidence.\n\nRequires automatic observation."
+  },
+  "help_policy": {
+    "message": "**Set probability and confidence together.** Moving a slider selects Custom; the reply count stays unchanged."
+  },
+  "help_suspect": {
+    "message": "**Probability required for a suspicious reply.** Confidence must also qualify. The account is blocked after the selected number of qualifying replies."
+  },
+  "help_confidence": {
+    "message": "**Confidence in an individual classification, separate from category probability; both must pass.**\n\nCumulative detection also needs count conditions.\n\nCombined mode has its own confidence setting."
+  },
+  "help_hits": {
+    "message": "**Block an account after this many qualifying replies.** Each must meet both probability and confidence thresholds.\n\nChoose 1, 2, or a custom count of 1–100. Count distinct replies from the last 30 days; repeat sightings do not count again. Replies may belong to the same thread."
+  },
+  "help_threads": {
+    "message": "**Minimum distinct original posts containing qualifying replies.**\n\nSeveral replies in one thread count as one post.\n\nAll cumulative conditions must pass.\n\nHigher is stricter; this cannot exceed the reply count."
+  },
+  "help_rate": {
+    "message": "**Cumulative mode only: suspicious share of the latest five valid judgments.**\n\nLow-confidence and unselected uncertain results are excluded.\n\nReply and thread counts must also pass."
+  },
+  "help_retention": {
+    "message": "**How long observation evidence is kept locally.**\n\nExpired evidence no longer counts or enters reviews; existing blocks remain.\n\nSeparate from the request cache’s fixed 30-day lifetime."
+  },
+  "help_daily": {
+    "message": "**Daily model-request cap for AI detection.**\n\nCumulative counts each request; combined collection costs no requests and each batch counts once.\n\nCache hits are excluded; failed requests count.\n\nResets at midnight UTC.\n\nGroup-blocking tasks are separate."
+  },
+  "help_following": {
+    "message": "**Skip accounts you follow; wait when following status is unknown.**\n\nEach module has its own switch.\n\nThe allowlist always takes priority."
+  },
+  "help_markers": {
+    "message": "**Enable per-reply probability badges in cumulative mode. Hover for option probabilities.**\n\nCombined mode automatically shows the account AI likelihood beside the username after a review, independently of this switch."
+  },
+  "help_observer_mask": {
+    "message": "**Cumulative mode only: mask a reply after its individual thresholds pass.**\n\nDisabled in combined mode because individual judgments do not exist.\n\nQualified combined blocks still use removal animations."
+  },
+  "help_review": {
+    "message": "**Requires observation and extra model requests.**\n\nReviews up to 5 replies, at least 3 across 2 threads, respecting higher count settings; counts above 5 prevent review.\n\nUses probability, confidence and hit ratio.\n\nAt least 1 hour and 2 new replies between reviews.\n\nCounts toward the daily limit; disabling deletes review text."
+  },
+  "help_support": {
+    "message": "**Probability threshold for support or selected blocking categories in a task you start.**\n\nModel confidence must also pass.\n\nCustom output categories change the target.\n\nHigher is stricter."
+  },
+  "help_mask": {
+    "message": "**Applies only to a started group task.**\n\nMask probabilities from the lower bound up to the auto-block threshold; the upper bound follows that threshold.\n\nPreserves height and can be revealed; it does not block the account."
+  },
+  "help_auto_load": {
+    "message": "**Automatically load more replies after you start a group task.**\n\nNever starts a task itself.\n\nMore replies may increase model usage; turn it off in the task bar."
+  },
+  "help_cache": {
+    "message": "**Both modules share request caching by model, rules and context.**\n\nResults expire after 30 days; least recently used entries are evicted first.\n\nClear cache removes request results, not evidence, history or allowlist.\n\nFuture requests may cost again."
+  },
+  "help_endpoint": {
+    "message": "**Shared Jev-compatible API endpoint.**\n\nA new domain needs its own key and host permission, and must support the selected model.\n\nSaving sends a validation request."
+  },
+  "help_model": {
+    "message": "**Model shared by both modules; must match the endpoint.**\n\nChanging it separates cache and observation evidence so old model results are not mixed into new cumulative decisions."
+  },
+  "ui_observer_mode": {
+    "message": "Detection mode"
+  },
+  "ui_mode_cumulative": {
+    "message": "Cumulative"
+  },
+  "ui_mode_combined": {
+    "message": "Combined"
+  },
+  "ui_combined_conditions": {
+    "message": "Collection and decision"
+  },
+  "ui_collect_replies": {
+    "message": "Maximum replies to analyze"
+  },
+  "ui_combined_probability": {
+    "message": "Combined suspect probability"
+  },
+  "ui_combined_ratio": {
+    "message": "Required sample coverage"
+  },
+  "ui_collected_unanalysed": {
+    "message": "Review sample"
+  },
+  "ui_collection_progress": {
+    "message": "Collected $1 replies · Analyze up to $2 per review · From $3 posts"
+  },
+  "help_observer_mode": {
+    "message": "**Cumulative: assess replies individually and accumulate suspicious ones.**\n\n**Combined: fetch recent replies in the background after the first encounter, then assess together.** No profile tab or navigation. Settings remain separate."
+  },
+  "help_collect_replies": {
+    "message": "Use up to 1–10 recent replies. Skip missing context and continue looking. Analyze however many usable replies are obtained; filling the limit is not required."
+  },
+  "help_collect_threads": {
+    "message": "**Minimum distinct original posts (2–5).** Cannot exceed the reply count.\n\nOne conversation counts as one thread. At most two pages are fetched; if that is insufficient, processing waits."
+  },
+  "help_combined_probability": {
+    "message": "The model classifies all available material as a whole. The selected blocking category must meet both probability and confidence thresholds."
+  },
+  "help_combined_confidence": {
+    "message": "**Confidence in the grouped classification.**\n\nMust pass together with combined probability before blocking.\n\nStored separately from cumulative confidence."
+  },
+  "help_combined_ratio": {
+    "message": "**Minimum sample share the model must judge as showing the pattern.**\n\nWith 3 samples at 75%, all 3 are required.\n\nThis is a grouped criterion, not an average of individual scores or cumulative recent hit ratio."
+  },
+  "modes_title": {
+    "message": "How do the two modes work?"
+  },
+  "modes_intro": {
+    "message": "Cumulative observes individual replies. Combined fetches recent replies after the first encounter, without waiting for repeated encounters."
+  },
+  "modes_default": {
+    "message": "Default"
+  },
+  "modes_together": {
+    "message": "Fetch on first encounter"
+  },
+  "modes_cumulative": {
+    "message": "**Assess each reply as you encounter it.**\n\nOnly replies meeting both thresholds count. Choose 1, 2, or a custom count; reaching it queues the account for blocking."
+  },
+  "modes_combined": {
+    "message": "**Assess the account on first encounter.**\n\nFetch recent replies in the background and consider its display name, bio, recurring reply structures and posting rhythm together. Missing context remains unknown; no profile navigation is needed."
+  },
+  "modes_c1": {
+    "message": "Encounter a reply → assess it"
+  },
+  "modes_c2": {
+    "message": "Count a qualifying reply"
+  },
+  "modes_c3": {
+    "message": "Selected count reached → queue block"
+  },
+  "modes_b1": {
+    "message": "First encounter → check local material"
+  },
+  "modes_b2": {
+    "message": "Skip incomplete replies → assess available samples"
+  },
+  "modes_b3": {
+    "message": "Group probability and confidence qualify → queue block"
+  },
+  "modes_try": {
+    "message": "Try an example"
+  },
+  "modes_demo_intro": {
+    "message": "Imagine an account has replies in threads A, B and C. One click lets cumulative assess the encountered reply; combined simulates fetching the other two and assessing them together."
+  },
+  "modes_scenario": {
+    "message": "Scenario"
+  },
+  "modes_suspicious": {
+    "message": "All three look suspicious"
+  },
+  "modes_mixed": {
+    "message": "One is a normal conversation"
+  },
+  "modes_next": {
+    "message": "Encounter another reply"
+  },
+  "modes_reset": {
+    "message": "Start over"
+  },
+  "modes_demo_note": {
+    "message": "This example uses 3 suspicious replies for cumulative mode and up to 3 replies for combined mode, with 90% probability and 80% confidence thresholds. Scores are simulated; no settings or accounts are changed."
+  },
+  "modes_requests": {
+    "message": "analysis requests"
+  },
+  "modes_read_settings": {
+    "message": "Understanding the settings"
+  },
+  "modes_counts_title": {
+    "message": "What does the reply count mean?"
+  },
+  "modes_counts": {
+    "message": "**Cumulative: the count is the blocking requirement.** With 2 selected, two distinct qualifying replies suffice, even in the same thread.\n\n**Combined: the count is an analysis maximum.** A limit of 7 with 5 usable replies analyzes those 5. Skip missing context; do not analyze an empty set."
+  },
+  "modes_scores_title": {
+    "message": "Probability and confidence"
+  },
+  "modes_scores": {
+    "message": "**Probability: how closely content matches a blocking category.**\n\n**Confidence: how certain the model is about its classification.** Both must qualify before a reply counts toward the selected total."
+  },
+  "modes_marks_title": {
+    "message": "Why are individual markers unavailable in combined mode?"
+  },
+  "modes_marks": {
+    "message": "**Combined mode shows an account score, not a per-reply score.** After a review, hover over the username badge for option probabilities, confidence and sample count.\n\nEarly masking remains unavailable; qualifying blocks still play the removal animation."
+  },
+  "modes_cost_title": {
+    "message": "Which uses fewer requests?"
+  },
+  "modes_cost": {
+    "message": "**Cumulative: assess individually, then accumulate judgments.**\n\n**Combined: collect usable replies within the read budget, up to the chosen limit, then assess once.** No quota waiting or per-reply voting.\n\nCached results are reused. Accounts confidently assessed as natural are saved locally and skipped in future."
+  },
+  "modes_shared": {
+    "message": "**Enable automatic observation first.** The whitelist and enabled following protection apply; official @grok is excluded. Expired replies stop counting. Switching modes does not reuse the previous mode’s judgments.\n\nA model probability is a judgment, not proof of who wrote the reply."
+  },
+  "modes_reply": {
+    "message": "Reply $1 · Thread $2"
+  },
+  "modes_reply_score": {
+    "message": "Cumulative example: $1% probability, 90% confidence"
+  },
+  "modes_unseen": {
+    "message": "Not encountered yet"
+  },
+  "modes_hit_progress": {
+    "message": "$1/3 suspicious replies"
+  },
+  "modes_collect_progress": {
+    "message": "$1 usable replies · $2 originals"
+  },
+  "modes_queued": {
+    "message": "Requirements met → queue block"
+  },
+  "modes_wait_hits": {
+    "message": "Keep observing: not enough suspicious replies"
+  },
+  "modes_batch_no": {
+    "message": "Group: 42% probability, 90% confidence → no block"
+  },
+  "modes_batch_yes": {
+    "message": "Group: 96% probability, 90% confidence → queue block"
+  },
+  "modes_wait_collect": {
+    "message": "Background collection starts on first encounter"
+  },
+  "modes_fetched_reply": {
+    "message": "Fetched for combined; not encountered by cumulative"
+  },
+  "ui_collection_fetching": {
+    "message": "Fetching recent replies in background"
+  },
+  "ui_collection_insufficient": {
+    "message": "No usable replies obtained"
+  },
+  "ui_collection_limited": {
+    "message": "X reads rate-limited; will resume later"
+  },
+  "ui_collection_unavailable": {
+    "message": "Recent replies unavailable; will try later"
+  },
+  "ui_block_hidden_text": {
+    "message": "Block hidden-character spam"
+  },
+  "help_block_hidden_text": {
+    "message": "Automatically block accounts that insert excessive invisible characters into replies."
+  },
+  "ui_account_material": {
+    "message": "Assessment inputs"
+  },
+  "ui_account_profile_available": {
+    "message": "Display name and bio included"
+  },
+  "ui_account_profile_unknown": {
+    "message": "Display name or bio is incomplete"
+  },
+  "ui_account_observed": {
+    "message": "Timing sample: $1 replies · $2 original posts"
+  },
+  "ui_account_rhythm": {
+    "message": "Median observed gap: $1 s · Busiest 5 minutes: $2 replies across $3 originals"
+  },
+  "ui_account_rhythm_unknown": {
+    "message": "Insufficient timing samples"
+  },
+  "modes_account_dimensions": {
+    "message": "**Profile:** How the display name and bio relate to the replies, including any explicit claim of automated replies.\n\n**Reply history:** Repeated structures, personal-experience framing and stock follow-up questions across discussions.\n\n**Posting rhythm:** Intervals, density, text length and distinct originals help distinguish short follow-back messages from full cross-topic commentary.\n\nThese inform an account-level judgment. Missing data stays unknown; an AI-related name, high frequency or a claim to be human cannot decide the result alone."
+  },
+  "ui_normal_accounts": {
+    "message": "Accounts assessed as natural"
+  },
+  "ui_normal_remove": {
+    "message": "Remove from list"
+  },
+  "ui_normal_empty": {
+    "message": "No records yet"
+  },
+  "ui_normal_help": {
+    "message": "Accounts confidently assessed as natural conversation are saved locally and skipped in future combined assessments. Remove an account to allow reassessment."
+  },
+  "ui_more_judgment_options": {
+    "message": "Advanced assessment options"
+  },
+  "ui_reply_preview_incomplete": {
+    "message": "Only part of this reply is saved. Use the arrow on the right to open the original."
+  },
+  "observer_combined_marker": {
+    "message": "Account AI likelihood $1%"
+  },
+  "observer_combined_marker_note": {
+    "message": "Account review · $1 replies analyzed"
+  },
+  "ui_normal_search": {
+    "message": "Search name or @username"
+  },
+  "ui_normal_count": {
+    "message": "$1 accounts"
+  },
+  "ui_hits_one": {
+    "message": "Block after 1"
+  },
+  "ui_hits_two": {
+    "message": "2 suspicious replies"
+  },
+  "ui_hits_progress": {
+    "message": "Suspicious replies: $1 / $2"
+  },
+  "dash_title": {
+    "message": "Dashboard"
+  },
+  "dash_overview": {
+    "message": "Today"
+  },
+  "dash_analyzed": {
+    "message": "Analyzed"
+  },
+  "dash_recent": {
+    "message": "Recent activity"
+  },
+  "dash_search": {
+    "message": "Search accounts or matched rules"
+  },
+  "dash_combined_score": {
+    "message": "Combined review $1%"
+  },
+  "dash_ai_score": {
+    "message": "AI likelihood $1%"
+  },
+  "dash_support_score": {
+    "message": "Agrees with post $1%"
+  },
+  "dash_observation": {
+    "message": "Observation"
+  },
+  "dash_skipped": {
+    "message": "Skipped"
+  },
+  "dash_masked": {
+    "message": "Masked"
+  },
+  "dash_withdraw": {
+    "message": "Cancel"
+  },
+  "dash_undo": {
+    "message": "Undo"
+  },
+  "dash_empty": {
+    "message": "No activity yet"
+  },
+  "dash_count_note": {
+    "message": "Results in today’s retained records, including cache reuse; not API calls."
+  },
+  "dash_tasks": {
+    "message": "$1 active tasks"
+  },
+  "dash_no_tasks": {
+    "message": "No active task"
+  },
+  "dash_combined_watching": {
+    "message": "Combined · Watching"
+  },
+  "dash_cumulative_watching": {
+    "message": "Cumulative · Watching"
+  },
+  "dash_view_tasks": {
+    "message": "View tasks"
+  },
+  "dash_manage": {
+    "message": "Manage"
+  },
+  "dash_running": {
+    "message": "Running"
+  },
+  "dash_task_records": {
+    "message": "Task history"
+  },
+  "dash_detection_settings": {
+    "message": "Detection settings"
+  },
+  "dash_my_rules": {
+    "message": "My rules"
+  },
+  "dash_edit_rule": {
+    "message": "Edit rule"
+  },
+  "ui_custom_filters_enabled": {
+    "message": "Enable custom filters"
+  },
+  "ui_custom_filters_off": {
+    "message": "Custom filters off"
+  },
+  "ui_custom_filters_toggle_help": {
+    "message": "Turning this off stops custom rule matching and cancels unsent blocks. Individual rule settings are kept; submitted blocks are not undone. Hidden-character filtering in General settings remains independent."
+  },
+  "ui_rule_conditions": {
+    "message": "Match conditions"
+  },
+  "ui_rule_condition_number": {
+    "message": "Condition $1"
+  },
+  "ui_rules_import": {
+    "message": "Import JSON"
+  },
+  "ui_rules_export": {
+    "message": "Export JSON"
+  },
+  "ui_rules_export_one": {
+    "message": "Export this rule"
+  },
+  "ui_rules_select_all": {
+    "message": "Select all"
+  },
+  "ui_rules_import_note": {
+    "message": "Imported rules are added to your list and take effect after saving."
+  },
+  "ui_rules_import_count": {
+    "message": "Import $1 rules"
+  },
+  "ui_rules_export_count": {
+    "message": "Export $1 rules"
+  },
+  "ui_rules_import_ready": {
+    "message": "Imported $1 rules. Save settings to apply."
+  },
+  "ui_rules_file_invalid": {
+    "message": "Invalid file or rules. Check JSON, conditions and regular expressions. Import up to 50 rules at once."
+  },
+  "ui_rules_file_large": {
+    "message": "Files must total no more than 1 MB. Select up to 50 files."
+  },
+  "ui_rules_export_empty": {
+    "message": "No rules to export."
+  },
+  "ui_subscription_add": {
+    "message": "URL subscription"
+  },
+  "ui_subscription_title": {
+    "message": "Rule subscriptions"
+  },
+  "ui_subscription_daily": {
+    "message": "Update daily"
+  },
+  "ui_subscription_apply": {
+    "message": "Add subscription"
+  },
+  "ui_subscription_load": {
+    "message": "Load rules"
+  },
+  "ui_subscription_count": {
+    "message": "$1 rules"
+  },
+  "ui_subscription_notice": {
+    "message": "Subscribed rules take effect immediately. With automatic updates enabled, additions, changes and removals from the source are applied automatically. Local rules are kept."
+  },
+  "ui_subscription_url_invalid": {
+    "message": "Enter an HTTPS JSON URL without embedded credentials or a fragment."
+  },
+  "ui_subscription_permission": {
+    "message": "Access to this website was not granted."
+  },
+  "ui_subscription_checked": {
+    "message": "Checked $1"
+  },
+  "ui_subscription_update_failed": {
+    "message": "Update failed. The last valid rules were kept."
+  },
+  "ui_subscription_refresh": {
+    "message": "Update now"
+  },
+  "ui_subscription_remove": {
+    "message": "Remove subscription and rules"
+  },
+  "ui_subscription_failed": {
+    "message": "Could not read or apply the subscription. Check the URL, permission, JSON format and rule count. Duplicate URLs are not allowed; the combined limit is 50 rules."
+  },
+  "legal_title": {
+    "message": "Usage notice and license"
+  },
+  "legal_continue": {
+    "message": "Agree and continue"
+  },
+  "legal_full_license": {
+    "message": "Read the full AGPL-3.0 license"
+  },
+  "legal_load_failed": {
+    "message": "The license file could not be loaded. Please reopen it."
+  },
+  "legal_acknowledge": {
+    "message": "I have read the usage notice and understand the AGPL-3.0 license."
+  },
+  "legal_risk_title": {
+    "message": "Classification can be wrong"
+  },
+  "legal_risk": {
+    "message": "AI probabilities do not establish an account’s identity. False positives and missed detections are possible. Choose rules using your own judgment and review processing records."
+  },
+  "legal_actions_title": {
+    "message": "Blocking affects your account"
+  },
+  "legal_actions": {
+    "message": "When automatic processing is enabled, the extension may submit block requests using your signed-in X account. Requests already sent cannot always be withdrawn. You can try unblocking from the records."
+  },
+  "legal_data_title": {
+    "message": "Data and keys"
+  },
+  "legal_data": {
+    "message": "Posts, replies and account information needed for analysis are sent to your configured model API. API keys, rules and processing records are stored in your local browser. X credentials are used only for X requests and are not sent to model services."
+  },
+  "legal_cost_title": {
+    "message": "Third-party costs and availability"
+  },
+  "legal_cost": {
+    "message": "Model calls may incur charges under your provider’s pricing. Changes to X or model APIs, rate limits and network failures may temporarily prevent features from working."
+  },
+  "legal_sources_title": {
+    "message": "Subscriptions and local acknowledgment"
+  },
+  "legal_sources": {
+    "message": "Subscribe only to sources you trust. Automatic updates can change the rules applied. This acknowledgment stores only the document version and time locally. It collects no name and uploads no signature information."
+  },
+  "legal_license_title": {
+    "message": "Open-source license and warranty"
+  },
+  "legal_license": {
+    "message": "This project is licensed under AGPL-3.0-only and provided as is, without guarantees of classification accuracy or continuous availability. Running it does not require accepting the AGPL; copying, modifying and distributing are governed by its terms. This acknowledgment adds no restrictions to that license."
+  },
+  "legal_step": {
+    "message": "Notice"
+  },
+  "variable_review_account": {
+    "message": "Account profile and activity"
+  },
+  "variable_review_profile": {
+    "message": "Name and biography"
+  },
+  "variable_review_activity": {
+    "message": "Reply timing statistics"
+  },
+  "variable_review_samples": {
+    "message": "Recent replies and context"
+  },
+  "variable_review_count": {
+    "message": "Sample count"
+  },
+  "ui_review_prompt_editor": {
+    "message": "Combined assessment · Custom prompt"
+  },
+  "ui_cumulative_prompt_editor": {
+    "message": "Cumulative assessment · Custom prompt"
   }
 }

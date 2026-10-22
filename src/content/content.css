@@ -1,24 +1,68 @@
-.blocksb-menu-item{display:flex;align-items:center;width:100%;border:0;background:transparent;color:inherit;text-align:left;font:700 14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;padding:15px 16px;cursor:pointer;white-space:normal;max-width:360px}.blocksb-menu-item:hover{background:rgba(29,155,240,.09)}.blocksb-menu-item:focus-visible{outline:2px solid #1d9bf0;outline-offset:-2px}.blocksb-allow-item{font-weight:500;color:#008577}
+/* In-page controls on x.com. Colors follow X's theme via html[data-blocksb-theme]
+ * (set by content.js from the page background): light (default), dim, dark (Lights out).
+ */
+:root{--blocksb-ink:#0f1419;--blocksb-muted:#536471;--blocksb-surface:#f7f9f9;--blocksb-line:#eff3f4;--blocksb-border:#cfd9de;--blocksb-hover:rgba(15,20,25,.03);--blocksb-amber:#c27c00;--blocksb-amber-soft:rgba(255,173,31,.14);--blocksb-red:#f4212e;--blocksb-bg:#fff;--blocksb-shadow:0 0 15px rgba(101,119,134,.2),0 0 3px 1px rgba(101,119,134,.15);--blocksb-font:"TwitterChirp",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+html[data-blocksb-theme=dim]{--blocksb-ink:#f7f9f9;--blocksb-muted:#8b98a5;--blocksb-surface:#1e2732;--blocksb-line:#38444d;--blocksb-border:#536471;--blocksb-hover:rgba(247,249,249,.03);--blocksb-amber:#ffad1f;--blocksb-bg:#15202b;--blocksb-shadow:0 0 15px rgba(136,153,166,.2),0 0 3px 1px rgba(136,153,166,.15)}
+html[data-blocksb-theme=dark]{--blocksb-ink:#e7e9ea;--blocksb-muted:#71767b;--blocksb-surface:#16181c;--blocksb-line:#2f3336;--blocksb-border:#536471;--blocksb-hover:rgba(231,233,234,.03);--blocksb-amber:#ffad1f;--blocksb-bg:#000;--blocksb-shadow:0 0 15px rgba(255,255,255,.2),0 0 3px 1px rgba(255,255,255,.15)}
+
+/* Post "…" menu entries, matching X's own menu items. */
+.blocksb-menu-item{display:flex;align-items:center;gap:12px;width:100%;max-width:360px;min-height:44px;margin:0;border:0;padding:12px 16px;background:transparent;color:var(--blocksb-ink);text-align:left;font:700 15px/20px var(--blocksb-font);white-space:normal;cursor:pointer;transition:background-color .2s}
+.blocksb-menu-item:hover{background:var(--blocksb-hover)}
+.blocksb-menu-item:focus-visible{outline:2px solid #1d9bf0;outline-offset:-2px}
+.blocksb-menu-item::before{content:"";flex:0 0 auto;width:18px;height:18px;border:2px solid currentColor;border-radius:50%;box-sizing:border-box;background:linear-gradient(45deg,transparent calc(50% - 1px),currentColor calc(50% - 1px),currentColor calc(50% + 1px),transparent calc(50% + 1px))}
+.blocksb-allow-item::before{border-radius:4px 4px 9px 9px;background:linear-gradient(currentColor,currentColor) center 45%/2px 6px no-repeat,linear-gradient(currentColor,currentColor) center 45%/6px 2px no-repeat}
+
 /* Keep the date, probability and action on one line without changing the comment body. */
-.blocksb-comment-tools{display:inline-flex!important;flex:0 0 auto;align-items:center;gap:8px;margin-inline-start:8px;white-space:nowrap;vertical-align:baseline;font:12px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
-.blocksb-probability{display:inline-block;appearance:none;border:0;padding:0;background:transparent;text-align:left;color:#536471;font:inherit;line-height:inherit;font-variant-numeric:tabular-nums;min-width:87px;cursor:help;border-radius:3px}.blocksb-probability:hover{color:#1d9bf0}.blocksb-probability:focus-visible{outline:2px solid #1d9bf0;outline-offset:3px}
-.blocksb-block-button{appearance:none;border:0;border-radius:4px;background:transparent;color:#1d9bf0;padding:0;cursor:pointer;white-space:nowrap;font:inherit;line-height:inherit}
-.blocksb-block-button:hover{color:#0084d6;text-decoration:underline}.blocksb-block-button:disabled{color:#8899a6;cursor:default;text-decoration:none}.blocksb-block-button:focus-visible{outline:2px solid #1d9bf0;outline-offset:3px}
-@media(prefers-color-scheme:dark){.blocksb-probability{color:#8b98a5}}
+.blocksb-comment-tools{display:inline-flex!important;flex:0 0 auto;align-items:center;gap:8px;margin-inline-start:6px;white-space:nowrap;vertical-align:baseline;font:400 13px/1.25 var(--blocksb-font);color:var(--blocksb-muted)}
+.blocksb-comment-tools::before{content:"·"}
+.blocksb-probability{display:inline-block;appearance:none;border:0;padding:1px 6px;margin:0 -2px;border-radius:9999px;background:transparent;text-align:left;color:var(--blocksb-muted);font:inherit;line-height:inherit;font-variant-numeric:tabular-nums;min-width:87px;cursor:help;transition:background-color .2s,color .2s}
+.blocksb-probability:hover,.blocksb-probability[aria-expanded=true]{color:#1d9bf0;background:rgba(29,155,240,.1)}
+.blocksb-probability:focus-visible{outline:2px solid #1d9bf0;outline-offset:2px}
+.blocksb-block-button{appearance:none;border:1px solid var(--blocksb-border);border-radius:9999px;background:transparent;color:var(--blocksb-ink);padding:1px 10px;cursor:pointer;white-space:nowrap;font:700 12px/16px var(--blocksb-font);transition:background-color .2s,color .2s,border-color .2s}
+.blocksb-block-button:hover{color:var(--blocksb-red);border-color:rgba(244,33,46,.4);background:rgba(244,33,46,.1)}
+.blocksb-block-button:disabled{color:var(--blocksb-muted);border-color:var(--blocksb-line);background:transparent;cursor:default}
+.blocksb-block-button:focus-visible{outline:2px solid #1d9bf0;outline-offset:2px}
+
 article[data-testid="tweet"].blocksb-removed{display:none!important}
 /* Keep the exact occupied height during flight; shrink only after the clone reaches the bin. */
 article[data-testid="tweet"].blocksb-exiting{opacity:0!important;visibility:hidden!important;pointer-events:none!important;overflow:hidden!important;box-sizing:border-box!important;overflow-anchor:none!important}
 article[data-testid="tweet"].blocksb-exiting *{visibility:hidden!important}
-/* Original children remain in layout. An opaque absolute cover cannot change row height. */
+/* Original children remain in layout. An absolute cover cannot change row height. */
 article[data-testid="tweet"].blocksb-masked{position:relative!important;isolation:isolate}
 article[data-testid="tweet"].blocksb-masked>:not(.blocksb-comment-mask){visibility:hidden!important;pointer-events:none!important}
-.blocksb-comment-mask{position:absolute!important;inset:0!important;z-index:10;display:flex!important;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;align-content:center;padding:8px 16px;box-sizing:border-box;overflow:hidden;background:#f7f9f9;color:#536471;border-bottom:1px solid #eff3f4;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;cursor:default}
-.blocksb-mask-reveal{border:1px solid #cfd9de;border-radius:18px;background:transparent;color:#0f1419;padding:5px 12px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}.blocksb-mask-reveal:hover{background:#1d9bf014}.blocksb-mask-reveal:focus-visible{outline:2px solid #1d9bf0;outline-offset:2px}
-@media(prefers-color-scheme:dark){.blocksb-comment-mask{background:#15202b;color:#8b98a5;border-color:#293846}.blocksb-mask-reveal{color:#eff3f4;border-color:#38444d}}
-.blocksb-flying-card{position:fixed!important;z-index:2147483645!important;pointer-events:none!important;overflow:hidden;border:1px solid #cfd9de;border-radius:16px;background:Canvas;color:CanvasText;box-shadow:0 10px 36px #0002;transform-origin:center center}
+/* Like X's "hidden content" notice: a rounded surface inside the full-size, click-absorbing cover. */
+.blocksb-comment-mask{position:absolute!important;inset:0!important;z-index:10;display:flex!important;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;align-content:center;padding:12px 32px;box-sizing:border-box;overflow:hidden;background:transparent;color:var(--blocksb-muted);font:400 15px/20px var(--blocksb-font);cursor:default}
+.blocksb-comment-mask::before{content:"";position:absolute;inset:8px 16px;z-index:-1;border:1px solid var(--blocksb-line);border-radius:16px;background:var(--blocksb-surface)}
+.blocksb-mask-label{flex:1 1 160px;min-width:0}
+.blocksb-mask-reveal{flex:0 0 auto;min-height:32px;border:1px solid var(--blocksb-border);border-radius:9999px;background:transparent;color:var(--blocksb-ink);padding:0 16px;font:700 14px/1 var(--blocksb-font);cursor:pointer;white-space:nowrap;transition:background-color .2s}
+.blocksb-mask-reveal:hover{background:var(--blocksb-hover)}
+.blocksb-mask-reveal:focus-visible{outline:2px solid #1d9bf0;outline-offset:2px}
+
+.blocksb-flying-card{position:fixed!important;z-index:2147483645!important;pointer-events:none!important;overflow:hidden;border:1px solid var(--blocksb-line);border-radius:16px;background:var(--blocksb-bg);color:var(--blocksb-ink);box-shadow:var(--blocksb-shadow);transform-origin:center center}
 .blocksb-particle{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;contain:layout paint;will-change:transform,opacity}
 .blocksb-particle-content{position:absolute!important;margin:0!important;pointer-events:none!important;box-sizing:border-box!important}
-.blocksb-observer-marker{display:inline-flex;align-items:center;flex:0 0 auto;appearance:none;border:0;margin-inline-start:8px;padding:1px 5px;border-radius:4px;background:#5364710d;color:#536471;font:11px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;white-space:nowrap;cursor:help}
-.blocksb-observer-marker:focus-visible{outline:2px solid #1d9bf0;outline-offset:3px}
-.blocksb-observer-marker[data-suspicious="true"]{color:#b87500;background:#ffb02012}
-@media(prefers-color-scheme:dark){.blocksb-observer-marker{color:#8b98a5}.blocksb-observer-marker[data-suspicious="true"]{color:#f0b84c}}
+
+.blocksb-observer-marker{display:inline-flex;align-items:center;flex:0 0 auto;appearance:none;border:0;margin-inline-start:6px;padding:1px 8px;border-radius:9999px;background:var(--blocksb-hover);color:var(--blocksb-muted);font:500 12px/16px var(--blocksb-font);white-space:nowrap;cursor:help;transition:background-color .2s}
+.blocksb-observer-marker:hover{background:rgba(29,155,240,.1);color:#1d9bf0}
+.blocksb-observer-marker:focus-visible{outline:2px solid #1d9bf0;outline-offset:2px}
+.blocksb-observer-marker[data-suspicious="true"]{color:var(--blocksb-amber);background:var(--blocksb-amber-soft);font-weight:700}
+
+/* Reserve inline space so revealing controls cannot reflow a comment's header.
+ * Keyboard focus and touch retain access without requiring a mouse hover. */
+.blocksb-comment-tools,.blocksb-observer-marker{opacity:0;pointer-events:none;transition:opacity .15s}
+article[data-testid="tweet"]:hover .blocksb-comment-tools,
+article[data-testid="tweet"]:focus-within .blocksb-comment-tools,
+.blocksb-comment-tools:has([aria-expanded="true"]),
+article[data-testid="tweet"]:hover .blocksb-observer-marker,
+article[data-testid="tweet"]:focus-within .blocksb-observer-marker,
+.blocksb-observer-marker[aria-expanded="true"]{opacity:1;pointer-events:auto}
+@media(hover:none){.blocksb-comment-tools,.blocksb-observer-marker{opacity:1;pointer-events:auto}}
+@media(prefers-reduced-motion:reduce){.blocksb-comment-tools,.blocksb-observer-marker{transition:none}}
+
+.blocksb-comment-actions{display:inline-flex;align-items:center;margin-inline-start:4px;opacity:0;pointer-events:none;transition:opacity .15s}
+article[data-testid="tweet"]:hover .blocksb-comment-actions,article[data-testid="tweet"]:focus-within .blocksb-comment-actions,.blocksb-comment-actions:has([aria-expanded="true"]){opacity:1;pointer-events:auto}
+.blocksb-more-button{appearance:none;border:0;border-radius:9999px;background:transparent;color:var(--blocksb-muted);font:700 16px/20px var(--blocksb-font);padding:2px 7px;cursor:pointer}
+.blocksb-more-button:hover{background:rgba(29,155,240,.1);color:#1d9bf0}
+.blocksb-more-button:focus-visible{outline:2px solid #1d9bf0}
+@media(hover:none){.blocksb-comment-actions{opacity:1;pointer-events:auto}}
+@media(prefers-reduced-motion:reduce){.blocksb-comment-actions{transition:none}}

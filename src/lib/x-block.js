@@ -4,6 +4,11 @@ import { normalizeHandle, numericId } from "./core.js";
 
 const bearer = "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA";
 
+/** Headers for trusted worker-owned X reads. Never persist or expose these to a page. */
+export function xReadHeaders(session) {
+  return { authorization: bearer, "x-csrf-token": session.csrf, "x-twitter-auth-type": "OAuth2Session", "x-twitter-active-user": "yes" };
+}
+
 /** Read only the active account ID and CSRF token from the permitted X origin.
  * Tokens stay in worker memory, never in jobs, snapshots, exports or Jev requests.
  */

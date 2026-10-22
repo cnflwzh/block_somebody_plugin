@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="modes_title"></title>
+  <link rel="icon" href="../../assets/brand.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="modes.css"><script type="module" src="modes.js"></script>
+  <link rel="stylesheet" href="ui-foundations.css">
+</head>
+<body>
+  <header><a href="manager.html?tab=settings"><img src="../../assets/brand.svg" alt="" width="28" height="28">block s.b.</a><span data-i18n="ui_observer_title"></span></header>
+  <main>
+    <h1 data-i18n="modes_title"></h1><p class="lead" data-i18n="modes_intro"></p>
+    <div class="comparison">
+      <section class="mode-card cumulative"><span class="eyebrow" data-i18n="modes_default"></span><h2 data-i18n="ui_mode_cumulative"></h2><div data-prose="modes_cumulative"></div><ol class="flow"><li data-i18n="modes_c1"></li><li data-i18n="modes_c2"></li><li data-i18n="modes_c3"></li></ol></section>
+      <section class="mode-card combined"><span class="eyebrow" data-i18n="modes_together"></span><h2 data-i18n="ui_mode_combined"></h2><div data-prose="modes_combined"></div><ol class="flow"><li data-i18n="modes_b1"></li><li data-i18n="modes_b2"></li><li data-i18n="modes_b3"></li></ol></section>
+    </div>
+    <section class="demo">
+      <h2 data-i18n="modes_try"></h2><p data-i18n="modes_demo_intro"></p>
+      <div class="controls"><label><span data-i18n="modes_scenario"></span><select id="scenario"><option value="suspicious" data-i18n="modes_suspicious"></option><option value="mixed" data-i18n="modes_mixed"></option></select></label><button id="next" type="button" data-i18n="modes_next"></button><button id="reset" type="button" class="secondary" data-i18n="modes_reset"></button></div>
+      <p class="demo-note" data-i18n="modes_demo_note"></p>
+      <ol id="replies" class="replies"></ol>
+      <div class="comparison results" role="status" aria-live="polite" aria-atomic="true">
+        <section class="cumulative"><h3 data-i18n="ui_mode_cumulative"></h3><div class="metric"><strong id="c-requests">0</strong><span data-i18n="modes_requests"></span></div><p id="c-progress"></p><p id="c-status" class="outcome"></p></section>
+        <section class="combined"><h3 data-i18n="ui_mode_combined"></h3><div class="metric"><strong id="b-requests">0</strong><span data-i18n="modes_requests"></span></div><p id="b-progress"></p><p id="b-status" class="outcome"></p></section>
+      </div>
+    </section>
+    <section class="details"><h2 data-i18n="modes_read_settings"></h2><div class="comparison"><article><h3 data-i18n="modes_counts_title"></h3><div data-prose="modes_counts"></div></article><article><h3 data-i18n="modes_scores_title"></h3><div data-prose="modes_scores"></div></article><article><h3 data-i18n="modes_marks_title"></h3><div data-prose="modes_marks"></div></article><article><h3 data-i18n="modes_cost_title"></h3><div data-prose="modes_cost"></div></article></div></section>
+    <section class="details"><h2 data-i18n="ui_account_material"></h2><div data-prose="modes_account_dimensions"></div></section>
+    <aside data-prose="modes_shared"></aside>
+  </main>
+</body>
+</html>
