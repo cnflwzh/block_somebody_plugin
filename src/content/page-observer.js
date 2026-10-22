@@ -73,11 +73,18 @@
   const eligible = url => { try { const u = new URL(url, location.href); return u.origin === location.origin && /\/i\/api\/graphql\//.test(u.pathname); } catch { return false; } };
   const publish = (posts, source) => window.postMessage({ channel, posts, source, observedAt: Date.now() }, location.origin);
   /** Read only tweet props attached to rendered cards; no global store, cookies or private profile data. */
+  const articleSelector = '[data-testid="primaryColumn"] article[data-testid="tweet"]';
+  const dirtyArticles = new Set();
+  let renderedFullScan = true;
+  const permalink = time => time?.closest("a")?.getAttribute("href")?.match(/^\/(\w{1,15})\/status\/(\d+)(?:[/?#]|$)/);
   function captureRendered(force = false) {
     const found = [], account = viewer();
-    for (const article of document.querySelectorAll('[data-testid="primaryColumn"] article[data-testid="tweet"]')) {
-      const date = article.querySelector('[data-testid="User-Name"] time') || article.querySelector("time");
-      const ownLink = date?.closest("a")?.getAttribute("href")?.match(/^\/(\w{1,15})\/status\/(\d+)/);
+    const articles = force || renderedFullScan ? [...document.querySelectorAll(articleSelector)] : [...dirtyArticles];
+    dirtyArticles.clear(); renderedFullScan = false;
+    for (const article of articles) {
+      if (!article?.isConnected) continue;
+      const ownLink = permalink(article.querySelector('[data-testid="User-Name"] time'))
+        || [...article.querySelectorAll("time")].reverse().map(permalink).find(Boolean);
       if (!ownLink) continue;
       const key = Object.keys(article).find(k => k.startsWith("__reactFiber$") || k.startsWith("__reactInternalInstance$"));
       let fiber = key && article[key];
@@ -105,21 +112,35 @@
     for (let i = 0; i < found.length; i += 40) publish(found.slice(i, i + 40), "dom");
   }
   let renderedTimer;
-  function scheduleRendered() {
+  function scheduleRendered(force = false) {
+    if (force) renderedFullScan = true;
     if (renderedTimer) return;
-    renderedTimer = setTimeout(() => { renderedTimer = null; captureRendered(); }, 200);
+    renderedTimer = setTimeout(() => { renderedTimer = null; captureRendered(renderedFullScan); }, 200);
   }
   const renderedObserver = new MutationObserver(changes => {
-    if (changes.some(change => {
+    const owned = "#blocksb-overlay,.blocksb-comment-tools,.blocksb-observer-marker,.blocksb-comment-mask,.blocksb-flying-card,.blocksb-menu-item";
+    let relevant = false;
+    for (const change of changes) {
       const node = change.target.nodeType === 1 ? change.target : change.target.parentElement;
-      const owned = "#blocksb-overlay,.blocksb-comment-tools,.blocksb-observer-marker,.blocksb-comment-mask,.blocksb-flying-card,.blocksb-menu-item";
-      if (node?.closest?.(owned)) return false;
+      if (node?.closest?.(owned)) continue;
       const changed = [...change.addedNodes, ...change.removedNodes];
-      if (changed.length && changed.every(n => n.nodeType === 1 && n.matches(owned))) return false;
-      // Sidebars, counters and our own annotations must not repeatedly walk every React card.
-      const column = '[data-testid="primaryColumn"]';
-      return !!node?.closest?.(column) || changed.some(n => n.nodeType === 1 && (n.matches(column) || n.querySelector(column)));
-    })) scheduleRendered();
+      if (changed.length && changed.every(n => n.nodeType === 1 && n.matches(owned))) continue;
+      const article = node?.closest?.(articleSelector);
+      const column = node?.closest?.('[data-testid="primaryColumn"]')
+        || changed.map(n => n.nodeType === 1 ? n.closest?.('[data-testid="primaryColumn"]') : null).find(Boolean);
+      if (!column) continue;
+      relevant = true;
+      if (article) dirtyArticles.add(article);
+      for (const item of changed) {
+        if (item.nodeType !== 1) continue;
+        if (item.matches(articleSelector)) dirtyArticles.add(item);
+        item.querySelectorAll?.(articleSelector).forEach(card => dirtyArticles.add(card));
+      }
+      // A mutation directly on the column can replace a card without exposing the
+      // article as an added node. Keep a safe full-scan fallback for that rare shape.
+      if (!article && !changed.some(n => n.nodeType === 1 && (n.matches(articleSelector) || n.querySelector?.(articleSelector)))) renderedFullScan = true;
+    }
+    if (relevant) scheduleRendered();
   });
   renderedObserver.observe(document.documentElement, { childList: true, characterData: true, subtree: true });
   scheduleRendered();

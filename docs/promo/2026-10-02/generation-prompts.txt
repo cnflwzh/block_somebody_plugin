@@ -1,0 +1,70 @@
+block s.b. — X 宣传教程图
+生成方式：内置 image_gen 工具。
+依据：当前工作区 README.md、src/manager/manager.html、src/manager/manager.js、src/content/content.js。
+图片为界面示意，使用虚构账号；未连接 Jev 或操作真实 X 账号。
+
+通用生成规格
+Use case: infographic-diagram.
+Create one polished Simplified Chinese tutorial graphic for the Chrome extension “block s.b.”, for the developer to publish on X. Square 1536×1536 composition, crisp legible Chinese typography, generous margins, strong editorial hierarchy. White background, pale gray panels, near-black text, restrained blue #1d9bf0 for interactive controls, coral #EF554F brand accent. Clean flat UI illustration, no photography, no decorative mascots, no gradients, no exaggerated marketing promises. Provided image is ONLY the extension logo reference; reproduce it small beside “block s.b.” in the top brand row. Use exact supplied Chinese copy, no invented features or labels. UI visuals are simplified instructional mockups, clearly include “界面示意” in footer. All example identities use @demo. No real user data, no realistic API keys, no QR codes. This is one image in a coherent four-image series. Top left brand; top right page number; title at top; main instructional material in central panels; readable caution footer. Do not show the prompt or design instructions.
+
+1. 01-install-connect.png
+Page number “01 / 04”. Title “先安装，再连接模型”. Subtitle “桌面 Chrome · X / Twitter 网页”.
+Design two vertically stacked tutorial panels with numbered labels and simplified UI snippets.
+Panel 1 heading “① 安装扩展”. Exact instruction lines:
+“下载项目源码并解压”
+“打开 chrome://extensions，开启「开发者模式」”
+“点击「加载已解压的扩展程序」”
+“选择包含 manifest.json 的文件夹”
+Small blue browser-style button labeled “加载已解压的扩展程序”. Supporting line “固定扩展图标，再刷新 X 页面”.
+Panel 2 heading “② 连接 Jev”. Path line “扩展图标 → 设置 → 模型设置”.
+Illustrated compact settings form with labels and values: “API Key” with “••••••••”; “API 端点” with “https://api.typesafe.ai/v1/systemone”; “模型” with “jev-1.13.0”; blue button “保存并连接”. Key annotation “填入你自己的 Jev API Key”.
+Bottom caution strip exact copy “连接检查和评论分析都会调用模型服务，可能产生费用。”
+Footer “安装无需 Node.js · 界面示意”.
+Prioritize readability of endpoint and code filenames. No app store imagery.
+
+2. 02-start-task.png
+Page number “02 / 04”. Title “从一条原帖开始”. Subtitle “识别赞同原帖的评论，按设置屏蔽账号”.
+Central large simplified X post mockup: fictional “示例作者 @demo”, post text “这是一条用于演示的原帖。”, ellipsis menu with a coral ring around ellipsis. Open dropdown shows two menu rows: “屏蔽 @demo” and highlighted custom row “屏蔽 @demo 及其评论区的支持者”. The second row must be complete and readable, allow two lines. Callout “① 打开原帖右上角菜单” points to ellipsis. Callout “② 点击插件新增的入口” points to highlighted second row.
+Below mockup show a simple three-stage flow with exact labels “进入帖子详情” → “切换「最近」” → “读取并分析评论”.
+Supporting line “首批评论就绪后，原帖作者也会加入屏蔽队列。”
+Small secondary panel heading “继续读取评论”. Body “手动向下滚动，或在右下角任务栏开启「自动加载」。” Small pill “自动加载默认关闭”.
+Bottom important strip “仅在你主动启动的评论区分析；打开管理面板不会启动任务。”
+Footer “会实际修改 X 屏蔽关系 · 默认规则 · 界面示意”.
+
+3. 03-read-results.png
+Page number “03 / 04”. Title “看懂结果，再调整策略”. Subtitle “默认「谨慎」策略”.
+Arrange three large clear horizontal result cards:
+First coral-accent card heading “自动屏蔽”. Prominent paired metric badges “支持概率 ≥ 92%” and “模型置信度 ≥ 80%”, connected with “且”. Body “模型判定支持原帖，且同时满足两项阈值时，加入屏蔽队列。”
+Second amber-accent card heading “仅隐藏评论”. Prominent metric “80% ≤ 支持概率 < 92%”. Body “判定为支持时覆盖遮罩，保留原高度。” Show a gray masked comment strip and button “查看原文”.
+Third neutral card heading “保留原文”. Body “反对、无关、立场不明，或未满足处理条件。” Small emphasized line “概率 ≥ 92% 但置信度不足，也会保留。”
+Below cards show a miniature probability badge “附和概率 95%” with cursor and simple popover bars, caption “悬停概率标签，查看各选项概率和置信度”.
+Bottom caution strip “概率不是准确率承诺；反讽、玩笑可能误判。”
+Final supporting line “目前按文本判断，不读取图片或视频中的观点。”
+Footer “自定义规则会改变判定类别 · 界面示意”.
+Do not imply every high number automatically blocks. All thresholds accurate, compare signs exact.
+
+4. 04-manage-undo.png
+Page number “04 / 04”. Title “白名单、停止与撤回”. Subtitle “在管理面板检查记录，保留调整余地”.
+Three generously spaced stacked panels, large readable Chinese:
+Panel 1 heading “① 先保护不想处理的人”. Simplified whitelist input “@用户名或个人主页链接” and button “添加”. Body “白名单用户不分析、不自动屏蔽；其内容不发送给 Jev。” Secondary line “加入白名单不会自动解除已有屏蔽。”
+Panel 2 heading “② 离开页面 ≠ 结束任务”. A small background queue illustration with three connected dots. Body “离开原帖后，已入队的屏蔽仍会继续提交。” Secondary line “点击「结束」会取消尚未提交的自动屏蔽；已提交的需另行撤回。”
+Panel 3 heading “③ 到记录里取消屏蔽”. Simplified history group card with label “屏蔽记录”, button “一键撤回屏蔽”, small action “取消屏蔽”. Body “可按原帖整组撤回，也可在明细中单独取消。” Secondary line “撤回时，保持同一账号的任意 X 页面打开。”
+Bottom amber caution strip with two clear lines:
+“撤回可能解除你此前已有的屏蔽，请先检查明细。”
+“「已提交」仅表示请求成功响应，未额外核实屏蔽关系。”
+Footer “原帖与必要评论文本会发送给所配置的模型服务 · 界面示意”.
+Ensure no claims of foolproof undo, private local-only AI, or guaranteed full comment collection.
+
+定向修订
+01-install-connect.png
+Edit this existing tutorial image with only two specific text corrections, preserving all layout, artwork, Chinese instructions, colors, aspect ratio and resolution.
+1. In bottom settings form, replace the entire incorrect URL in the API endpoint input with exact Chinese text “保留默认端点”. This prevents URL copying mistakes and reflects user leaves default. Do not render any URL in this field. Keep label “API 端点”, model “jev-1.13.0” and other inputs unchanged.
+2. In upper-right extension card, replace invented slogan “让更好的对话发生” with descriptive exact text “X 评论区屏蔽工具”.
+Keep everything else unchanged.
+
+03-read-results.png
+Edit this existing tutorial image. Preserve overall layout, artwork, Chinese copy, metric thresholds, colors, aspect ratio and resolution. Two specific corrections:
+1. In the lower probability popover there must be ONE overall model confidence, not a separate confidence for every option. Remove the four per-row confidence values entirely. Retain exactly four rows with labels and probabilities: “支持 95%”, “反对 3%”, “无关 1%”, “立场不明 1%”, along with their bars. Add a single compact header at the top of that popover reading “模型置信度 87%”. Enlarge popover slightly within its existing panel if needed for legibility. Do not change the main top 92% and 80% criteria.
+2. Replace the small top branding slogan “更清净的浏览体验” with “Chrome 扩展程序”.
+Do not change any other copy or introduce new claims.
+
