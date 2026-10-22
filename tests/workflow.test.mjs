@@ -143,6 +143,11 @@ test("worker flow: arm, whitelist, classify, background queue and undo", async t
       await rpc("CLASSIFY", message);
       assert.equal(sentJev, beforeCalls + 1); assert.equal(submitted, 2);
     });
+    await t.test("content snapshots project only the current account's lightweight history", async () => {
+      const snapshot = await rpc("SNAPSHOT", { account: "viewer" }, sender);
+      assert.ok(snapshot.history.length > 0);
+      assert.ok(snapshot.history.every(h => !h.reply && !h.root && !h.target.text && !h.target.following));
+    });
     await t.test("undo retains history and excludes user from current session", async () => {
       now += 5000;
       const h = data.state.history.find(h => h.target.handle === reply.handle);

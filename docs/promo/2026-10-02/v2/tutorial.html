@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>block s.b. 使用教程 · 实际界面版</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e7ebee;color:#0f1419;font-family:"Microsoft YaHei","Segoe UI",sans-serif}section.poster{width:1600px;height:1600px;background:#fff;padding:64px 68px;position:relative;margin:0 auto 32px;overflow:hidden}.brand{display:flex;align-items:center;gap:16px;font-size:30px;font-weight:700}.brand img{width:48px;height:48px}.brand .series{font-size:24px;color:#536471;font-weight:400;border-left:2px solid #dce3e7;margin-left:8px;padding-left:24px}.page{margin-left:auto;color:#687580;font-size:26px;font-weight:500}h1{font-size:66px;line-height:1.25;letter-spacing:-2px;margin:44px 0 16px}p{margin:0;line-height:1.65}.sub{font-size:28px;color:#536471}.split{display:grid;grid-template-columns:530px 1fr;gap:52px;margin-top:48px;align-items:start}.steps{padding-top:10px}.step{margin-bottom:34px}.label{font-size:29px;font-weight:700;margin-bottom:13px}.num{display:inline-flex;width:40px;height:40px;border-radius:50%;align-items:center;justify-content:center;background:#fff0ef;color:#d4443f;margin-right:13px;font-size:24px}.body{font-size:25px;color:#374954;line-height:1.85}.body strong{color:#0f1419}.code{font-family:Consolas,monospace;font-size:25px}.shot-label{display:flex;justify-content:space-between;font-size:21px;color:#536471;margin-bottom:15px;gap:16px}.shot-label b{font-weight:500;color:#1680c1}.shot{display:block;width:100%;height:auto;border:1px solid #dfe6eb;border-radius:14px;box-shadow:0 12px 36px #0f14190a}.caption{font-size:21px;color:#63727c;margin-top:16px;line-height:1.7}.callout{padding:24px 28px;background:#f4f8fb;border-left:5px solid #1d9bf0;border-radius:0 12px 12px 0;font-size:25px;line-height:1.7;margin-top:28px}.callout strong{display:block;margin-bottom:5px}.bottom{position:absolute;bottom:94px;left:68px;right:68px;display:grid;gap:18px}.notice{background:#fff4ef;border-left:5px solid #ef554f;border-radius:0 12px 12px 0;padding:24px 30px;font-size:25px;line-height:1.65}.notice strong{color:#ad352f}.foot{position:absolute;left:68px;right:68px;bottom:38px;display:flex;justify-content:space-between;font-size:18px;color:#74838d}.menu-area{margin:46px 0 0;background:#f5f8fa;border-radius:20px;padding:36px 42px}.menu-area .shot{width:1080px;margin:22px auto 16px;box-shadow:none}.menu-area .caption{text-align:center}.process{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:38px}.process>div{border-top:3px solid #dbe5eb;padding-top:23px}.process h2{font-size:28px;margin:0 0 14px}.process p{font-size:24px;color:#374954;line-height:1.8}.tag{font-size:22px;color:#647580;margin-bottom:10px}.two{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:40px}.two h2{font-size:30px;margin:0 0 14px}.two .body{font-size:24px;line-height:1.8;margin:19px 4px 0}.two .shot-label{font-size:20px}.policy{margin-top:40px}.policy h2{font-size:27px;margin:0 0 10px}.policy p{font-size:24px;color:#374954;line-height:1.8}.policy+.policy{padding-top:24px;border-top:1px solid #e2e8ed;margin-top:24px}.tight{margin-top:18px}.start-note{margin-top:34px;font-size:25px;line-height:1.8;color:#374954}.small{font-size:22px}.row-note{margin-top:28px;border:1px solid #dde7ee;border-radius:14px;padding:22px 28px;font-size:24px;line-height:1.8}
+html{scrollbar-width:none}html::-webkit-scrollbar{display:none}.notice strong{display:block;margin-bottom:7px}.two .shot{max-width:660px;margin-inline:auto}.two .body{font-size:22px;line-height:1.65;margin-top:15px}.two{margin-top:32px}
+</style>
+
+<section class="poster" id="p1">
+ <div class="brand"><img src="../../../../assets/brand.svg">block s.b.<span class="series">使用教程</span><span class="page">01 / 04</span></div>
+ <h1>安装插件，连接 Jev</h1><p class="sub">桌面 Chrome · X / Twitter 网页</p>
+ <div class="split">
+  <div class="steps">
+   <div class="step"><div class="label"><span class="num">1</span>加载扩展</div><p class="body">下载项目源码并解压。<br>打开 <span class="code">chrome://extensions</span>，<br>开启「开发者模式」。<br>点击「加载已解压的扩展程序」，<br>选择包含 <span class="code">manifest.json</span><br>的项目文件夹。</p></div>
+   <div class="step"><div class="label"><span class="num">2</span>打开「设置」</div><p class="body">固定扩展图标，刷新 X 页面。<br>点击扩展图标，在顶部标签中<br>选择<strong>「设置」</strong>。</p></div>
+   <div class="step"><div class="label"><span class="num">3</span>保存并连接</div><p class="body">填写自己的 Jev API Key。<br>使用官方服务时，保留默认端点<br>和模型，点击<strong>「保存并连接」</strong>。</p></div>
+   <p class="caption">安装源码无需 Node.js；不要选择 src/。</p>
+  </div>
+  <div><div class="shot-label"><b>设置 → 模型设置</b><span>当前项目界面截图</span></div><img class="shot" src="screenshots/settings.png"><p class="caption">API Key 请填写你自己的密钥，截图中留空。</p></div>
+ </div>
+ <div class="bottom"><div class="notice"><strong>使用前了解费用与数据去向</strong>连接检查和评论分析都会调用模型服务，可能产生费用。原帖、当前评论及必要的上下文会发送给你配置的服务。</div></div>
+ <div class="foot"><span>block s.b. · v1.0.0</span><span>源码渲染截图 · 示例数据 · 截图外文字为教程说明</span></div>
+</section>
+
+<section class="poster" id="p2">
+ <div class="brand"><img src="../../../../assets/brand.svg">block s.b.<span class="series">使用教程</span><span class="page">02 / 04</span></div>
+ <h1>从原帖菜单启动任务</h1><p class="sub">默认规则：识别赞同原帖的评论，按设置屏蔽账号。</p>
+ <div class="menu-area"><div class="shot-label"><b>点击原帖右上角「…」，找到原生屏蔽选项下方的插件入口</b></div><img class="shot" src="screenshots/menu.png"><p class="caption">仅截取插件实际生成的两个菜单项；@demo_author 为示例账号。</p></div>
+ <div class="process">
+  <div><div class="tag">第 1 步</div><h2>选择第一项</h2><p>点击「屏蔽 @用户名<br>及其评论区的支持者」。<br>插件进入所选帖子的详情页。</p></div>
+  <div><div class="tag">第 2 步</div><h2>等待评论就绪</h2><p>插件通过页面菜单切换到「最近」。<br>首批评论就绪后，原帖作者<br>进入屏蔽队列，开始评论分析。</p></div>
+  <div><div class="tag">第 3 步</div><h2>继续加载评论</h2><p>自己向下滚动，或在页面右下角<br>任务栏开启「自动加载」。<br>自动加载默认关闭。</p></div>
+ </div>
+ <div class="row-note"><strong>只在主动启动的评论区工作。</strong>打开管理面板不会启动分析，也不会自动扫描首页。</div>
+ <p class="start-note">插件只能处理 X 实际提供的回复，不能保证读取全部评论。<br>页面隐藏仅作用于对应原帖评论区；实际屏蔽关系由 X 执行。</p>
+ <div class="bottom"><div class="notice"><strong>离开原帖 ≠ 取消已入队的屏蔽</strong>离开页面后，已入队操作仍会在后台继续。任务栏的「结束」会取消尚未提交的自动屏蔽；已提交的操作需要到记录中撤回。</div></div>
+ <div class="foot"><span>block s.b. · v1.0.0 · 默认规则</span><span>菜单由当前 content.js / content.css 生成 · 示例账号</span></div>
+</section>
+
+<section class="poster" id="p3">
+ <div class="brand"><img src="../../../../assets/brand.svg">block s.b.<span class="series">使用教程</span><span class="page">03 / 04</span></div>
+ <h1>看懂阈值，再调整策略</h1><p class="sub">设置 → 识别策略 · 下图为默认「谨慎」配置</p>
+ <div class="split">
+  <div>
+   <div class="policy tight"><h2>什么时候自动屏蔽？</h2><p>模型判定支持原帖，且<br><strong>支持概率 ≥ 92%</strong>、<br><strong>模型置信度 ≥ 80%</strong>，<br>同时满足后加入屏蔽队列。</p></div>
+   <div class="policy"><h2>什么时候只隐藏？</h2><p>判定支持原帖，且支持概率<br><strong>80% ≤ 概率 &lt; 92%</strong>时，<br>覆盖遮罩并保留评论高度。<br>点击「查看原文」仍可阅读。</p></div>
+   <div class="policy"><h2>其余情况保留原文</h2><p>反对、无关、无法判断，或<br>没有满足处理条件时保留。<br>概率 ≥ 92% 但置信度不足，<br>也不会自动屏蔽。</p></div>
+  </div>
+  <div><div class="shot-label"><b>识别策略</b><span>当前项目界面截图</span></div><img class="shot" src="screenshots/strategy.png"><p class="caption">支持概率和模型置信度是两个独立条件，需要同时达到阈值。</p><div class="callout"><strong>调整后记得保存</strong>修改策略后，点击设置页底部的「保存设置」。评论旁的概率标签可悬停查看各选项概率和模型置信度。</div></div>
+ </div>
+ <div class="bottom"><div class="notice"><strong>概率是筛选条件，不是准确率承诺</strong>反讽、玩笑或不完整上下文可能导致误判。目前按文本判断，不读取图片或视频中的观点；自定义规则会改变判定类别。</div></div>
+ <div class="foot"><span>block s.b. · v1.0.0 · 默认规则</span><span>源码渲染截图 · 默认设置 · 截图外文字为教程说明</span></div>
+</section>
+
+<section class="poster" id="p4">
+ <div class="brand"><img src="../../../../assets/brand.svg">block s.b.<span class="series">使用教程</span><span class="page">04 / 04</span></div>
+ <h1>检查记录，设置白名单</h1><p class="sub">点击扩展图标，或任务中的垃圾桶，打开管理面板。</p>
+ <div class="two">
+  <div><h2>屏蔽记录：检查与撤回</h2><div class="shot-label"><span>按原帖分组，区分执行操作的账号</span></div><img class="shot" src="screenshots/history.png"><p class="body">点击<strong>「展开明细」</strong>查看账号与触发评论；<br>通过<strong>「一键撤回屏蔽」</strong>撤回整组，<br>或在明细中单独取消。</p><p class="body">撤回时，保持<strong>同一登录账号</strong>的<br>任意 X 页面打开即可。</p></div>
+  <div><h2>白名单：保留指定用户</h2><div class="shot-label"><span>输入 @用户名或 X 主页链接添加</span></div><img class="shot" src="screenshots/whitelist.png"><p class="body">白名单用户不分析、不自动屏蔽，<br>其内容不会发送给 Jev。<br>加入后会取消尚未提交的相关屏蔽。</p><p class="body"><strong>加入白名单不会解除已有屏蔽。</strong><br>已经屏蔽的账号，需要在记录中取消。</p></div>
+ </div>
+ <div class="bottom"><div class="notice"><strong>整组撤回前，先检查账号明细</strong>撤回可能解除你此前已有的屏蔽。「已提交」仅表示 X 返回请求成功响应，插件未额外查询屏蔽关系。</div></div>
+ <div class="foot"><span>block s.b. · v1.0.0</span><span>源码渲染截图 · 账号、内容和记录均为示例数据</span></div>
+</section>
+</html>

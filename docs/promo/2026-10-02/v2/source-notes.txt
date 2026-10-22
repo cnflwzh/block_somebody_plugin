@@ -1,0 +1,19 @@
+block s.b. 教程图 v2 — 实际源码界面版
+
+本目录及上一级目录同名的 4 张 PNG 均为修正版（1600 × 1600）。
+旧 AI 重绘初稿保存在 ../previous-ai-draft/，不建议用于宣传。
+
+制作方法
+- 浏览器直接加载当前 src/manager/manager.html、manager.css、manager.js 和 src/lib/core.js。
+- 设置、识别策略、历史和白名单截图均保留实际 HTML/CSS/JS 的渲染结果。
+- 设置页面的 API Key 留空，不含真实凭据。
+- Chrome runtime 消息使用本地虚构数据，未调用 Jev 或真实 X 服务。
+- 菜单截图由当前 src/content/content.js 和 content.css 生成，只截取插件自己的两个菜单项，不绘制虚构的 X 界面。
+- 页面截图采用管理页 620px 视口；浏览器工具栏弹窗和嵌入抽屉可能因宽度不同而有不同换行。
+- screenshots/ 保存未重绘的原始界面截图；tutorial.html 只排版截图外的教程文字与图片。
+- 不使用图像生成模型重绘界面，也未新增任何产品控件或功能。
+
+本地预览：http://127.0.0.1:8773/docs/promo/2026-10-02/v2/tutorial.html
+预览服务脚本：.local/promo-real-v2.mjs
+版本：依据当前工作区 1.0.0；日期：2026-10-02。
+已逐张检查版式，检查图片加载、文字区域重叠及导出尺寸。未运行功能测试。
